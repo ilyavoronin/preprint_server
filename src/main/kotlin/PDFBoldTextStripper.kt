@@ -2,11 +2,14 @@ package testpdf
 
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition
+import java.lang.Math.abs
 
 
 class PDFBoldTextStripper(): PDFTextStripper() {
     val fontWidthToCnt = mutableMapOf<Float, Int>()
     var lastY = 0f
+    var lastPageN = 0
+    var firstLineOfNewPage = false
     override fun writeString(text: String?, textPositions: MutableList<TextPosition>?) {
         var newText = text
         if (text != null && textPositions != null && textPositions.size > 0) {
@@ -22,21 +25,31 @@ class PDFBoldTextStripper(): PDFTextStripper() {
             }
             fontWidthToCnt[currentFontWidth] = fontWidthToCnt[currentFontWidth]!! + 1
 
-            //find big empty spaces between the lines
             val curY = textPositions[0].y
-            print(curY)
-            print(" ")
-            print(lastY)
-            print(" ")
-            println(textPositions[0].pageHeight)
+            //checking if new line has started
+            if (abs(curY - lastY) > 5) {
+                //write the beginning coordinate of the line
+                newText = "@d" + textPositions[0].x.toString() + "@d" + newText;
+                firstLineOfNewPage = false
+            }
+            //find big empty spaces between the lines
             val diff =
-                if (curY + 30 >= lastY) curY - lastY
-                else textPositions[0].pageHeight - lastY + curY - 80
-            println(diff)
-            if (diff > 200) {
+                if (currentPageNo == lastPageN) curY - lastY
+                else textPositions[0].pageHeight - lastY + curY - (textPositions[0].pageHeight / 10)
+            if (diff * 4 > textPositions[0].pageHeight) {
                 newText = "\\%\\${newText}"
             }
+
+            //check if this line contains page number
+            if (lastPageN != currentPageNo) {
+                firstLineOfNewPage = true
+            }
+            val pageString = currentPageNo.toString()
+            if (firstLineOfNewPage && text == pageString) {
+                newText = "\\%p$newText"
+            }
             lastY = curY
+            lastPageN = currentPageNo
         }
         super.writeString(newText, textPositions)
     }
