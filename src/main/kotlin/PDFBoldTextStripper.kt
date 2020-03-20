@@ -19,7 +19,7 @@ class PDFBoldTextStripper(): PDFTextStripper() {
             if (!fontWidthToCnt.containsKey(currentFontWidth)) {
                 fontWidthToCnt[currentFontWidth] = 0
             }
-            if (currentFontWidth > fontWidthToCnt.maxBy { it.value }!!.key || text.all {it.isUpperCase()} ||
+            if (currentFontWidth != fontWidthToCnt.maxBy { it.value }!!.key || text.all {it.isUpperCase()} ||
                     textPositions[0].font.fontDescriptor?.fontName?.contains("bold",ignoreCase = true) ?: false) {
                 newText = "${newText}\\\$\\"
             }
@@ -34,9 +34,11 @@ class PDFBoldTextStripper(): PDFTextStripper() {
             }
             //find big empty spaces between the lines
             val diff =
-                if (currentPageNo == lastPageN) curY - lastY
+                if (currentPageNo == lastPageN || curY > lastY) curY - lastY
                 else textPositions[0].pageHeight - lastY + curY - (textPositions[0].pageHeight / 10)
-            if (diff * 4 > textPositions[0].pageHeight) {
+            if (diff > textPositions[0].pageHeight) {
+                println("$diff ${textPositions[0].pageHeight} $lastY $curY $currentPageNo $lastPageN")
+                println(text.length)
                 newText = "\\%\\${newText}"
             }
 

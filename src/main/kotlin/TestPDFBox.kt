@@ -7,16 +7,20 @@ import kotlin.system.measureTimeMillis
 
 fun extractReferences(text : String, pageWidth : Double) : List <String> {
     //find where references begin
-    var ind = text.lastIndexOf("References\\\$\\", text.lastIndex, ignoreCase = true)
+    var ind = text.lastIndexOfAny(listOf("References\\\$\\", "REFERENCES\\\$\\"), text.lastIndex, ignoreCase = false)
     if (ind == -1) {
-        ind = text.lastIndexOf("References", ignoreCase = true)
+        ind = text.lastIndexOfAny(listOf("References", "REFERENCES"), text.lastIndex, ignoreCase = false)
         if (ind == -1) {
-            return listOf()
+            val indOfFirstRef = text.lastIndexOfAny(listOf("[1]"), text.lastIndex, ignoreCase = false)
+            if (indOfFirstRef == -1) {
+                return listOf()
+            }
+            ind = text.lastIndexOf("@d", indOfFirstRef)
+            ind = text.lastIndexOf("@d", ind - 1) - 1
         }
     }
     //removing mark for bold text
     var refs =  text.substring(ind).replace("\\\$\\", "");
-
     //find the end of references
     val indBeg = refs.indexOf('\n') + 1
     var indEnd = refs.indexOfAny(listOf("\n\n", "\\%\\"), indBeg) // \\%\\ indicates a big space between lines
@@ -24,7 +28,7 @@ fun extractReferences(text : String, pageWidth : Double) : List <String> {
         indEnd = refs.lastIndex
     }
     refs = refs.substring(indBeg, indEnd)
-
+    println(refs)
     //remove page number and empty lines
     val indentRegex = """@d[0-9.]+@d""".toRegex()
     val regexpPageNumber = ("""($indentRegex)?\s*(\d{1,3})?\s*""").toRegex()
@@ -66,54 +70,54 @@ fun extractReferences(text : String, pageWidth : Double) : List <String> {
     }
 
     //parse references
-    if (otherIndent != -1.0) {
-        var curRef = ""
-        var lastRefLineIndex = 0
-        for((i, pair) in linesWithInd.withIndex()) {
-            val (indent, line) = pair
-            if (i == 0) {
-                curRef = line
-                continue
-            }
-            if (abs(indent - firstIndent) < 2 && isFirstRefLine(line, linesWithInd[0].second)) {
-                refList.add(curRef.replace(indentRegex, ""))
-                curRef = line
-                lastRefLineIndex = i
-            }
-            else {
-                if(abs(indent - otherIndent) < 2) {
-                    if (curRef.isNotEmpty() && curRef.last() == '-') {
-                        curRef = curRef.dropLast(1)
-                        curRef += line
-                    }
-                    else {
-                        curRef += " $line"
-                    }
-                }
-                else {
-                    val patternChanged = ((indent < firstIndent && abs(indent - firstIndent) < 10)
-                            || indent > pageWidth / 2)
-                    if (patternChanged && isFirstRefLine(line, linesWithInd[0].second)) {
-                        if (indent > pageWidth / 2) {
-                            otherIndent = indent + otherIndent - firstIndent
-                        }
-                        firstIndent = indent
-                        refList.add(curRef.replace(indentRegex, ""))
-                        curRef = line
-                        lastRefLineIndex = i
-                    }
-                    else {
-                        //pattern has ended
-                        break
-                    }
-                }
-            }
-        }
-        if (curRef.isNotEmpty()) {
-            refList.add(curRef.replace(indentRegex, ""))
-        }
-        return refList
+    if (otherIndent == -1.0) {
+        otherIndent = firstIndent
     }
+    var curRef = ""
+    var lastRefLineIndex = 0
+    println("$firstIndent $otherIndent")
+    for((i, pair) in linesWithInd.withIndex()) {
+        val (indent, line) = pair
+        if (i == 0) {
+            curRef = line
+            continue
+        }
+        if (abs(indent - firstIndent) < 2 && isFirstRefLine(line, linesWithInd[0].second)) {
+            refList.add(curRef.replace(indentRegex, ""))
+            curRef = line
+            lastRefLineIndex = i
+        } else {
+            println("$indent $otherIndent")
+            if (abs(indent - otherIndent) < 2) {
+                if (curRef.isNotEmpty() && curRef.last() == '-') {
+                    curRef = curRef.dropLast(1)
+                    curRef += line
+                } else {
+                    curRef += " $line"
+                }
+            } else {
+                val patternChanged = ((indent < firstIndent && abs(indent - firstIndent) < 10)
+                        || indent > pageWidth / 2 || firstIndent > pageWidth / 2 && indent < pageWidth / 5)
+                if (patternChanged && isFirstRefLine(line, linesWithInd[0].second)) {
+                    if (indent > pageWidth / 2 || firstIndent > pageWidth / 2 && indent < pageWidth / 5) {
+                        otherIndent = indent + otherIndent - firstIndent
+                    }
+                    firstIndent = indent
+                    refList.add(curRef.replace(indentRegex, ""))
+                    curRef = line
+                    lastRefLineIndex = i
+                } else {
+                    println(i)
+                    //pattern has ended
+                    break
+                }
+            }
+        }
+    }
+    if (curRef.isNotEmpty()) {
+        refList.add(curRef.replace(indentRegex, ""))
+    }
+    return refList
     refs = linesWithInd.joinToString(separator = "\n", prefix = "\n") {(intend, string) -> string.replace(indentRegex, "")}
 
     //parse references if previous method didn't work
