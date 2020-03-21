@@ -18,7 +18,6 @@ dependencies {
     implementation("pl.edu.icm.cermine:cermine-impl:1.12")
     implementation("org.apache.pdfbox:pdfbox:2.0.19")
     implementation("com.github.kittinunf.fuel:fuel:2.2.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.1")
 }
 
 configure<JavaPluginConvention> {
