@@ -7,7 +7,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 
 object ArxivXMLParser {
-    fun parse(xmlText : String) : List<ArxivData> {
+    fun parseArxivRecords(xmlText : String) : List<ArxivData> {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
         xmlDoc.documentElement.normalize()
@@ -54,6 +54,24 @@ object ArxivXMLParser {
             arxivRecords.add(arxivData)
         }
         return arxivRecords
+    }
+
+    fun getPdfLinks(xmlText: String) : List<String>? {
+        val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
+        val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
+        val entryList = xmlDoc.getElementsByTagName("entry")
+        val pdfList = mutableListOf<String>()
+        for (i in 0 until entryList.length) {
+            val elem = entryList.item(i) as Element
+            val links = elem.getElementsByTagName("link")
+            for (j in 0 until links.length) {
+                val linkElem = links.item(j) as Element
+                if (linkElem.hasAttribute("title") && linkElem.getAttribute("title") == "pdf") {
+                    pdfList.add(linkElem.getAttribute("href"))
+                }
+            }
+        }
+        return pdfList
     }
 
     fun Element.getValue(tagName : String) : String? {

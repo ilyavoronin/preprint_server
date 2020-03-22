@@ -19,4 +19,5 @@ data class ArxivData(val identifier : String) {
     var doi : String? = null
     var license = ""
     var abstract = ""
+    var pdf = ""
 }
