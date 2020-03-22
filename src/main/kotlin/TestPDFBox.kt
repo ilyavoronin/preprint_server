@@ -2,7 +2,6 @@ package testpdf
 
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
-import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
 fun main() {

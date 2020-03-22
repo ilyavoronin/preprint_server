@@ -16,6 +16,7 @@ fun main() {
         is Result.Failure -> {
             val ex = result.getException()
             println(ex)
+            return
         }
         is Result.Success -> {
             println("Success")

@@ -1,6 +1,7 @@
 package testpdf
 
 import java.util.*
+import kotlin.math.abs
 
 data class Author(val name : String, val affiliation : String? = null)
 
@@ -20,4 +21,16 @@ data class ArxivData(val identifier : String) {
     var license = ""
     var abstract = ""
     var pdf = ""
+    var refList = listOf<String>()
+    override fun toString(): String {
+        return """id: $id
+Creation date: $creationDate
+Authors:
+${authors.foldIndexed(""){i, acc, author -> "$acc${i + 1}) ${author.name}\n"}}
+Abstract:
+$abstract
+References:
+${refList.foldIndexed("") { i, acc, ref -> "$acc${i + 1}) $ref\n" }}
+        """
+    }
 }
