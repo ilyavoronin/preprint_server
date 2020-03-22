@@ -4,20 +4,28 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
+import java.io.IOException
 import java.lang.Thread.sleep
 
 object PdfHandler {
     fun getFullInfo(recordList : List <ArxivData>, outputPath : String) {
-        for ((i, record) in recordList.withIndex()) {
-            println("downloading: $i: ${record.id}")
+        loop@for ((i, record) in recordList.withIndex()) {
+            println("downloading $i: ${record.id}")
             println(record.pdf)
             if (record.pdf == "") {
-                File(outputPath + "failed.txt").writeText("${record.id}\n")
+                File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
             val pdf = downloadPdf(record.pdf) ?: return
             File("$outputPath${record.id}.pdf").writeBytes(pdf)
-            val (pdfText, pageWidth) = parsePdf(pdf)
+
+            val (pdfText, pageWidth) =  try {
+                parsePdf(pdf)
+            } catch (e : IOException) {
+                println(e.message)
+                File(outputPath + "failed.txt").appendText("${record.id}\n")
+                continue
+            }
             record.refList = ReferenceExtractor.extract(pdfText, pageWidth)
             sleep(3000)
         }
@@ -25,7 +33,8 @@ object PdfHandler {
 
     fun downloadPdf(url : String) : ByteArray? {
         val (request, response, result) = url
-            .httpGet()
+            .httpGet().requestProgress { readBytes, totalBytes ->
+                println("${readBytes.toDouble() / totalBytes * 100}% done")}
             .response()
         return when (result) {
             is Result.Failure -> {
@@ -39,6 +48,7 @@ object PdfHandler {
             }
         }
     }
+
     fun parsePdf(pdf : ByteArray) : Pair<String, Double> {
         val pdfStripper = PDFBoldTextStripper()
         val doc = PDDocument.load(pdf)
@@ -46,5 +56,9 @@ object PdfHandler {
         val text = pdfStripper.getText(doc)
         doc.close()
         return Pair(text, pageWidth)
+    }
+
+    fun logFailed(record : ArxivData) {
+
     }
 }
