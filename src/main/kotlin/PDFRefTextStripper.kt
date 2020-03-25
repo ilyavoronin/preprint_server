@@ -7,7 +7,7 @@ import java.lang.Math.round
 
 
 class PDFRefTextStripper(): PDFTextStripper() {
-    val fontWidthToCnt = mutableMapOf<Int, Int>().withDefault{0}
+    val fontWidthToCnt = mutableMapOf<Int, Int>()
     var lastY = 0f
     var lastPageNo = 0
     var isTwoColumns = false
@@ -24,7 +24,7 @@ class PDFRefTextStripper(): PDFTextStripper() {
         val curFontWidth = round(textPositions.last().font.boundingBox.width)
         for ((i, symbol) in textPositions.withIndex()) {
             val curFontWidth = round(symbol.font.boundingBox.width)
-            fontWidthToCnt[curFontWidth] = fontWidthToCnt[curFontWidth]!! + 1
+            fontWidthToCnt[curFontWidth] = (fontWidthToCnt[curFontWidth] ?: 0) + 1
         }
 
         //check if this document has two columns
@@ -33,7 +33,7 @@ class PDFRefTextStripper(): PDFTextStripper() {
             isTwoColumns = true
         }
 
-        //check if the font is bold
+        //check if the font differs from standard document font and find word 'References'
         if (text.all {it.isUpperCase()} || curFontWidth != fontWidthToCnt.maxBy{it.value}!!.key ||
                 textPositions[0].font.fontDescriptor?.fontName?.contains("bold",ignoreCase = true) ?: false) {
             val pos1 = text.indexOf("References")
@@ -45,11 +45,13 @@ class PDFRefTextStripper(): PDFTextStripper() {
             }
         }
 
+
         //write the coordinate of the word
-        newText = "@d" + textPositions[0].x.toString() + "@d" + newText
+        newText = "@d" + round(textPositions[0].x).toString() + "@d" + newText
 
         //mark big spaces in the file
-        if (curPageNo != lastPageNo && lastY - curY > pageWidth / 3) {
+        if (curPageNo == lastPageNo && curY > lastY && curY - lastY > pageHeight / 5 ||
+                curPageNo != lastPageNo && pageHeight - lastY > pageHeight / 3) {
             newText = "\n\\%\\\n" + newText
         }
 

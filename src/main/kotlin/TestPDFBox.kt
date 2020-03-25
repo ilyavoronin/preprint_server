@@ -7,7 +7,7 @@ import kotlin.system.measureTimeMillis
 fun main() {
     System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
     println(measureTimeMillis {
-        for (fileName in test_files) {
+        for (fileName in test_files1) {
             val pdStripper = PDFRefTextStripper()
 
             val inputFile = File(prefix + fileName)
