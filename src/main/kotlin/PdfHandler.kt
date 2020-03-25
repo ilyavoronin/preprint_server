@@ -50,7 +50,7 @@ object PdfHandler {
     }
 
     fun parsePdf(pdf : ByteArray) : Pair<String, Double> {
-        val pdfStripper = PDFBoldTextStripper()
+        val pdfStripper = PDFRefTextStripper()
         val doc = PDDocument.load(pdf)
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
         val text = pdfStripper.getText(doc)
