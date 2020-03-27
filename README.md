@@ -15,6 +15,6 @@ Arxiv data class description
 * **acmClass**(required for cs archives only) -- this field is used to indicate the classification code according to the [ACM Computing Classification System](https://www.acm.org/publications/computing-classification-system/1998)
 * **doi**(optional) -- This field is only for a DOI ([Digital Object Identifier](http://doi.org/)) that resolves (links) to another version of the article, in a journal for example 
 * **abstract**(requred)
-* **license(?)
+* **license**(?)
 * **pdf** -- link to the pdf with preprint
 * **refList** -- list of references
