@@ -35,5 +35,5 @@ val test_files = listOf(
 )
 
 val test_files1 = listOf(
-    "1806.10564.pdf"
+    "0.pdf"
 )

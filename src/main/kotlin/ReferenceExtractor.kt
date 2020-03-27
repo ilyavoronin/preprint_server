@@ -8,6 +8,12 @@ object ReferenceExtractor {
     fun extract(textWithMarks : String, pageWidth : Double) : List <String> {
         var lines = getLines(textWithMarks)
         lines = removePageStrings(lines)
+        val ind = findRefBegin(lines)
+        println(ind)
+        if (ind == -1) {
+            return listOf()
+        }
+        lines = lines.drop(ind)
         return listOf()
     }
 
@@ -139,5 +145,70 @@ object ReferenceExtractor {
                 true
             }
         }
+    }
+
+    //return the index of the first line of references
+    fun findRefBegin(lines: List<Line>) : Int {
+        val i1 = lines.indexOfLast { line ->
+            line.str.contains("${PdfMarks.RareFont}References")
+                    || line.str.contains("${PdfMarks.RareFont}REFERENCES")
+        }
+        if (i1 != -1) {
+            return i1 + 1
+        }
+
+        val i2 = lines.indexOfLast { line ->
+            line.str.contains("References") || line.str.contains("REFERENCES")
+        }
+        if (i2 != -1) {
+            return i2 + 1
+        }
+
+        //search for [1], [2], [3], ... [10]
+        //or search for 1., 2., 3., ... 10.
+        val numberList1 = mutableListOf<String>()
+        val numberList2 = mutableListOf<String>()
+        val numberList3 = mutableListOf<String>()
+        for (a in 50 downTo 1) {
+            numberList1 += "[$a]"
+            numberList2 += "$a."
+            numberList3 += a.toString()
+        }
+
+        fun findSequenceFromEnd(list : List<String>) : Int {
+            var lastIndex = lines.lastIndex
+            var lastPage = lines.last().pn
+            for (s in list) {
+                while (lastIndex > -1) {
+                    if (lastPage - lines[lastIndex].pn > 1) {
+                        return -1
+                    }
+                    if (lines[lastIndex].str.contains("^$s".toRegex())) {
+                        lastPage = lines[lastIndex].pn
+                        break
+                    }
+                    lastIndex--
+                }
+            }
+            return lastIndex
+        }
+
+        for (i in 50 downTo 10 step 10) {
+            val i3 = findSequenceFromEnd(numberList1.subList(50 - i, 50))
+            if (i3 != -1) {
+                return i3
+            }
+
+            val i4 = findSequenceFromEnd(numberList2.subList(50 - i, 50))
+            if (i4 != -1) {
+                return i2
+            }
+
+            val i5 = findSequenceFromEnd(numberList3.subList(50 - i, 50))
+            if (i5 != -1) {
+                return i5
+            }
+        }
+        return -1
     }
 }
