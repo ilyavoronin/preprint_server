@@ -1,131 +1,143 @@
 package testpdf
 
+import java.io.File
 import kotlin.math.abs
 
 object ReferenceExtractor {
-    fun extract(text : String, pageWidth : Double) : List <String> {
-        //find where references begin
-        var ind = text.lastIndexOfAny(listOf("References\\\$\\", "REFERENCES\\\$\\"), text.lastIndex, ignoreCase = false)
-        if (ind == -1) {
-            ind = text.lastIndexOfAny(listOf("References", "REFERENCES"), text.lastIndex, ignoreCase = false)
-            if (ind == -1) {
-                val indOfFirstRef = text.lastIndexOfAny(listOf("[1]"), text.lastIndex, ignoreCase = false)
-                if (indOfFirstRef == -1) {
-                    return listOf()
-                }
-                ind = text.lastIndexOf("@d", indOfFirstRef)
-                ind = text.lastIndexOf("@d", ind - 1) - 1
+    data class Line(val indent : Int, val str : String, val pn : Int)
+    fun extract(textWithMarks : String, pageWidth : Double) : List <String> {
+        var lines = getLines(textWithMarks)
+        lines = removePageStrings(lines)
+        return listOf()
+    }
+
+    //get indent from each line
+    private fun getLines(text : String) : List<Line> {
+        val indentRegex = """${PdfMarks.IntBeg.str}\d{1,3}${PdfMarks.IntEnd.str}""".toRegex()
+        var pageNumber = 0
+        return text.split('\n').map {line ->
+            if (line == PdfMarks.PageStart.str) {
+                pageNumber += 1
             }
-        }
-        //removing mark for bold text
-        var refs =  text.substring(ind).replace("\\\$\\", "");
-        //find the end of references
-        val indBeg = refs.indexOf('\n') + 1
-        var indEnd = refs.indexOfAny(listOf("\n\n", "\\%\\"), indBeg) // \\%\\ indicates a big space between lines
-        if (indEnd == -1) {
-            indEnd = refs.lastIndex
-        }
-        refs = refs.substring(indBeg, indEnd)
-        //remove page number and empty lines
-        val indentRegex = """@d[0-9.]+@d""".toRegex()
-        val regexpPageNumber = ("""($indentRegex)?\s*(\d{1,3})?\s*""").toRegex()
-        val linesWithInd = refs.lines().filter {line ->
-            !line.matches(regexpPageNumber) && !line.contains("\\%p")
-        }.map {line ->
-            val match = "^$indentRegex".toRegex().find(line) ?: return@map Pair(0.0, line)
-            Pair(match.value.drop(2).dropLast(2).toDouble(), line.drop(match.range.last + 1))
-        }
+            val matchRes = """^$indentRegex""".toRegex().find(line)
+            if (matchRes != null) {
+                val indent = matchRes.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
+                return@map Line(indent, line.replace(indentRegex, ""), pageNumber)
+            }
+            else {
+                if (line == PdfMarks.PageStart.str) {
+                    return@map Line(PdfMarks.PageStart.num, "", pageNumber)
+                }
+                if (line == PdfMarks.PageEnd.str) {
+                    return@map Line(PdfMarks.PageEnd.num, "", pageNumber)
+                }
+            }
+            Line(-1, "@", pageNumber)
+        }.filter { line -> line.indent != -1 || line.str != "@" }
+    }
 
-        val refList = mutableListOf<String>()
+    private fun removePageStrings(lines : List<Line>) : List<Line> {
+        //find out where page numbers are located(bottom or top or alternate)
 
-        var firstIndent = linesWithInd[0].first
-        var otherIndent = -1.0
-        for ((indent, _) in linesWithInd) {
-            if (abs(indent - firstIndent) > 2) {
-                otherIndent = indent
+        val pageNumberPos = mutableListOf<Int>()
+        for ((i, line) in lines.withIndex()) {
+            if (line.pn == 1) {
+                continue
+            }
+            if (line.indent == PdfMarks.PageStart.num) {
+                if (i + 1 <= lines.lastIndex && lines[i + 1].str.contains(line.pn.toString())) {
+                    pageNumberPos.add(0)
+                }
+            }
+            if (i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num) {
+                if (line.str.contains(line.pn.toString())) {
+                    if (pageNumberPos.size + 1 == line.pn) {
+                        //the this page has page number in the first and in the last line
+                        //mark this page with 2
+                        pageNumberPos[pageNumberPos.lastIndex] = 2
+                    }
+                    else {
+                        //this page has page number in the last line
+                        pageNumberPos.add(1)
+                    }
+                }
+                if (pageNumberPos.size + 1 < line.pn) {
+                    //then this page doesn't contain page number
+                    //and we will assume that all pages doesn't contain page number
+                    return lines
+                }
+            }
+
+            //we only want to scan first 6 pages
+            if (line.pn == 8) {
                 break
             }
         }
+        //0 -- page number in the first line
+        //1 -- page number in the second line
+        //2 -- in the odd pages in the first line, in the even on the last
+        //3 -- in the even pages in the last line, in the odd on the first
+        //4 -- in the first and in the last line
+        var pagePattern = 0;
+        if (pageNumberPos.size < 6) {
+            when {
+                (pageNumberPos.all {it == 0}) -> pagePattern = 0
+                (pageNumberPos.all {it == 1}) -> pagePattern = 1
+                else                          -> return lines //we haven't got enough information
+            }
+        }
+        else {
+            when {
+                (pageNumberPos.all {it == 2}) -> pagePattern = 4
 
-        fun isFirstRefLine(line : String, firsLine : String) : Boolean {
-            if (firsLine[0] == '[') {
-                if (line[0] != '[') {
-                    return false
-                }
+                (pageNumberPos.all {it == 0 || it == 2})      -> pagePattern = 0
+
+                (pageNumberPos.all {it == 1 || it == 2})      -> pagePattern = 1
+
+                (pageNumberPos.withIndex().all
+                {(i, p) -> (i % 2 == 0 && (p == 0 || p == 2))
+                        || i % 2 == 1 && (p == 1 || p == 2)}) -> pagePattern = 2
+
+                (pageNumberPos.withIndex().all
+                {(i, p) -> (i % 2 == 0 && (p == 1 || p == 2))
+                        || i % 2 == 1 && (p == 0 || p == 2)}) -> pagePattern = 3
+
+                else                                          -> pagePattern = -1
             }
-            if (firsLine[0].isDigit()) {
-                if (!line[0].isDigit()) {
-                    return false
-                }
-            }
-            if (firsLine[0].isLetter()) {
-                if (!line[0].isLetter()) {
-                    return false
-                }
-            }
-            return true
         }
 
-        //parse references
-        if (otherIndent == -1.0) {
-            otherIndent = firstIndent
+        if (pagePattern == -1) {
+            return lines
         }
-        var curRef = ""
-        for((i, pair) in linesWithInd.withIndex()) {
-            val (indent, line) = pair
-            if (i == 0) {
-                curRef = line
-                continue
+
+        //(is first or last line, line, page number) -> should we delete this line or not
+        val deleter : (Boolean, Line) -> Boolean = when(pagePattern) {
+            0 -> {
+                isFirst, line -> isFirst && (line.str.contains(line.pn.toString()))
             }
-            if (abs(indent - firstIndent) < 2 && isFirstRefLine(line, linesWithInd[0].second)) {
-                refList.add(curRef.replace(indentRegex, ""))
-                curRef = line
+            1 -> {
+                isFirst, line -> !isFirst && (line.str.contains(line.pn.toString()))
+            }
+            2 -> {
+                isFirst, line -> isFirst && line.pn % 2 == 1 || !isFirst && line.pn % 2 == 0
+            }
+            3 -> {
+                isFirst, line -> isFirst && line.pn % 2 == 0 || !isFirst && line.pn % 1 == 0
+            }
+            else -> {
+                _, _ -> true
+            }
+        }
+
+        return lines.filterIndexed{i, line ->
+            if (i - 1 > 0 && lines[i - 1].indent == PdfMarks.PageStart.num) {
+                !deleter(true, line)
+            }
+            else if (i + 1 < lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num) {
+                !deleter(false, line)
             } else {
-                if (abs(indent - otherIndent) < 2) {
-                    if (curRef.isNotEmpty() && curRef.last() == '-') {
-                        curRef = curRef.dropLast(1)
-                        curRef += line
-                    } else {
-                        curRef += " $line"
-                    }
-                } else {
-                    val patternChanged = ((indent < firstIndent && abs(indent - firstIndent) < 10)
-                            || indent > pageWidth / 2 || firstIndent > pageWidth / 2 && indent < pageWidth / 5)
-                    if (patternChanged && isFirstRefLine(line, linesWithInd[0].second)) {
-                        if (indent > pageWidth / 2 || firstIndent > pageWidth / 2 && indent < pageWidth / 5) {
-                            otherIndent = indent + otherIndent - firstIndent
-                        }
-                        firstIndent = indent
-                        refList.add(curRef.replace(indentRegex, ""))
-                        curRef = line
-                    } else {
-                        //pattern has ended
-                        break
-                    }
-                }
+                true
             }
         }
-        if (curRef.isNotEmpty()) {
-            refList.add(curRef.replace(indentRegex, ""))
-        }
-        return refList
-        /*refs = linesWithInd.joinToString(separator = "\n", prefix = "\n") {(intend, string) -> string.replace(indentRegex, "")}
-
-        //parse references if previous method didn't work
-        val regexpFirstType = """\n\[[\w-]+][\s\S]*?\n\[""".toRegex()
-        if (regexpFirstType.find(refs) != null) {
-            var i = 0
-            while (true) {
-                val match = regexpFirstType.find(refs, i) ?: break
-                i = match.range.last - 1
-                val ref = match.value.lines().dropLast(1).drop(1).joinToString(separator = " ")
-                refList += ref
-            }
-            refList += refs.substring(i + 1).lines()
-                .dropLastWhile{it.matches("""\s*""".toRegex())}.joinToString(separator = " ")
-            return refList
-        }
-        return refList
-         */
     }
 }

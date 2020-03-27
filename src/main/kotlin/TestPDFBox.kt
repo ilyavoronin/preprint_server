@@ -15,11 +15,10 @@ fun main() {
 
             val pdStripper = PDFRefTextStripper()
             val text = pdStripper.getText(doc)
-            outputFile.writeText(text)
-            /*val refs = ReferenceExtractor.extract(text, pageWidth)
+            val refs = ReferenceExtractor.extract(text, pageWidth)
             outputFile.writeText("")
             refs.forEach { outputFile.appendText(it + "\n") }
-            println(fileName)*/
+            println(fileName)
             doc.close()
         }
     })

@@ -14,9 +14,9 @@ class PDFRefTextStripper(): PDFTextStripper() {
 
     init {
         //set mark for the end of the page
-        super.setPageEnd("\n\\@pe\\\n")
+        super.setPageEnd("\n${PdfMarks.PageEnd.str}\n")
         //set mark for the start of the page
-        super.setPageStart("\n\\@ps\\\n")
+        super.setPageStart("\n${PdfMarks.PageStart.str}\n")
     }
 
     override fun writeString(text: String?, textPositions: MutableList<TextPosition>?) {
@@ -48,20 +48,14 @@ class PDFRefTextStripper(): PDFTextStripper() {
             val pos2 = text.indexOf("REFERENCES")
             val pos = if (pos1 != -1) pos1 else pos2
             if (pos != -1) {
-                //mark bold word 'References' with '\r\'
-                newText = newText.substring(0, pos) + "\\r\\" + newText.substring(pos)
+                //mark bold word 'References'
+                newText = newText.substring(0, pos) + PdfMarks.RareFont.str + newText.substring(pos)
             }
         }
 
 
         //write the coordinate of the word
-        newText = "@d" + round(textPositions[0].x).toString() + "@d" + newText
-
-        //mark big spaces in the file
-        if (curPageNo == lastPageNo && curY > lastY && curY - lastY > pageHeight / 5 ||
-                curPageNo != lastPageNo && pageHeight - lastY > pageHeight / 3) {
-            newText = "\n\\%\\\n" + newText
-        }
+        newText = PdfMarks.IntBeg.str + round(textPositions[0].x).toString() + PdfMarks.IntEnd.str + newText
 
         lastPageNo = curPageNo
         lastY = curY
