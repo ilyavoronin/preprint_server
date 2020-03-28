@@ -18,11 +18,11 @@ object ReferenceExtractor {
                 break
             }
         }
-        //File("supertest.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
         val ind = findRefBegin(lines)
         if (ind == -1) {
             return listOf()
         }
+        //File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
         lines = lines.drop(ind)
         return listOf()
     }
@@ -352,5 +352,5 @@ object ReferenceExtractor {
         }.filter{ it != -1 }
     }
 
-    fun removeEmptyLines(lines : List<Line>) = lines.filter {it.str != ""}
+    fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
 }
