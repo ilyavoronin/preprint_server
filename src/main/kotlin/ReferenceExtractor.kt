@@ -1,13 +1,17 @@
 package testpdf
 
 import java.io.File
+import java.lang.Integer.max
 import kotlin.math.abs
 
 object ReferenceExtractor {
-    data class Line(val indent : Int, val str : String, val pn : Int)
+    data class Line(val indent : Int, var str : String, val pn : Int)
+
     fun extract(textWithMarks : String, pageWidth : Double) : List <String> {
         var lines = getLines(textWithMarks)
-        lines = removePageStrings(lines)
+        lines = removeEmptyLines(lines)
+        lines = removePageHeaders(lines)
+        //lines = removePageStrings(lines)
         val ind = findRefBegin(lines)
         println(ind)
         if (ind == -1) {
@@ -164,8 +168,10 @@ object ReferenceExtractor {
             return i2 + 1
         }
 
-        //search for [1], [2], [3], ... [10]
-        //or search for 1., 2., 3., ... 10.
+        //search for [1], [2], [3], ... [n]
+        //or search for 1., 2., 3., ... n.
+        //or search for 1, 2, 3, ... n
+        //where n from 50 to 10 with step 10
         val numberList1 = mutableListOf<String>()
         val numberList2 = mutableListOf<String>()
         val numberList3 = mutableListOf<String>()
@@ -211,4 +217,117 @@ object ReferenceExtractor {
         }
         return -1
     }
+
+    fun removePageHeaders(lines : List<Line>) : List<Line> {
+        //find longest common substring
+        fun findLGS(s1 : String, s2 : String) : String {
+            if (s1 == s2) {
+                return s1
+            }
+            val dp = Array(s1.length) {IntArray(s2.length)}
+            for (i in 0 until s1.length + 1) {
+                for (j in 0 until s2.length + 1) {
+                    dp[i][j] = 0
+                }
+            }
+            for (i in 1 until s1.length + 1) {
+                for (j in 1 until s2.length + 1) {
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+                    if (s1[i - 1] == s2[j - 1]) {
+                        dp[i][j] == max(dp[i][j], dp[i - 1][j - 1])
+                    }
+                }
+            }
+
+            var li : Int = s1.length
+            var lj : Int = s2.length
+            var res = ""
+            while (li > 0 && lj > 0) {
+                if (dp[li][lj] == dp[li - 1][lj]) {
+                    li -= 1
+                    continue
+                }
+                if (dp[li][lj] == dp[li][lj - 1]) {
+                    lj -= 1
+                    continue
+                }
+                res += s1[li - 1]
+                li -= 1
+                lj -= 1
+            }
+            return res.reversed()
+        }
+
+        //make all lines with indices from the list, that contains headers, empty
+        fun removeHeaders(listIndices : List<Int>) {
+            //we capture 'lines' from outer function
+
+            val c = 0.75
+            var state : Int = 0
+            //current longest substring for the last lines
+            var curMaxString = ""
+            var runLength = 0
+            for ((i, index) in listIndices.withIndex()) {
+                if (state == 1) {
+                    val newString = findLGS(curMaxString, lines[index].str)
+                    if (newString.length == curMaxString.length) {
+                        runLength += 1
+                        continue
+                    }
+                    else {
+                        if (runLength >= 3) {
+                            for (j in i - 1 downTo i - runLength + 1) {
+                                lines[listIndices[j]].str = ""
+                            }
+                        }
+                        state = 0
+                        runLength = 0
+                    }
+                }
+                if (i == listIndices.lastIndex) {
+                    break
+                }
+                curMaxString = findLGS(lines[index].str, lines[listIndices[i + 1]].str)
+                if (curMaxString.length > lines[index].str.length * c &&
+                    curMaxString.length > lines[listIndices[i + 1]].str.length * c) {
+                    //the we assume that this strings contain header
+                    state = 1
+                    runLength = 2
+                }
+                else {
+                    curMaxString = ""
+                }
+            }
+        }
+
+        val firstLineInd = getFirstLineIndices(lines)
+        val lastLineInd = getLastLineIndices(lines)
+        removeHeaders(firstLineInd)
+        removeHeaders(lastLineInd)
+        return lines.filter { it.str != "" }
+    }
+
+    fun getFirstLineIndices(lines : List<Line>) : List<Int> {
+        return lines.mapIndexed { i, line ->
+            if (line.indent == PdfMarks.PageStart.num && i + 1 < lines.size) {
+                i + 1
+            }
+            else {
+                -1
+            }
+        }.filter{ it != -1 }
+    }
+
+    fun getLastLineIndices(lines : List<Line>) : List<Int> {
+        return lines.mapIndexed { i, line ->
+            if (line.indent == PdfMarks.PageEnd.num && i - 1 >= 0) {
+                i - 1
+            }
+            else {
+                -1
+            }
+        }.filter{ it != -1 }
+    }
+
+    fun removeEmptyLines(lines : List<Line>) = lines.filter {it.str != ""}
 }
