@@ -22,8 +22,8 @@ object ReferenceExtractor {
         if (ind == -1) {
             return listOf()
         }
-        //File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
         lines = lines.drop(ind)
+        File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
         return listOf()
     }
 
@@ -94,7 +94,7 @@ object ReferenceExtractor {
         //2 -- in the odd pages in the first line, in the even on the last
         //3 -- in the even pages in the last line, in the odd on the first
         //4 -- in the first and in the last line
-        var pagePattern = 0;
+        val pagePattern : Int
         if (pageNumberPos.size < 6) {
             when {
                 (pageNumberPos.all {it == 0}) -> pagePattern = 0
@@ -270,7 +270,7 @@ object ReferenceExtractor {
         fun removeHeaders(listIndices : List<Int>) {
             //capture 'lines' from outer function
 
-            var state : Int = 0
+            var state = 0
             //current longest substring for the last lines
             var curMaxString = ""
             var runLength = 0
@@ -330,6 +330,22 @@ object ReferenceExtractor {
         return lines.filter { it.str != "" }
     }
 
+    private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean) : List<String> {
+        //find type of references
+        var type : ReferenceType
+        for (refType in ReferenceType.values()) {
+            if (refType.regex.matches(lines[0].str)) {
+                type = refType
+            }
+        }
+
+        fun FindIndentationPattern(firstLine : Int) {
+            //type is captured from outer function
+            
+        }
+        return listOf()
+    }
+
     private fun getFirstLineIndices(lines : List<Line>) : List<Int> {
         return lines.mapIndexed { i, line ->
             if (line.indent == PdfMarks.PageStart.num && i + 1 < lines.size) {
@@ -352,5 +368,5 @@ object ReferenceExtractor {
         }.filter{ it != -1 }
     }
 
-    fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
+    private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
 }
