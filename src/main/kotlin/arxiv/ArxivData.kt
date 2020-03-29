@@ -1,11 +1,8 @@
-package testpdf
-
-import java.util.*
-import kotlin.math.abs
-
-data class Author(val name : String, val affiliation : String? = null)
+package preprint.server.arxiv
 
 data class ArxivData(val identifier : String) {
+    data class Author(val name : String, val affiliation : String? = null)
+
     var id = ""
     var datestamp = ""
     val specs = mutableListOf<String>()

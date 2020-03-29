@@ -1,4 +1,4 @@
-package testpdf
+package preprint.server.arxiv
 
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
@@ -22,7 +22,9 @@ object ArxivXMLParser {
             recordMetadata.normalize()
 
             //create ArxivData from identifier string
-            val arxivData = ArxivData(recordHeader.getValue("identifier") ?: "") //TODO throw exception
+            val arxivData = ArxivData(
+                recordHeader.getValue("identifier") ?: ""
+            ) //TODO throw exception
             arxivData.datestamp = recordHeader.getValue("datestamp") ?: "" //TODO throw exception
             //get all specs from header
             val specs = recordHeader.getElementsByTagName("setSpecs")
@@ -41,7 +43,7 @@ object ArxivXMLParser {
                 val authorInfo = authorsList.item(j) as Element
                 val name = authorInfo.getValue("keyname") + authorInfo.getValue("forenames")
                 val affiliation : String? = authorInfo.getValue("affiliations")
-                arxivData.authors.add(Author(name, affiliation))
+                arxivData.authors.add(ArxivData.Author(name, affiliation))
             }
 
             arxivData.title = recordMetadata.getValue("title") ?: "" //TODO throw Exception

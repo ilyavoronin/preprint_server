@@ -1,10 +1,9 @@
-package testpdf
+package preprint.server.examples
 
-import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.httpDownload
-import com.github.kittinunf.fuel.httpGet
+import preprint.server.arxiv.ArxivAPI
+import preprint.server.pdf.PdfHandler
+
 import java.io.File
-import com.github.kittinunf.result.Result;
 
 
 fun main() {

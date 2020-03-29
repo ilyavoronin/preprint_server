@@ -1,4 +1,8 @@
-package testpdf
+package preprint.server.pdf
+
+import preprint.server.arxiv.ArxivData
+import preprint.server.references.PDFBoldTextStripper
+import preprint.server.references.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;

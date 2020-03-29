@@ -1,4 +1,4 @@
-package testpdf
+package preprint.server.examples
 
 val prefix = "files/"
 

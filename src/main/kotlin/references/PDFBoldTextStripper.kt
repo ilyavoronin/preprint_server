@@ -1,4 +1,4 @@
-package testpdf
+package preprint.server.references
 
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition

@@ -1,4 +1,4 @@
-package testpdf
+package preprint.server.arxiv
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
@@ -24,7 +24,7 @@ object ArxivAPI {
                 println("Success")
                 val data = result.get()
                 val arxivRecords = ArxivXMLParser.parseArxivRecords(data)
-                val pdfLinks = getRecordsLinks(arxivRecords.map {arxivData -> arxivData.id })!!
+                val pdfLinks = getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })!!
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdf = pdfLink
                 }

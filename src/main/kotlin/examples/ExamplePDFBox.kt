@@ -1,4 +1,7 @@
-package testpdf
+package preprint.server.examples
+
+import preprint.server.references.PDFBoldTextStripper
+import preprint.server.references.ReferenceExtractor
 
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File

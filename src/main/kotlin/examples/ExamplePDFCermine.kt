@@ -1,4 +1,4 @@
-package testpdf
+package preprint.server.examples
 
 import pl.edu.icm.cermine.ContentExtractor
 import java.io.File
@@ -19,8 +19,6 @@ fun main() {
             for (ref in references) {
                 file.appendText(ref.text + "\n")
             }
-            //file.appendText("\n\n\n#### PDF TEXT ####\n")
-            //file.appendText(extractor.rawFullText)
             println("$pdfFilename done")
         }
     })
