@@ -48,7 +48,7 @@ object ArxivXMLParser {
 
             arxivData.title = recordMetadata.getValue("title") ?: "" //TODO throw Exception
             arxivData.categories = recordMetadata.getValue("categories")
-                ?.split(" ") ?: listOf() //TODO throw Exception
+                ?.split(" ")?.toMutableList() ?: mutableListOf() //TODO throw Exception
             arxivData.journalRef = recordMetadata.getValue("journal-ref")
             arxivData.doi = recordMetadata.getValue("doi")
             arxivData.license = recordMetadata.getValue("license") ?: "" //TODO throw Exception

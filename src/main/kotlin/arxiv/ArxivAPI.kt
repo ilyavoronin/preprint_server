@@ -26,7 +26,7 @@ object ArxivAPI {
                 val arxivRecords = ArxivXMLParser.parseArxivRecords(data)
                 val pdfLinks = getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })!!
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
-                    arxivData.pdf = pdfLink
+                    arxivData.pdfUrl = pdfLink
                 }
                 arxivRecords
             }

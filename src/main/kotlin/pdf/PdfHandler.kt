@@ -1,6 +1,6 @@
 package preprint.server.pdf
 
-import preprint.server.arxiv.ArxivData
+import preprint.server.data.Data
 import preprint.server.references.PDFBoldTextStripper
 import preprint.server.references.ReferenceExtractor
 
@@ -12,15 +12,15 @@ import java.io.IOException
 import java.lang.Thread.sleep
 
 object PdfHandler {
-    fun getFullInfo(recordList : List <ArxivData>, outputPath : String) {
+    fun getFullInfo(recordList : List <Data>, outputPath : String) {
         loop@for ((i, record) in recordList.withIndex()) {
             println("downloading $i: ${record.id}")
-            println(record.pdf)
-            if (record.pdf == "") {
+            println(record.pdfUrl)
+            if (record.pdfUrl == "") {
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
-            val pdf = downloadPdf(record.pdf) ?: return
+            val pdf = downloadPdf(record.pdfUrl) ?: return
             File("$outputPath${record.id}.pdf").writeBytes(pdf)
 
             val (pdfText, pageWidth) =  try {
@@ -30,7 +30,7 @@ object PdfHandler {
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
-            record.refList = ReferenceExtractor.extract(pdfText, pageWidth)
+            record.refList = ReferenceExtractor.extract(pdfText, pageWidth).toMutableList()
             sleep(3000)
         }
     }
@@ -60,9 +60,5 @@ object PdfHandler {
         val text = pdfStripper.getText(doc)
         doc.close()
         return Pair(text, pageWidth)
-    }
-
-    fun logFailed(record : ArxivData) {
-
     }
 }
