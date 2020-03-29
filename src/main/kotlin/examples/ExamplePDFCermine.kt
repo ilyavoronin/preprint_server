@@ -13,8 +13,10 @@ fun main() {
             val extractor = ContentExtractor()
             val inputStream: InputStream = FileInputStream(prefix + pdfFilename)
             extractor.setPDF(inputStream)
+
             val file = File(prefix + "extracted_cermine/${pdfFilename}.txt")
             val references = extractor.references
+
             file.writeText("#### REFERENCES ####\n")
             for (ref in references) {
                 file.appendText(ref.text + "\n")
