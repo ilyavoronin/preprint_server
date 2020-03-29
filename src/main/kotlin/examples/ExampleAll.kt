@@ -6,12 +6,16 @@ import preprint.server.pdf.PdfHandler
 import java.io.File
 
 
+const val START_DATE = "2020-03-20"
+const val NUMBER_OF_PDF_TO_DOWNLOAD = 10
+const val FOLDER_PATH = "files/test/"
+
 fun main() {
-    System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
-    val folderPath = "/home/ilya/projects/pdf_test/files/test/"
-    val arxivRecords = ArxivAPI.getBulkArxivRecords("2020-03-20")!!.subList(0, 100)
-    PdfHandler.getFullInfo(arxivRecords, folderPath)
+    System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog")
+
+    val arxivRecords = ArxivAPI.getBulkArxivRecords(START_DATE)!!.subList(0, NUMBER_OF_PDF_TO_DOWNLOAD)
+    PdfHandler.getFullInfo(arxivRecords, FOLDER_PATH)
     for (record in arxivRecords) {
-        File("${folderPath}${record.id}.txt").writeText(record.toString())
+        File("${FOLDER_PATH}${record.id}.txt").writeText(record.toString())
     }
 }
