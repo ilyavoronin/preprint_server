@@ -27,7 +27,7 @@ data class ArxivData(val identifier : String) : Data {
 
     override fun toString(): String {
         var res = ""
-        res += "id : $id\n"
+        res += "id: $id\n"
 
         res += "Creation date: $creationDate\n"
 
@@ -38,10 +38,10 @@ data class ArxivData(val identifier : String) : Data {
         res += "Title: $title\n"
 
         res += "Authors:\n"
-        res += authors.foldIndexed("") { i, acc, author -> "  $acc${i + 1}) ${author.name}\n" }
+        res += authors.foldIndexed("") { i, acc, author -> "$acc  ${i + 1}) ${author.name}\n" }
 
         res += "Categories:\n"
-        res += categories.foldIndexed("") { i, acc, category -> "  $acc${i + 1}) ${category}\n" }
+        res += categories.foldIndexed("") { i, acc, category -> "$acc  ${i + 1}) ${category}\n" }
         if (comments != null) {
             res += "Comments:\n$comments\n"
         }
@@ -65,7 +65,7 @@ data class ArxivData(val identifier : String) : Data {
         res += "PDF url: $pdfUrl\n"
 
         res += "References:\n"
-        res += refList.foldIndexed("") { i, acc, reference -> "  $acc${i + 1}) ${reference}\n" }
+        res += refList.foldIndexed("") { i, acc, reference -> "$acc  ${i + 1}) ${reference}\n" }
 
         return res + "\n\n"
     }
