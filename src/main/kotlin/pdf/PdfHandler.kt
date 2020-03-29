@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import preprint.server.ref.ReferenceExtractor
 import java.io.File
 import java.io.IOException
+import java.lang.Exception
 import java.lang.Thread.sleep
 
 object PdfHandler {
@@ -29,7 +30,7 @@ object PdfHandler {
 
             record.refList =  try {
                 refExtractor.extract(pdf).toMutableList()
-            } catch (e : IOException) {
+            } catch (e : Exception) {
                 println(e.message)
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue

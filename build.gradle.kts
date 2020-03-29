@@ -10,6 +10,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven("http://maven.icm.edu.pl/artifactory/repo/")
+    maven("https://dl.bintray.com/rookies/maven" )
 }
 
 dependencies {
@@ -18,6 +19,8 @@ dependencies {
     implementation("pl.edu.icm.cermine:cermine-impl:1.12")
     implementation("org.apache.pdfbox:pdfbox:2.0.19")
     implementation("com.github.kittinunf.fuel:fuel:2.2.1")
+    compile("org.grobid:grobid-core:0.5.6")
+    implementation("org.allenai:science-parse_2.11:2.0.3")
 }
 
 configure<JavaPluginConvention> {
