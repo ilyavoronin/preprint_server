@@ -1,8 +1,8 @@
 package preprint.server.pdf
 
 import preprint.server.data.Data
-import preprint.server.references.PDFBoldTextStripper
-import preprint.server.references.ReferenceExtractor
+import preprint.server.ref.PDFBoldTextStripper
+import preprint.server.ref.CustomReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
@@ -26,15 +26,14 @@ object PdfHandler {
             val pdf = downloadPdf(record.pdfUrl) ?: return
             File("$outputPath${record.id}.pdf").writeBytes(pdf)
 
-            val (pdfText, pageWidth) =  try {
-                parsePdf(pdf)
+            record.refList =  try {
+                CustomReferenceExtractor.extract(pdf).toMutableList()
             } catch (e : IOException) {
                 println(e.message)
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
 
-            record.refList = ReferenceExtractor.extract(pdfText, pageWidth).toMutableList()
             sleep(SLEEP_TIME)
         }
     }
@@ -54,14 +53,5 @@ object PdfHandler {
                 result.get()
             }
         }
-    }
-
-    fun parsePdf(pdf : ByteArray) : Pair<String, Double> {
-        val pdfStripper = PDFBoldTextStripper()
-        val doc = PDDocument.load(pdf)
-        val pageWidth = doc.pages[0].mediaBox.width.toDouble()
-        val text = pdfStripper.getText(doc)
-        doc.close()
-        return Pair(text, pageWidth)
     }
 }

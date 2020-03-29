@@ -1,7 +1,7 @@
 package preprint.server.examples
 
-import preprint.server.references.PDFBoldTextStripper
-import preprint.server.references.ReferenceExtractor
+import preprint.server.ref.PDFBoldTextStripper
+import preprint.server.ref.CustomReferenceExtractor
 
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
@@ -12,21 +12,16 @@ fun main() {
 
     println(measureTimeMillis {
         for (fileName in test_files) {
-            val pdStripper = PDFBoldTextStripper()
-
             val inputFile = File(prefix + fileName)
             val outputFile = File(prefix + "extractedPDFBox/" + fileName + ".txt")
 
-            val doc = PDDocument.load(inputFile)
-            val pageWidth = doc.pages[0].mediaBox.width.toDouble()
-            val text = pdStripper.getText(doc)
+            val pdf = inputFile.readBytes()
 
-            val refs = ReferenceExtractor.extract(text, pageWidth)
-            
+            val refs = CustomReferenceExtractor.extract(pdf)
+
             outputFile.writeText("")
             refs.forEach { outputFile.appendText(it + "\n") }
             println(fileName)
-            doc.close()
         }
     })
 }

@@ -1,11 +1,11 @@
-package preprint.server.references
+package preprint.server.ref
 
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition
 import java.lang.Math.abs
 
 
-class PDFBoldTextStripper(): PDFTextStripper() {
+object PDFBoldTextStripper: PDFTextStripper() {
     val fontWidthToCnt = mutableMapOf<Float, Int>()
     var lastY = 0f
     var lastPageN = 0
