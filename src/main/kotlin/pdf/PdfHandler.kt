@@ -12,14 +12,17 @@ import java.io.IOException
 import java.lang.Thread.sleep
 
 object PdfHandler {
+    private const val SLEEP_TIME : Long = 2000
     fun getFullInfo(recordList : List <Data>, outputPath : String) {
-        loop@for ((i, record) in recordList.withIndex()) {
+        for ((i, record) in recordList.withIndex()) {
             println("downloading $i: ${record.id}")
             println(record.pdfUrl)
+
             if (record.pdfUrl == "") {
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
+
             val pdf = downloadPdf(record.pdfUrl) ?: return
             File("$outputPath${record.id}.pdf").writeBytes(pdf)
 
@@ -30,15 +33,15 @@ object PdfHandler {
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
                 continue
             }
+
             record.refList = ReferenceExtractor.extract(pdfText, pageWidth).toMutableList()
-            sleep(3000)
+            sleep(SLEEP_TIME)
         }
     }
 
     fun downloadPdf(url : String) : ByteArray? {
-        val (request, response, result) = url
-            .httpGet().requestProgress { readBytes, totalBytes ->
-                println("${readBytes.toDouble() / totalBytes * 100}% done")}
+        val (_, _, result) = url
+            .httpGet()
             .response()
         return when (result) {
             is Result.Failure -> {
