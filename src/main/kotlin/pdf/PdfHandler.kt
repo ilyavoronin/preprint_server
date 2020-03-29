@@ -7,13 +7,14 @@ import preprint.server.ref.CustomReferenceExtractor
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
 import org.apache.pdfbox.pdmodel.PDDocument
+import preprint.server.ref.ReferenceExtractor
 import java.io.File
 import java.io.IOException
 import java.lang.Thread.sleep
 
 object PdfHandler {
-    private const val SLEEP_TIME : Long = 2000
-    fun getFullInfo(recordList : List <Data>, outputPath : String) {
+    private const val SLEEP_TIME : Long = 0
+    fun getFullInfo(recordList : List <Data>, outputPath : String, refExtractor : ReferenceExtractor) {
         for ((i, record) in recordList.withIndex()) {
             println("downloading $i: ${record.id}")
             println(record.pdfUrl)
@@ -27,7 +28,7 @@ object PdfHandler {
             File("$outputPath${record.id}.pdf").writeBytes(pdf)
 
             record.refList =  try {
-                CustomReferenceExtractor.extract(pdf).toMutableList()
+                refExtractor.extract(pdf).toMutableList()
             } catch (e : IOException) {
                 println(e.message)
                 File(outputPath + "failed.txt").appendText("${record.id}\n")
