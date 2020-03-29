@@ -11,6 +11,7 @@ object ArxivXMLParser {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
         xmlDoc.documentElement.normalize()
+
         val arxivRecords = mutableListOf<ArxivData>()
         val recordList = xmlDoc.getElementsByTagName("record")
         println("Number of records: ${recordList.length}")
@@ -25,7 +26,9 @@ object ArxivXMLParser {
             val arxivData = ArxivData(
                 recordHeader.getValue("identifier") ?: ""
             ) //TODO throw exception
-            arxivData.datestamp = recordHeader.getValue("datestamp") ?: "" //TODO throw exception
+
+            arxivData.datestamp = recordHeader.getValue("datestamp") ?: ""
+
             //get all specs from header
             val specs = recordHeader.getElementsByTagName("setSpecs")
             for (j in 0 until specs.length) {
@@ -33,36 +36,46 @@ object ArxivXMLParser {
             }
 
             arxivData.id = recordMetadata.getValue("id") ?: "" //TODO throw exception
-            arxivData.creationDate = recordMetadata.getValue("created") ?: "" //TODO throw exception
+
+            arxivData.creationDate = recordMetadata.getValue("created") ?: ""
+
             arxivData.lastUpdateDate = recordMetadata.getValue("updated")
+
+            arxivData.title = recordMetadata.getValue("title") ?: ""
 
             //get authors' names with affiliations(if present)
             val authorsNodeList = recordMetadata.getElementsByTagName("authors").item(0) as Element
             val authorsList = authorsNodeList.getElementsByTagName("author")
             for (j in 0 until authorsList.length) {
                 val authorInfo = authorsList.item(j) as Element
-                val name = authorInfo.getValue("keyname") + authorInfo.getValue("forenames")
+                val name = authorInfo.getValue("keyname") + " " + authorInfo.getValue("forenames")
                 val affiliation : String? = authorInfo.getValue("affiliations")
                 arxivData.authors.add(ArxivData.Author(name, affiliation))
             }
 
-            arxivData.title = recordMetadata.getValue("title") ?: "" //TODO throw Exception
             arxivData.categories = recordMetadata.getValue("categories")
-                ?.split(" ")?.toMutableList() ?: mutableListOf() //TODO throw Exception
+                ?.split(" ")?.toMutableList() ?: mutableListOf()
+
+            arxivData.comments = recordMetadata.getValue("comments")
+            arxivData.reportNo = recordMetadata.getValue("report-no")
             arxivData.journalRef = recordMetadata.getValue("journal-ref")
+            arxivData.mscClass = recordMetadata.getValue("msc-class")
+            arxivData.acmClass = recordMetadata.getValue("acm-class")
             arxivData.doi = recordMetadata.getValue("doi")
-            arxivData.license = recordMetadata.getValue("license") ?: "" //TODO throw Exception
-            arxivData.abstract = recordMetadata.getValue("abstract") ?: "" //TODO throw Exception
+            arxivData.license = recordMetadata.getValue("license") ?: ""
+            arxivData.abstract = recordMetadata.getValue("abstract") ?: ""
             arxivRecords.add(arxivData)
         }
         return arxivRecords
     }
 
     fun getPdfLinks(xmlText: String) : List<String>? {
+        val pdfList = mutableListOf<String>()
+
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
+
         val entryList = xmlDoc.getElementsByTagName("entry")
-        val pdfList = mutableListOf<String>()
         for (i in 0 until entryList.length) {
             val elem = entryList.item(i) as Element
             val links = elem.getElementsByTagName("link")
