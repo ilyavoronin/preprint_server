@@ -1,9 +1,7 @@
 package preprint.server.examples
 
-import preprint.server.ref.PDFBoldTextStripper
 import preprint.server.ref.CustomReferenceExtractor
 
-import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.File
 import kotlin.system.measureTimeMillis
 

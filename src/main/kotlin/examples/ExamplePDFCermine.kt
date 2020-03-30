@@ -9,7 +9,7 @@ import kotlin.system.measureTimeMillis
 
 fun main() {
     println(measureTimeMillis {
-        for (pdfFilename in test_files) {
+        for (pdfFilename in test_files1) {
             val extractor = ContentExtractor()
             val inputStream: InputStream = FileInputStream(prefix + pdfFilename)
             extractor.setPDF(inputStream)
