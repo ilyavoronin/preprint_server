@@ -24,7 +24,7 @@ fun main() {
             println("Success")
             val data = result.get()
             outputXMLFile.writeText(data)
-            for (elem in ArxivXMLParser.parseArxivRecords(data)) {
+            for (elem in ArxivXMLParser.parseArxivRecords(data).first) {
                 outputFile.appendText(elem.toString())
             }
         }

@@ -15,7 +15,7 @@ const val FOLDER_PATH = "files/test/"
 fun main() {
     System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog")
 
-    val arxivRecords = ArxivAPI.getBulkArxivRecords(START_DATE)!!.subList(0, NUMBER_OF_PDF_TO_DOWNLOAD)
+    val arxivRecords = ArxivAPI.getBulkArxivRecords(START_DATE, "").first!!.subList(0, NUMBER_OF_PDF_TO_DOWNLOAD)
     PdfHandler.getFullInfo(arxivRecords, FOLDER_PATH, GrobidReferenceExtractor)
     for (record in arxivRecords) {
         File("${FOLDER_PATH}${record.id}.txt").writeText(record.toString())

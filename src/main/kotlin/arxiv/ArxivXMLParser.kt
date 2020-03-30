@@ -7,7 +7,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 
 object ArxivXMLParser {
-    fun parseArxivRecords(xmlText : String) : List<ArxivData> {
+    fun parseArxivRecords(xmlText : String) : Pair<List<ArxivData>, String> {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
         xmlDoc.documentElement.normalize()
@@ -66,7 +66,9 @@ object ArxivXMLParser {
             arxivData.abstract = recordMetadata.getValue("abstract") ?: ""
             arxivRecords.add(arxivData)
         }
-        return arxivRecords
+        val resumptionTokenElem = xmlDoc.getElementsByTagName("resumptionToken").item(0) as Element //TODO throw an exception
+
+        return Pair(arxivRecords, resumptionTokenElem.textContent)
     }
 
     fun getPdfLinks(xmlText: String) : List<String>? {

@@ -2,3 +2,4 @@
 .gradle/
 build/
 files/
+grobid.log

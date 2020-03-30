@@ -20,8 +20,10 @@ object GrobidReferenceExtractor : ReferenceExtractor {
     override fun extract(pdf: ByteArray): List<String> {
         val tmpFile = createTempFile()
         tmpFile.writeBytes(pdf)
-        return engine.processReferences(tmpFile, 0).map { ref ->
+        val res =  engine.processReferences(tmpFile, 0).map { ref ->
             ref.rawBib.replace("\n", " ") + "\n" + ref.resBib.toBibTeX() + "\n"
         }
+        tmpFile.deleteOnExit()
+        return res
     }
 }

@@ -9,24 +9,30 @@ object ArxivAPI {
     const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
     const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
 
-    fun getBulkArxivRecords(date : String) : List<ArxivData>? {
-        val requestURL = requestBulkUrlPrefix + "verb=ListRecords&from=$date&metadataPrefix=arXiv"
+    fun getBulkArxivRecords(startDate : String, resumptionToken : String) : Pair<List<ArxivData>?, String> {
+        println("$resumptionToken")
+        val requestURL = when(resumptionToken) {
+                ""   -> requestBulkUrlPrefix +
+                            "verb=ListRecords&from=$startDate&metadataPrefix=arXiv"
+                else -> requestBulkUrlPrefix +
+                            "verb=ListRecords&resumptionToken=$resumptionToken"
+        }
         val (_, _, result) = requestURL.httpGet().responseString()
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
                 println(ex)
-                null
+                Pair(null, resumptionToken)
             }
             is Result.Success -> {
                 println("Success")
                 val data = result.get()
-                val arxivRecords = ArxivXMLParser.parseArxivRecords(data)
+                val (arxivRecords, newResumptionToken) = ArxivXMLParser.parseArxivRecords(data)
                 val pdfLinks = getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })!!
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdfUrl = pdfLink
                 }
-                arxivRecords
+                Pair(arxivRecords, newResumptionToken)
             }
         }
     }
