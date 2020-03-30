@@ -5,7 +5,7 @@ import java.lang.Integer.max
 import kotlin.math.abs
 
 object ReferenceExtractor {
-    data class Line(val indent : Int, var str : String, val pn : Int)
+    data class Line(val indent : Int, val lastPos : Int, var str : String, val pn : Int)
 
     fun extract(textWithMarks : String, pageWidth : Double) : List <String> {
         var lines = getLines(textWithMarks)
@@ -35,20 +35,22 @@ object ReferenceExtractor {
             if (line == PdfMarks.PageStart.str) {
                 pageNumber += 1
             }
-            val matchRes = """^$indentRegex""".toRegex().find(line)
-            if (matchRes != null) {
-                val indent = matchRes.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
-                return@map Line(indent, line.replace(indentRegex, ""), pageNumber)
+            val matchResBeg = """^$indentRegex""".toRegex().find(line)
+            val matchResEnd = """$indentRegex$""".toRegex().find(line)
+            if (matchResBeg != null && matchResEnd != null) {
+                val indent = matchResBeg.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
+                val lastPos = matchResEnd.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
+                return@map Line(indent, lastPos, line.replace(indentRegex, ""), pageNumber)
             }
             else {
                 if (line == PdfMarks.PageStart.str) {
-                    return@map Line(PdfMarks.PageStart.num, line, pageNumber)
+                    return@map Line(PdfMarks.PageStart.num, 0, line, pageNumber)
                 }
                 if (line == PdfMarks.PageEnd.str) {
-                    return@map Line(PdfMarks.PageEnd.num, line, pageNumber)
+                    return@map Line(PdfMarks.PageEnd.num, 0, line, pageNumber)
                 }
             }
-            Line(-1, "@", pageNumber)
+            Line(-1, 0,"@", pageNumber)
         }.filter { line -> line.indent != -1 || line.str != "@" }
     }
 

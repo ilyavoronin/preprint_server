@@ -57,6 +57,9 @@ class PDFRefTextStripper(): PDFTextStripper() {
         //write the coordinate of the word
         newText = PdfMarks.IntBeg.str + round(textPositions[0].x).toString() + PdfMarks.IntEnd.str + newText
 
+        //write the last coordinte of the word
+        newText = newText + PdfMarks.IntBeg.str + round(textPositions.last().x).toString() + PdfMarks.IntEnd.str
+
         lastPageNo = curPageNo
         lastY = curY
         super.writeString(newText, textPositions)
