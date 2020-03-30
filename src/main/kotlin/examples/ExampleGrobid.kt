@@ -1,6 +1,7 @@
 package examples
 
 import org.allenai.scienceparse.Parser
+import org.grobid.core.data.BibDataSet
 import org.grobid.core.engines.Engine
 import org.grobid.core.factory.GrobidFactory
 import org.grobid.core.main.GrobidHomeFinder

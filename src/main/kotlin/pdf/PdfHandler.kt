@@ -1,15 +1,11 @@
 package preprint.server.pdf
 
 import preprint.server.data.Data
-import preprint.server.ref.PDFBoldTextStripper
-import preprint.server.ref.CustomReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
-import org.apache.pdfbox.pdmodel.PDDocument
 import preprint.server.ref.ReferenceExtractor
 import java.io.File
-import java.io.IOException
 import java.lang.Exception
 import java.lang.Thread.sleep
 
