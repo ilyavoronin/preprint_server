@@ -1,9 +1,17 @@
 package preprint.server.ref
 
-object ReferenceParserA : ReferenceParser {
-    val typeRegex = ReferenceType.A.regex
-    override fun parse(lines: List<CustomReferenceExtractor.Line>,
-                       isTwoColumns: Boolean, pageWidth: Int) : List<String> {
+object ReferenceParserBC : ReferenceParser {
+    override fun parse(
+        lines: List<CustomReferenceExtractor.Line>,
+        isTwoColumns: Boolean,
+        pageWidth: Int
+    ): List<String> {
+        //find if references type B or C
+        val refType = when {
+            ReferenceType.B.firstRegex.containsMatchIn(lines[0].str) -> ReferenceType.B
+            else                                                     -> ReferenceType.C
+        }
+        val refRegex = refType.regex
         val refList = mutableListOf<String>()
         if (isTwoColumns == false) {
             //analyze this text
@@ -19,8 +27,8 @@ object ReferenceParserA : ReferenceParser {
                 maxWidth = Integer.max(maxWidth, lines[i].lastPos - lines[i].indent)
                 var j = i + 1
                 while (j < lines.size) {
-                    val match = typeRegex.find(lines[j].str)
-                    val value = match?.value?.drop(1)?.dropLast(1)?.toInt()
+                    val match = refRegex.find(lines[j].str)
+                    val value = match?.value?.dropLast(1)?.toInt()
                     if (value != null && value == curRefNum + 1) {
                         break
                     } else {
@@ -45,6 +53,10 @@ object ReferenceParserA : ReferenceParser {
                 }
                 curRefNum += 1
                 i = j
+            }
+
+            if (!canUseSecondIndentPattern) {
+                return listOf()
             }
 
             fun addLineToReference(ref: String, line: String): String {
@@ -126,8 +138,8 @@ object ReferenceParserA : ReferenceParser {
                 maxWidth = Integer.max(maxWidth, lines[i].lastPos - lines[i].indent)
                 var j = i + 1
                 while (j < lines.size) {
-                    val match = typeRegex.find(lines[j].str)
-                    val value = match?.value?.drop(1)?.dropLast(1)?.toInt()
+                    val match = refRegex.find(lines[j].str)
+                    val value = match?.value?.dropLast(1)?.toInt()
                     if (value != null && value == curRefNum + 1) {
                         break
                     } else {
@@ -162,6 +174,10 @@ object ReferenceParserA : ReferenceParser {
                 }
                 curRefNum += 1
                 i = j
+            }
+
+            if (!canUseSecondIndentPattern) {
+                return listOf()
             }
 
             fun addLineToReference(ref: String, line: String): String {

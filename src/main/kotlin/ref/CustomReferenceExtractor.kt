@@ -31,8 +31,13 @@ object CustomReferenceExtractor : ReferenceExtractor {
         lines = lines.drop(ind)
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
-        File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
-        return Reference.toReferences(parseReferences(lines, isTwoColumns, pageWidth.roundToInt()))
+        val refList = Reference.toReferences(parseReferences(lines, isTwoColumns, pageWidth.roundToInt()))
+        if (refList.isEmpty() || refList.any {it.isReference == false}) {
+            println("GROBID")
+            return GrobidReferenceExtractor.extract(pdf)
+        }
+        println("CUSTOM")
+        return refList
     }
 
     //get indent from each line
@@ -151,6 +156,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
         println("isTwoColumn: $isTwoColumn")
         if (type == ReferenceType.A) {
             return ReferenceParserA.parse(lines, isTwoColumn, pageWidth)
+        }
+        if (type == ReferenceType.B || type == ReferenceType.C) {
+            return ReferenceParserBC.parse(lines, isTwoColumn, pageWidth)
         }
         return refList
     }
