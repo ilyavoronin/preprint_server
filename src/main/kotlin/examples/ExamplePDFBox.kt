@@ -1,6 +1,7 @@
 package preprint.server.examples
 
 import preprint.server.ref.CustomReferenceExtractor
+import preprint.server.ref.GrobidReferenceExtractor
 
 import java.io.File
 import kotlin.system.measureTimeMillis
@@ -18,7 +19,7 @@ fun main() {
             val refs = CustomReferenceExtractor.extract(pdf)
 
             outputFile.writeText("")
-            refs.forEach { outputFile.appendText(it + "\n") }
+            refs.forEach { outputFile.appendText(it.toString() + "\n") }
             println(fileName)
         }
     })

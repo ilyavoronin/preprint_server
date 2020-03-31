@@ -5,11 +5,11 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 object CermineReferenceExtractor : ReferenceExtractor {
-    override fun extract(pdf : ByteArray): List<String> {
+    override fun extract(pdf : ByteArray): List<Reference> {
         val extractor = ContentExtractor()
         val inputStream: InputStream = ByteArrayInputStream(pdf)
         extractor.setPDF(inputStream)
         val references = extractor.references
-        return references.map {it.text}
+        return Reference.toReferences(references.map { it.text })
     }
 }

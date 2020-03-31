@@ -1,5 +1,5 @@
 package preprint.server.ref
 
 interface ReferenceExtractor {
-    fun extract(pdf : ByteArray) : List<String>
+    fun extract(pdf : ByteArray) : List<Reference>
 }

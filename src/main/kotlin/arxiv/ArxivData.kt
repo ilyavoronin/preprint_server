@@ -1,12 +1,13 @@
 package preprint.server.arxiv
 
 import preprint.server.data.Data
+import preprint.server.ref.Reference
 
 data class ArxivData(val identifier : String) : Data {
     data class Author(val name : String, val affiliation : String? = null)
 
     override var id = ""
-    override var refList = mutableListOf<String>()
+    override var refList = mutableListOf<Reference>()
     override var pdfUrl = ""
 
     var datestamp = ""

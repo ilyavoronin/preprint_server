@@ -7,23 +7,11 @@ import org.grobid.core.utilities.GrobidProperties
 import java.util.*
 
 object GrobidReferenceExtractor : ReferenceExtractor {
-    lateinit var engine : Engine
-    init {
-        //the path to the grobid home folder
-        val homePath = "/home/ilya/staff/grobid/grobid-home"
-        val grobidHomeFinder = GrobidHomeFinder(Arrays.asList(homePath))
-        GrobidProperties.getInstance(grobidHomeFinder)
-
-        engine = GrobidFactory.getInstance().createEngine()
-    }
-
-    override fun extract(pdf: ByteArray): List<String> {
+    override fun extract(pdf: ByteArray): List<Reference> {
         val tmpFile = createTempFile()
         tmpFile.writeBytes(pdf)
-        val res =  engine.processReferences(tmpFile, 0).map { ref ->
-            ref.rawBib.replace("\n", " ") + "\n" + ref.resBib.toBibTeX() + "\n"
-        }
+        val res =  GrobidEngine.processReferences(tmpFile, 1)
         tmpFile.deleteOnExit()
-        return res
+        return res.map {Reference(it)}
     }
 }

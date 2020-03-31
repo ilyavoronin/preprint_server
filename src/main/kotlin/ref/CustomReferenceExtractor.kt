@@ -7,7 +7,7 @@ import kotlin.math.roundToInt
 object CustomReferenceExtractor : ReferenceExtractor {
     data class Line(val indent : Int, val lastPos : Int, var str : String, val pn : Int)
 
-    override fun extract(pdf : ByteArray) : List <String> {
+    override fun extract(pdf : ByteArray) : List <Reference> {
         val doc = PDDocument.load(pdf)
         val textWithMarks = PDFRefTextStripper.getMarkedText(doc)
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
@@ -32,7 +32,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
         File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
-        return parseReferences(lines, isTwoColumns, pageWidth.roundToInt())
+        return Reference.toReferences(parseReferences(lines, isTwoColumns, pageWidth.roundToInt()))
     }
 
     //get indent from each line
