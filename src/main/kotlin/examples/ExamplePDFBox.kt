@@ -1,7 +1,6 @@
 package preprint.server.examples
 
 import preprint.server.ref.CustomReferenceExtractor
-import preprint.server.ref.GrobidReferenceExtractor
 
 import java.io.File
 import kotlin.system.measureTimeMillis
