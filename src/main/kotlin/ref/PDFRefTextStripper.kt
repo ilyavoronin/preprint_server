@@ -1,5 +1,6 @@
 package preprint.server.ref
 
+import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition
 import java.lang.Math.abs
@@ -17,6 +18,7 @@ object PDFRefTextStripper: PDFTextStripper() {
         super.setPageEnd("\n${PdfMarks.PageEnd.str}\n")
         //set mark for the start of the page
         super.setPageStart("\n${PdfMarks.PageStart.str}\n")
+
     }
 
     override fun writeString(text: String?, textPositions: MutableList<TextPosition>?) {
@@ -53,7 +55,6 @@ object PDFRefTextStripper: PDFTextStripper() {
             }
         }
 
-
         //write the coordinate of the word
         newText = PdfMarks.IntBeg.str + round(textPositions[0].x).toString() + PdfMarks.IntEnd.str + newText
 
@@ -63,5 +64,13 @@ object PDFRefTextStripper: PDFTextStripper() {
         lastPageNo = curPageNo
         lastY = curY
         super.writeString(newText, textPositions)
+    }
+
+    fun getMarkedText(doc: PDDocument?): String {
+        isTwoColumns = false
+        lastPageNo = 0
+        lastY = 0f
+        fontWidthToCnt.clear()
+        return super.getText(doc)
     }
 }

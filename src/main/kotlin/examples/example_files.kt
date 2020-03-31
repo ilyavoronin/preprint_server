@@ -26,7 +26,7 @@ val test_files = listOf(
     "nuc2018.pdf",
     "nuc2020.pdf",
     "ph1996.pdf",
-    "ph2020.pdf",
+    "ph2000.pdf",
     "ph2005.pdf",
     "ph2009.pdf",
     "ph2013.pdf",
@@ -35,5 +35,7 @@ val test_files = listOf(
 )
 
 val test_files1 = listOf(
+    "0.pdf",
+    "1.pdf",
     "2.pdf"
 )

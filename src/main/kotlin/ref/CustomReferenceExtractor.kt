@@ -1,25 +1,27 @@
 package preprint.server.ref
 
+import com.google.common.math.DoubleMath.roundToInt
 import org.apache.pdfbox.pdmodel.PDDocument
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.InputStream
 import java.lang.Integer.max
-import kotlin.math.abs
+import kotlin.math.round
+import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
     data class Line(val indent : Int, val lastPos : Int, var str : String, val pn : Int)
 
     override fun extract(pdf : ByteArray) : List <String> {
         val doc = PDDocument.load(pdf)
-        val textWithMarks = PDFRefTextStripper.getText(doc)
+        val textWithMarks = PDFRefTextStripper.getMarkedText(doc)
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
+        val isTwoColumns = PDFRefTextStripper.isTwoColumns
 
         var lines = getLines(textWithMarks)
         lines = removeEmptyLines(lines)
+        lines = removeLeadingSpaces(lines)
         while (true) {
             val oldSize = lines.size
-            lines = removePageStrings(lines)
+            lines = removePageNumbers(lines)
             lines = removePageHeaders(lines)
             if (lines.size == oldSize) {
                 break
@@ -30,8 +32,10 @@ object CustomReferenceExtractor : ReferenceExtractor {
             return listOf()
         }
         lines = lines.drop(ind)
+        //remove pageStart and page end marks
+        lines = lines.filter {line -> line.indent >= 0}
         File("test.txt").writeText(lines.joinToString(separator = "\n") {line -> line.str})
-        return listOf()
+        return parseReferences(lines, isTwoColumns, pageWidth.roundToInt())
     }
 
     //get indent from each line
@@ -61,7 +65,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         }.filter { line -> line.indent != -1 || line.str != "@" }
     }
 
-    private fun removePageStrings(lines : List<Line>) : List<Line> {
+    private fun removePageNumbers(lines : List<Line>) : List<Line> {
         //find out where page numbers are located(bottom or top or alternate)
 
         val pageNumberPos = mutableListOf<Int>()
@@ -89,7 +93,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 if (pageNumberPos.size + 1 < line.pn) {
                     //then this page doesn't contain page number
                     //and we will assume that all pages doesn't contain page number
-                    return lines
+                    return removePageNumbersSimple(lines)
                 }
             }
 
@@ -108,7 +112,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
             when {
                 (pageNumberPos.all {it == 0}) -> pagePattern = 0
                 (pageNumberPos.all {it == 1}) -> pagePattern = 1
-                else                          -> return lines //we haven't got enough information
+                else                          -> pagePattern = -1 //we haven't got enough information
             }
         }
         else {
@@ -132,7 +136,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         }
 
         if (pagePattern == -1) {
-            return lines
+            return removePageNumbersSimple(lines)
         }
 
         //(is first or last line, line, page number) -> should we delete this line or not
@@ -158,11 +162,34 @@ object CustomReferenceExtractor : ReferenceExtractor {
             if (i - 1 > 0 && lines[i - 1].indent == PdfMarks.PageStart.num) {
                 !deleter(true, line)
             }
-            else if (i + 1 < lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num) {
+            else if (i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num) {
                 !deleter(false, line)
             } else {
                 true
             }
+        }
+    }
+
+    private fun removePageNumbersSimple(lines : List<Line>) : List<Line> {
+        val firstLineIndices = getFirstLineIndices(lines)
+        val lastLineIndices = getLastLineIndices(lines)
+
+        //drop first page
+        firstLineIndices.drop(1)
+        lastLineIndices.drop(1)
+
+        fun isDigits(indices : List<Int>) : Boolean {
+            return indices.all{ind -> lines[ind].str.all {it.isDigit()}}
+        }
+
+        return when {
+            isDigits(firstLineIndices) -> lines.filterIndexed {i, line ->
+                !(i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num)
+            }
+            isDigits(lastLineIndices) -> lines.filterIndexed {i, line ->
+                !(i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num)
+            }
+            else -> lines
         }
     }
 
@@ -206,7 +233,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
                     }
                     if (lines[lastIndex].str.contains("^$s".toRegex())) {
                         lastPage = lines[lastIndex].pn
-                        lastIndex--
                         break
                     }
                     lastIndex--
@@ -339,20 +365,262 @@ object CustomReferenceExtractor : ReferenceExtractor {
         return lines.filter { it.str != "" }
     }
 
-    private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean) : List<String> {
+    private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean, pageWidth : Int) : List<String> {
         //find type of references
-        var type : ReferenceType
+        var type : ReferenceType = ReferenceType.A
         for (refType in ReferenceType.values()) {
-            if (refType.regex.matches(lines[0].str)) {
+            if (refType.firstRegex.containsMatchIn(lines[0].str)) {
                 type = refType
+                break
+            }
+        }
+        val refList = mutableListOf<String>()
+        val typeRegex = type.regex
+
+        //futher if we return empty list
+        // means that we want grobid to parse this document later
+
+        //[1], [2], ...
+        println(type)
+        println("isTwoColumn: $isTwoColumn")
+        if (type == ReferenceType.A && isTwoColumn == false) {
+            //analyze this text
+            var canUseSecondIndentPattern = true
+            var i = 0
+            var secondLineIndent = -1
+            var curRefNum = 1
+            val firstLineIndices = mutableListOf<Int>()
+            var maxWidth = 0
+            while (i < lines.size) {
+                firstLineIndices.add(i)
+                //find next reference
+                maxWidth = max(maxWidth, lines[i].lastPos - lines[i].indent)
+                var j = i + 1
+                while (j < lines.size) {
+                    val match = typeRegex.find(lines[j].str)
+                    val value = match?.value?.drop(1)?.dropLast(1)?.toInt()
+                    if (value != null && value == curRefNum + 1) {
+                        break
+                    }
+                    else {
+                        if (value == curRefNum) {
+                            return listOf()
+                        }
+                    }
+                    j += 1
+                }
+                if (j != lines.size) {
+                    for (k in i + 1 until j) {
+                        if (secondLineIndent == -1) {
+                            secondLineIndent = lines[k].indent
+                        }
+                        if (secondLineIndent != lines[k].indent) {
+                            canUseSecondIndentPattern = false
+                        }
+                    }
+                }
+                else {
+                    //this was the last reference
+                    break
+                }
+                curRefNum += 1
+                i = j
+            }
+
+            fun addLineToReference(ref : String, line : String) : String {
+                return if (ref.length > 2 && ref.last() == '-') {
+                    if (ref[ref.lastIndex - 1].isLowerCase()) {
+                        ref.dropLast(1) + line
+                    }
+                    else {
+                        ref + line
+                    }
+                }
+                else {
+                    if (ref == "") {
+                        line
+                    }
+                    else {
+                        ref + " " + line
+                    }
+                }
+            }
+
+            //parse references
+            for ((j, lineInd) in firstLineIndices.withIndex()) {
+                var curRef = ""
+                if (j != firstLineIndices.lastIndex) {
+                    val nextLineInd = firstLineIndices[j + 1]
+                    for (k in lineInd until nextLineInd) {
+                        curRef = addLineToReference(curRef, lines[k].str)
+
+                        if ((curRef.last() == '.' || nextLineInd - lineInd > 5)
+                                && ((k != lineInd && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
+                                    || (lines[k].lastPos - lines[k].indent) < maxWidth * 0.7)) {
+
+                            //then this is the end of reference
+                            break
+                        }
+                    }
+                }
+                else {
+                    //this is the last reference and we should find it's end
+                    for (k in lineInd until lines.size) {
+                        curRef = addLineToReference(curRef, lines[k].str)
+                        if (canUseSecondIndentPattern && k < lines.lastIndex &&
+                            lines[k + 1].indent != secondLineIndent) {
+                            //we find the end of reference
+                            break
+                        }
+                        if (k > lineInd) {
+                            if (lines[k].lastPos < lines[k - 1].lastPos * 0.9) {
+                                //we find the end of reference
+                                break
+                            }
+                        }
+                        else {
+                            if (lines[k].lastPos - lines[k].indent < 0.9 * maxWidth) {
+                                //we find the end of reference
+                                break
+                            }
+                        }
+                    }
+                }
+                refList.add(curRef)
             }
         }
 
-        fun FindIndentationPattern(firstLine : Int) {
-            //type is captured from outer function
-            
+        if (type == ReferenceType.A && isTwoColumn) {
+            //analyze this text
+            var canUseSecondIndentPattern = true
+            var i = 0
+            var secondLineIndentLeft = -1
+            var secondLineIndentRight = -1
+
+            //current page side(0 -- left, 1 -- right)
+            fun getSide(line : Line) : Int {
+                return if (lines[0].lastPos < pageWidth * 0.7) 0 else 1
+            }
+            var curRefNum = 1
+            val firstLineIndices = mutableListOf<Int>()
+            var maxWidth = 0
+            while (i < lines.size) {
+                firstLineIndices.add(i)
+                //find next reference
+                maxWidth = max(maxWidth, lines[i].lastPos - lines[i].indent)
+                var j = i + 1
+                while (j < lines.size) {
+                    val match = typeRegex.find(lines[j].str)
+                    val value = match?.value?.drop(1)?.dropLast(1)?.toInt()
+                    if (value != null && value == curRefNum + 1) {
+                        break
+                    }
+                    else {
+                        if (value == curRefNum) {
+                            return listOf()
+                        }
+                    }
+                    j += 1
+                }
+                if (j != lines.size) {
+                    for (k in i + 1 until j) {
+                        val curSide = getSide(lines[k])
+                        if (curSide == 0) {
+                            if (secondLineIndentLeft == -1) {
+                                secondLineIndentLeft = lines[k].indent
+                            }
+                            if (secondLineIndentLeft != lines[k].indent) {
+                                canUseSecondIndentPattern = false
+                            }
+                        }
+                        else {
+                            if (secondLineIndentRight == -1) {
+                                secondLineIndentRight = lines[k].indent
+                            }
+                            if (secondLineIndentRight != lines[k].indent) {
+                                canUseSecondIndentPattern = false
+                            }
+                        }
+                    }
+                }
+                else {
+                    //this was the last reference
+                    break
+                }
+                curRefNum += 1
+                i = j
+            }
+
+            fun addLineToReference(ref : String, line : String) : String {
+                return if (ref.length > 2 && ref.last() == '-') {
+                    if (ref[ref.lastIndex - 1].isLowerCase()) {
+                        ref.dropLast(1) + line
+                    }
+                    else {
+                        ref + line
+                    }
+                }
+                else {
+                    if (ref == "") {
+                        line
+                    }
+                    else {
+                        ref + " " + line
+                    }
+                }
+            }
+
+            //parse references
+            for ((j, lineInd) in firstLineIndices.withIndex()) {
+                var curRef = ""
+                if (j != firstLineIndices.lastIndex) {
+                    val nextLineInd = firstLineIndices[j + 1]
+                    var prevSide = 0
+                    for (k in lineInd until nextLineInd) {
+                        curRef = addLineToReference(curRef, lines[k].str)
+                        val curSide = getSide(lines[k])
+                        if ((curRef.last() == '.' || nextLineInd - lineInd > 10)
+                            && ((k != lineInd && curSide == prevSide && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
+                                    || (lines[k].lastPos - lines[k].indent) < maxWidth * 0.7)) {
+
+                            //then this is the end of reference
+                            break
+                        }
+                    }
+                }
+                else {
+                    //this is the last reference and we should find it's end
+                    var prevSide = 0
+                    for (k in lineInd until lines.size) {
+                        curRef = addLineToReference(curRef, lines[k].str)
+                        val curSide = getSide(lines[k])
+                        if (canUseSecondIndentPattern && k < lines.lastIndex) {
+                            if (curSide == 0 && lines[k + 1].indent != secondLineIndentLeft
+                                    || curSide == 1 && lines[k + 1].indent != secondLineIndentRight) {
+
+                                //we find the end of reference
+                                break
+                            }
+                        }
+                        if (k > lineInd) {
+                            if (prevSide == curSide && lines[k].lastPos < lines[k - 1].lastPos * 0.9) {
+                                //we find the end of reference
+                                break
+                            }
+                        }
+                        else {
+                            if (lines[k].lastPos - lines[k].indent < 0.9 * maxWidth) {
+                                //we find the end of reference
+                                break
+                            }
+                        }
+                        prevSide = curSide
+                    }
+                }
+                refList.add(curRef)
+            }
         }
-        return listOf()
+        return refList
     }
 
     private fun getFirstLineIndices(lines : List<Line>) : List<Int> {
@@ -378,4 +646,5 @@ object CustomReferenceExtractor : ReferenceExtractor {
     }
 
     private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
+    private fun removeLeadingSpaces(lines : List<Line>) = lines.map {line -> line.str = line.str.trim(); line}
 }

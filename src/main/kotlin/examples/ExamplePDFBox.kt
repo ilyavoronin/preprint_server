@@ -9,7 +9,7 @@ fun main() {
     System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog")
 
     println(measureTimeMillis {
-        for (fileName in test_files) {
+        for (fileName in test_files1) {
             val inputFile = File(prefix + fileName)
             val outputFile = File(prefix + "extractedPDFBox/" + fileName + ".txt")
 
