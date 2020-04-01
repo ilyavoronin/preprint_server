@@ -1,7 +1,6 @@
 package preprint.server.ref
 
 import org.apache.pdfbox.pdmodel.PDDocument
-import java.io.File
 import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
@@ -31,7 +30,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
         lines = lines.drop(ind)
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
-        val refList = Reference.toReferences(parseReferences(lines, isTwoColumns, pageWidth.roundToInt()))
+        val refList = Reference.toReferences(
+            parseReferences(lines, isTwoColumns, pageWidth.roundToInt()).map {it.trimIndent()}.filter { it.isNotEmpty() }
+        )
         if (refList.isEmpty() || refList.any {it.isReference == false}) {
             println("GROBID")
             return GrobidReferenceExtractor.extract(pdf)
@@ -138,7 +139,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
 
     private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean, pageWidth : Int) : List<String> {
         //find type of references
-        var type : ReferenceType = ReferenceType.A
+        var type : ReferenceType? = null
         for (refType in ReferenceType.values()) {
             if (refType.firstRegex.containsMatchIn(lines[0].str)) {
                 type = refType
@@ -146,7 +147,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
             }
         }
         val refList = mutableListOf<String>()
-        val typeRegex = type.regex
 
         //futher if we return empty list
         // means that we want grobid to parse this document later
@@ -154,13 +154,10 @@ object CustomReferenceExtractor : ReferenceExtractor {
         //[1], [2], ...
         println(type)
         println("isTwoColumn: $isTwoColumn")
-        if (type == ReferenceType.A) {
-            return ReferenceParserA.parse(lines, isTwoColumn, pageWidth)
+        if (type == null) {
+            return listOf()
         }
-        if (type == ReferenceType.B || type == ReferenceType.C) {
-            return ReferenceParserBC.parse(lines, isTwoColumn, pageWidth)
-        }
-        return refList
+        return ReferenceParser.parse(lines, type, isTwoColumn, pageWidth)
     }
 
     private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
