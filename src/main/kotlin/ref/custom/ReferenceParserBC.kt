@@ -61,7 +61,7 @@ object ReferenceParserBC : ReferenceParser {
 
             fun addLineToReference(ref: String, line: String): String {
                 return if (ref.length > 2 && ref.last() == '-') {
-                    if (ref[ref.lastIndex - 1].isLowerCase()) {
+                    if (ref[ref.lastIndex - 1].isLowerCase() && line.first().isLowerCase()) {
                         ref.dropLast(1) + line
                     } else {
                         ref + line
@@ -182,7 +182,7 @@ object ReferenceParserBC : ReferenceParser {
 
             fun addLineToReference(ref: String, line: String): String {
                 return if (ref.length > 2 && ref.last() == '-') {
-                    if (ref[ref.lastIndex - 1].isLowerCase()) {
+                    if (ref[ref.lastIndex - 1].isLowerCase() && line.first().isLowerCase()) {
                         ref.dropLast(1) + line
                     } else {
                         ref + line
