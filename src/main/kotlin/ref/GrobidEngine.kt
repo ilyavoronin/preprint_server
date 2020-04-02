@@ -1,5 +1,6 @@
 package preprint.server.ref
 
+import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
 import org.grobid.core.engines.Engine
@@ -10,6 +11,7 @@ import java.io.File
 import java.util.*
 
 object GrobidEngine {
+    val logger = logger()
     var engine : Engine
     init {
         //the path to the grobid home folder
@@ -21,14 +23,17 @@ object GrobidEngine {
     }
 
     fun processReferences(pdfFile : File, consolidate : Int) : List<BibDataSet> {
+        logger.info("Begin process references")
         return engine.processReferences(pdfFile, consolidate)
     }
 
     fun processRawReference(ref : String, consolidate: Int) : BiblioItem {
+        logger.info("Begin process raw reference")
         return engine.processRawReference(ref, consolidate)
     }
 
     fun processRawReferences(refList : List<String>, consolidate: Int) : List<BiblioItem> {
+        logger.info("Begin process raw references")
         return engine.processRawReferences(refList, consolidate)
     }
 }

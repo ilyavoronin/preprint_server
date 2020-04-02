@@ -1,12 +1,16 @@
 package preprint.server.ref
 
+import org.apache.logging.log4j.kotlin.logger
+
 object ReferenceParser {
+    val logger = logger()
     fun parse(
         lines: List<CustomReferenceExtractor.Line>,
         refType : ReferenceType,
         isTwoColumns: Boolean,
         pageWidth: Int
     ) : List<String> {
+        logger.info("Begin reference parsing")
         val refList = mutableListOf<String>()
         val refRegex = refType.regex
         if (!isTwoColumns) {

@@ -1,12 +1,17 @@
 package preprint.server.ref
 
+import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
 import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
     data class Line(val indent : Int, val lastPos : Int, var str : String, val pn : Int)
 
+    val logger = logger()
+
     override fun extract(pdf : ByteArray) : List <Reference> {
+        logger.info("Begin reference extraction")
+
         val doc = PDDocument.load(pdf)
         val textWithMarks = PDFRefTextStripper.getMarkedText(doc)
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
@@ -34,10 +39,10 @@ object CustomReferenceExtractor : ReferenceExtractor {
             parseReferences(lines, isTwoColumns, pageWidth.roundToInt()).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
         if (refList.isEmpty() || refList.any {it.isReference == false}) {
-            println("GROBID")
+            logger.info("done by GROBID")
             return GrobidReferenceExtractor.extract(pdf)
         }
-        println("CUSTOM")
+        logger.info("done by CUSTOM")
         return refList
     }
 
@@ -152,8 +157,8 @@ object CustomReferenceExtractor : ReferenceExtractor {
         // means that we want grobid to parse this document later
 
         //[1], [2], ...
-        println(type)
-        println("isTwoColumn: $isTwoColumn")
+        logger.info("References type: $type")
+        logger.info("Has two columns: $isTwoColumn")
         if (type == null) {
             return listOf()
         }

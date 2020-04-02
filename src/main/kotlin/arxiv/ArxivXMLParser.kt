@@ -14,7 +14,6 @@ object ArxivXMLParser {
 
         val arxivRecords = mutableListOf<ArxivData>()
         val recordList = xmlDoc.getElementsByTagName("record")
-        println("Number of records: ${recordList.length}")
         for (i in 0 until recordList.length) {
             val recordElem = recordList.item(i) as Element
             val recordHeader = recordElem.getElementsByTagName("header").item(0) as Element
