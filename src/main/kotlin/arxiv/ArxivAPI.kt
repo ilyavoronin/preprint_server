@@ -3,7 +3,7 @@ package preprint.server.arxiv
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.result.Result
-import org.apache.logging.log4j.kotlin.*
+import org.apache.logging.log4j.kotlin.logger
 
 object ArxivAPI {
 
