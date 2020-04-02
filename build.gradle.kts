@@ -22,6 +22,9 @@ dependencies {
     compile("org.grobid:grobid-core:0.5.6")
     compile("org.grobid:grobid-trainer:0.5.6")
     implementation("org.allenai:science-parse_2.11:2.0.3")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.1")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.1")
+    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
 }
 
 configure<JavaPluginConvention> {
