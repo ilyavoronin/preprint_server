@@ -10,8 +10,8 @@ import java.io.File
 import kotlin.system.measureTimeMillis
 
 
-const val START_DATE = "2018-02-20"
-const val NUMBER_OF_PDF_TO_DOWNLOAD = 100
+const val START_DATE = "2013-06-20"
+const val NUMBER_OF_PDF_TO_DOWNLOAD = 10
 const val FOLDER_PATH = "files/test/"
 
 fun main() {

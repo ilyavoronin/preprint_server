@@ -21,7 +21,7 @@ object ArxivAPI {
                 else -> requestBulkUrlPrefix +
                             "verb=ListRecords&resumptionToken=$resumptionToken"
         }
-        val (_, _, result) = requestURL.httpGet().responseString()
+        val (_, _, result) = requestURL.httpGet().timeoutRead(60000).responseString() //TODO handle timeout exception
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
@@ -50,6 +50,7 @@ object ArxivAPI {
         }
         val (_, _, result) = requestApiUrlPrefix
             .httpPost(listOf("id_list" to idString, "max_results" to "1000"))
+            .timeoutRead(60000)
             .responseString()
         return when (result) {
             is Result.Failure -> {
