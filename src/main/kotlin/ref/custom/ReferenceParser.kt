@@ -32,7 +32,11 @@ object ReferenceParser {
                         if (refType.isNum) {
                             val value = match.value.drop(refType.firstLen).dropLast(refType.lastLen).toInt()
                             if (value == curRefNum + 1) {
-                                if (!refType.strict || lines[j].indent != secondLineIndent) {
+                                if (refType.strict && lines[j].indent == secondLineIndent) {
+                                    logger.info("Drop because first line indent is equal to second line indent")
+                                    return listOf()
+                                }
+                                else {
                                     break
                                 }
                             }
@@ -64,9 +68,14 @@ object ReferenceParser {
                 i = j
             }
 
+            lines.forEach { println(it.str) }
+
             if (refType.strict && !canUseSecondIndentPattern) {
+                logger.info("Drop because can't use indent pattern")
                 return listOf()
             }
+
+            logger.info("Found $curRefNum references")
 
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {
@@ -126,7 +135,7 @@ object ReferenceParser {
 
             //current page side(0 -- left, 1 -- right)
             fun getSide(line: CustomReferenceExtractor.Line): Int {
-                return if (lines[0].lastPos < pageWidth * 0.7) 0 else 1
+                return if (line.indent < pageWidth * 0.4) 0 else 1
             }
 
             var curRefNum = 1
@@ -156,7 +165,10 @@ object ReferenceParser {
                                 return listOf()
                             }
                         }
-                        else if (!refType.strict || lines[j].indent != secondLineIndent) {
+                        else if (refType.strict && lines[j].indent == secondLineIndent) {
+                            logger.info("Drop because first line indent is equal to second line indent")
+                            return listOf()
+                        } else {
                             break
                         }
                     }
@@ -170,6 +182,7 @@ object ReferenceParser {
                                 secondLineIndentLeft = lines[k].indent
                             }
                             if (secondLineIndentLeft != lines[k].indent) {
+                                println("$secondLineIndentLeft ${lines[k].indent} $pageWidth $curSide")
                                 canUseSecondIndentPattern = false
                             }
                         } else {
@@ -190,8 +203,11 @@ object ReferenceParser {
             }
 
             if (refType.strict && !canUseSecondIndentPattern) {
+                logger.info("Drop because can't use indent pattern")
                 return listOf()
             }
+
+            logger.info("Found $curRefNum references")
 
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {

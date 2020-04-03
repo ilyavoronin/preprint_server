@@ -7,7 +7,7 @@ import kotlin.system.measureTimeMillis
 
 fun main() {
     println(measureTimeMillis {
-        for (fileName in test_files) {
+        for (fileName in test_files1) {
             val inputFile = File(prefix + fileName)
             val outputFile = File(prefix + "extractedPDFBox/" + fileName + ".txt")
 

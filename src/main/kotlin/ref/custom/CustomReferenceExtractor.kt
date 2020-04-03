@@ -38,7 +38,11 @@ object CustomReferenceExtractor : ReferenceExtractor {
         val refList = Reference.toReferences(
             parseReferences(lines, isTwoColumns, pageWidth.roundToInt()).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
-        if (refList.isEmpty() || refList.any {it.isReference == false}) {
+        val isReferences = refList.any {it.isReference == false}
+        if (refList.isEmpty() || isReferences) {
+            if (isReferences) {
+                logger.info("Drop because grobid can't identify parsed string as reference")
+            }
             logger.info("done by GROBID")
             return GrobidReferenceExtractor.extract(pdf)
         }
@@ -126,12 +130,12 @@ object CustomReferenceExtractor : ReferenceExtractor {
             if (i3 != -1) {
                 return i3
             }
-
+        }
+        for (i in 50 downTo 10 step 10) {
             val i4 = findSequenceFromEnd(numberList2.subList(50 - i, 50))
             if (i4 != -1) {
                 return i2
             }
-
             val i5 = findSequenceFromEnd(numberList3.subList(50 - i, 50))
             if (i5 != -1) {
                 return i5
@@ -156,7 +160,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
         //futher if we return empty list
         // means that we want grobid to parse this document later
 
-        //[1], [2], ...
         logger.info("References type: $type")
         logger.info("Has two columns: $isTwoColumn")
         if (type == null) {
