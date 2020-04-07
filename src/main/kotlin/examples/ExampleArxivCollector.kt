@@ -1,15 +1,13 @@
 package examples
 
 import arxiv.ArxivCollector
+import preprint.server.neo4j.DatabaseHandler
 import java.io.File
 
-const val START_DATE = "2020-03-20"
+const val START_DATE = "2020-04-06"
 const val fileName = "files/arxivRecords.txt"
 
 fun main() {
-    val arxivRecords = ArxivCollector.collect(START_DATE)
-
-    val outFile = File(fileName)
-    outFile.writeText("")
-    arxivRecords.forEach { outFile.appendText(it.toString()) }
+    val dataBaseHandler = DatabaseHandler("localhost", "7687", "neo4j", "qwerty")
+    val arxivRecords = ArxivCollector.collect(START_DATE, dataBaseHandler)
 }

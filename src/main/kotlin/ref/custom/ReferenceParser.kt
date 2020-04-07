@@ -68,8 +68,6 @@ object ReferenceParser {
                 i = j
             }
 
-            lines.forEach { println(it.str) }
-
             if (refType.strict && !canUseSecondIndentPattern) {
                 logger.info("Drop because can't use indent pattern")
                 return listOf()
@@ -182,7 +180,6 @@ object ReferenceParser {
                                 secondLineIndentLeft = lines[k].indent
                             }
                             if (secondLineIndentLeft != lines[k].indent) {
-                                println("$secondLineIndentLeft ${lines[k].indent} $pageWidth $curSide")
                                 canUseSecondIndentPattern = false
                             }
                         } else {
