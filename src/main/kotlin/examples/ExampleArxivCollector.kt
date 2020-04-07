@@ -9,5 +9,6 @@ const val fileName = "files/arxivRecords.txt"
 
 fun main() {
     val dataBaseHandler = DatabaseHandler("localhost", "7687", "neo4j", "qwerty")
-    val arxivRecords = ArxivCollector.collect(START_DATE, dataBaseHandler)
+    ArxivCollector.collect(START_DATE, dataBaseHandler)
+    dataBaseHandler.close()
 }
