@@ -265,6 +265,7 @@ object ReferenceParser {
                 refList.addAll(curRef.split(";"))
             }
         }
+        logger.debug(refList.joinToString(separator = "/n"))
         return refList
     }
 

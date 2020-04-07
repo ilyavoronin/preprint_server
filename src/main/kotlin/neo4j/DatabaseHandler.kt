@@ -58,7 +58,6 @@ class DatabaseHandler(
                 }
 
                 //create publication -> journal connections
-
                 if (record.journalRef != null) {
                     it.run("""
                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
