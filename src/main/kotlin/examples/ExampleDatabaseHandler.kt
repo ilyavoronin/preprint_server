@@ -2,6 +2,7 @@ package preprint.server.examples
 
 import preprint.server.arxiv.ArxivData
 import preprint.server.neo4j.DatabaseHandler
+import preprint.server.ref.Reference
 
 fun main() {
     val dbh = DatabaseHandler("localhost", "7687", "neo4j", "qwerty")
@@ -18,6 +19,7 @@ fun main() {
     r2.title = "Stars"
     r2.authors.add(ArxivData.Author("Author1", "University1"))
     r2.authors.add(ArxivData.Author("Author2", "University2"))
+    r2.refList.add(Reference("Planets", false).apply { title = "Planets" })
     records.add(r2)
 
     dbh.storeArxivData(records)

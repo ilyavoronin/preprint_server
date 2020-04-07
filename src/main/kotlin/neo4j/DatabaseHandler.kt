@@ -50,11 +50,10 @@ class DatabaseHandler(
                 //create publication -> publication connections
                 record.refList.forEach {ref ->
                     it.run("""
-                        MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}})
+                        MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
-                        WHERE pubTo.arxivId == ${ref.arxivId} OR
-                            pubTo.doi == ${ref.doi} OR pubTo.title == ${ref.title}
-                        MERGE (pubFrom)-[:${DBLabels.CITES.str} {rawRef = ${ref.rawReference}}]->(pubTo)
+                        WHERE pubTo.arxivId = "${ref.arxivId}" OR pubTo.doi = "${ref.doi}" OR pubTo.title = "${ref.title}"
+                        MERGE (pubFrom)-[:${DBLabels.CITES.str} {rawRef: "${ref.rawReference}"}]->(pubTo)
                     """.trimIndent())
                 }
             }
