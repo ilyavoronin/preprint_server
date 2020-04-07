@@ -19,7 +19,7 @@ fun main() {
 
     val arxivRecords = ArxivAPI.getBulkArxivRecords(START_DATE, "").first!!.subList(0, NUMBER_OF_PDF_TO_DOWNLOAD)
     println(measureTimeMillis {
-        PdfHandler.getFullInfo(arxivRecords, FOLDER_PATH, GrobidReferenceExtractor)
+        PdfHandler.getFullInfo(arxivRecords, FOLDER_PATH, GrobidReferenceExtractor, true)
     })
     for (record in arxivRecords) {
         File("${FOLDER_PATH}${record.id}.txt").writeText(record.toString())

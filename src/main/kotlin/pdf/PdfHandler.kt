@@ -13,7 +13,12 @@ import java.lang.Thread.sleep
 object PdfHandler {
     val logger = logger()
     private const val SLEEP_TIME : Long = 0
-    fun getFullInfo(recordList : List <Data>, outputPath : String, refExtractor : ReferenceExtractor) {
+    fun getFullInfo(
+        recordList : List <Data>,
+        outputPath : String,
+        refExtractor : ReferenceExtractor,
+        savePdf : Boolean
+    ) {
         logger.info("Begin download of ${recordList.size} pdf")
         for ((i, record) in recordList.withIndex()) {
             logger.info("downloading $i: ${record.id}")
@@ -26,7 +31,10 @@ object PdfHandler {
             }
 
             val pdf = downloadPdf(record.pdfUrl) ?: return
-            File("$outputPath${record.id}.pdf").writeBytes(pdf)
+
+            if (savePdf) {
+                File("$outputPath${record.id}.pdf").writeBytes(pdf)
+            }
 
             record.refList =  try {
                 refExtractor.extract(pdf).toMutableList()
