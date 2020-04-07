@@ -10,10 +10,14 @@ fun main() {
     r1.id = "1"
     r1.doi = "doi:1"
     r1.title = "Planets"
+    r1.authors.add(ArxivData.Author("Author3", "University1"))
+    r1.authors.add(ArxivData.Author("Author1"))
     records.add(r1)
     val r2 = ArxivData("2")
     r2.id = "2"
     r2.title = "Stars"
+    r2.authors.add(ArxivData.Author("Author1", "University1"))
+    r2.authors.add(ArxivData.Author("Author2", "University2"))
     records.add(r2)
 
     dbh.storeArxivData(records)
