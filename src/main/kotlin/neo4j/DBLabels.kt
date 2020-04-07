@@ -7,5 +7,6 @@ enum class DBLabels(val str: String) {
     JOURNAL("Journal"),
     AUTHORED("AUTHORED_BY"),
     WORKS("WORKS"),
-    CITES("CITES")
+    CITES("CITES"),
+    PUBLISHED_IN("PUBLISHED_IN")
 }

@@ -53,7 +53,17 @@ class DatabaseHandler(
                         MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
                         WHERE pubTo.arxivId = "${ref.arxivId}" OR pubTo.doi = "${ref.doi}" OR pubTo.title = "${ref.title}"
-                        MERGE (pubFrom)-[:${DBLabels.CITES.str} {rawRef: "${ref.rawReference}"}]->(pubTo)
+                        MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: "${ref.rawReference}"}]->(pubTo)
+                    """.trimIndent())
+                }
+
+                //create publication -> journal connections
+
+                if (record.journalRef != null) {
+                    it.run("""
+                       MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
+                       MERGE (j:${DBLabels.JOURNAL.str} {title: "${record.journalRef}"})
+                       MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
                     """.trimIndent())
                 }
             }
