@@ -25,6 +25,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.13.1")
     implementation("org.apache.logging.log4j:log4j-core:2.13.1")
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
+    implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
 }
 
 configure<JavaPluginConvention> {
