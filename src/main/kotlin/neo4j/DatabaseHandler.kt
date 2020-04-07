@@ -49,12 +49,25 @@ class DatabaseHandler(
 
                 //create publication -> publication connections
                 record.refList.forEach {ref ->
-                    it.run("""
+                    val res = it.run("""
                         MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
                         WHERE pubTo.arxivId = "${ref.arxivId}" OR pubTo.doi = "${ref.doi}" OR pubTo.title = "${ref.title}"
                         MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: "${ref.rawReference}"}]->(pubTo)
+                        RETURN pubTo
                     """.trimIndent())
+                    if (res.list().size == 0) {
+                        //then the cited publication doesn't exist in database
+                        //crete missing publication -> publication connection
+                        it.run("""
+                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: "${record.id}"})
+                            MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: "${ref.title}"})
+                            MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
+                            SET c.rawRef = "${ref.rawReference}"
+                            ${if (ref.arxivId != null) """mpub.arxivId = "${ref.arxivId}"""" else ""}
+                            ${if (ref.doi != null) """mpub.doi = "${ref.doi}"""" else ""}
+                        """.trimIndent())
+                    }
                 }
 
                 //create publication -> journal connections

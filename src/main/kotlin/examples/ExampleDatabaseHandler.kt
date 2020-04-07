@@ -14,6 +14,7 @@ fun main() {
     r1.authors.add(ArxivData.Author("Author3", "University1"))
     r1.authors.add(ArxivData.Author("Author1"))
     r1.journalRef = "Physics"
+    r1.refList.add(Reference("Abracadabra", false).apply { title = "Abracadabra" })
     records.add(r1)
     val r2 = ArxivData("2")
     r2.id = "2"
