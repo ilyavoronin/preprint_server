@@ -2,5 +2,5 @@
 .gradle/
 build/
 files/
-grobid.log
+grobid.log*
 logs/
