@@ -18,7 +18,7 @@ object ArxivCollector {
         logger.info("Begin collecting arxiv metadata from $startDate with resumption token:$resumptionToken")
         resumptionToken = resumptionToken_
         do {
-            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken)
+            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, 5)
             resumptionToken = newResumptionToken
             if (newArxivRecords != null) {
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
