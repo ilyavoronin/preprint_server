@@ -191,7 +191,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
             type,
             isTwoColumn,
             pageWidth
-        )
+        ).also {
+            logger.info("Parsed ${it.size} references")
+        }
     }
 
     private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}

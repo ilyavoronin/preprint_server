@@ -204,7 +204,7 @@ object ReferenceParser {
                 return listOf()
             }
 
-            logger.info("Found $curRefNum references")
+            logger.info("Found $curRefNum reference lines")
 
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {
@@ -262,10 +262,10 @@ object ReferenceParser {
                         prevSide = curSide
                     }
                 }
-                refList.addAll(curRef.split(";"))
+                refList.addAll(curRef.split(";").map{it.trimIndent()})
             }
         }
-        logger.debug(refList.joinToString(separator = "/n"))
+        logger.debug(refList.mapIndexed {i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
         return refList
     }
 
@@ -287,6 +287,6 @@ object ReferenceParser {
 
     private fun removeRefPattern(ref : String, regex : Regex) : String? {
         val match = regex.find(ref) ?: return null
-        return ref.drop(match.range.last + 1)
+        return ref.drop(match.range.last + 1).trimIndent()
     }
 }

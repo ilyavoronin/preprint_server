@@ -2,9 +2,11 @@
 <Configuration status="WARN">
     <Appenders>
         <Console name="LogToConsole" target="SYSTEM_OUT">
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY" />
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
         <File name="logFile" fileName="logs/info.log">
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY" />
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
         <File name="debugFile" fileName="logs/debug.log">
@@ -16,9 +18,10 @@
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="logFile"/>
         </Root>
-        <Logger name="preprint.server" level="info" additivity="false">
+        <Logger name="com.preprint.server" level="debug" additivity="false">
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="logFile"/>
+            <AppenderRef ref="debugFile"/>
         </Logger>
     </Loggers>
 </Configuration>
