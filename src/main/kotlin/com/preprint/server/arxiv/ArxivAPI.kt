@@ -14,7 +14,7 @@ object ArxivAPI {
     var recordsProcessed = 0
 
     //only 1000 records
-    fun getBulkArxivRecords(startDate : String, resumptionToken : String) : Triple<List<ArxivData>?, String, Int> {
+    fun getBulkArxivRecords(startDate : String, resumptionToken : String, limit : Int = 100000) : Triple<List<ArxivData>?, String, Int> {
         if (resumptionToken == "") {
             recordsProcessed = 0
         }
@@ -54,7 +54,7 @@ object ArxivAPI {
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdfUrl = pdfLink
                 }
-                Triple(arxivRecords, newResumptionToken, recordsTotal)
+                Triple(arxivRecords.take(limit), newResumptionToken, recordsTotal)
             }
         }
     }
