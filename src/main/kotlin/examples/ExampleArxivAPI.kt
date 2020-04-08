@@ -1,6 +1,4 @@
-package preprint.server.examples
-
-import preprint.server.arxiv.ArxivAPI
+import com.preprint.server.arxiv.ArxivAPI
 
 val recordIds = listOf("1507.00493", "1604.08289", "1608.08082")
 

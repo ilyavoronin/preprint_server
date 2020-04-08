@@ -1,4 +1,4 @@
-package preprint.server.arxiv
+package com.preprint.server.arxiv
 
 import org.w3c.dom.Element
 import org.xml.sax.InputSource

@@ -1,9 +1,8 @@
-package preprint.server.neo4j
+package com.preprint.server.neo4j
 
-import neo4j.DBLabels
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
-import preprint.server.arxiv.ArxivData
+import com.preprint.server.arxiv.ArxivData
 import java.io.Closeable
 
 class DatabaseHandler(

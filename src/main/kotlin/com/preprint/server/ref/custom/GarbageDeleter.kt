@@ -1,10 +1,8 @@
-package preprint.server.ref
+package com.preprint.server.ref.custom
 
-import preprint.server.ref.CustomReferenceExtractor
-import preprint.server.ref.PdfMarks
 
 object GarbageDeleter {
-    fun removePageNumbers(lines : List<CustomReferenceExtractor.Line>) : List<CustomReferenceExtractor.Line> {
+    fun removePageNumbers(lines : List<Line>) : List<Line> {
         //find out where page numbers are located(bottom or top or alternate)
 
         val pageNumberPos = mutableListOf<Int>()
@@ -79,7 +77,7 @@ object GarbageDeleter {
         }
 
         //(is first or last line, line, page number) -> should we delete this line or not
-        val deleter : (Boolean, CustomReferenceExtractor.Line) -> Boolean = when(pagePattern) {
+        val deleter : (Boolean, Line) -> Boolean = when(pagePattern) {
             0 -> {
                     isFirst, line -> isFirst && (line.str.contains(line.pn.toString()))
             }
@@ -109,7 +107,7 @@ object GarbageDeleter {
         }
     }
 
-    fun removePageNumbersSimple(lines : List<CustomReferenceExtractor.Line>) : List<CustomReferenceExtractor.Line> {
+    fun removePageNumbersSimple(lines : List<Line>) : List<Line> {
         val firstLineIndices = getFirstLineIndices(lines)
         val lastLineIndices = getLastLineIndices(lines)
 
@@ -132,7 +130,7 @@ object GarbageDeleter {
         }
     }
 
-    fun removePageHeaders(lines : List<CustomReferenceExtractor.Line>) : List<CustomReferenceExtractor.Line> {
+    fun removePageHeaders(lines : List<Line>) : List<Line> {
         //find longest common substring
         fun findLGS(s1 : String, s2 : String) : String {
             if (s1 == s2) {
@@ -235,7 +233,7 @@ object GarbageDeleter {
         return lines.filter { it.str != "" }
     }
 
-    private fun getFirstLineIndices(lines : List<CustomReferenceExtractor.Line>) : List<Int> {
+    private fun getFirstLineIndices(lines : List<Line>) : List<Int> {
         return lines.mapIndexed { i, line ->
             if (line.indent == PdfMarks.PageStart.num && i + 1 < lines.size) {
                 i + 1
@@ -246,7 +244,7 @@ object GarbageDeleter {
         }.filter{ it != -1 }
     }
 
-    private fun getLastLineIndices(lines : List<CustomReferenceExtractor.Line>) : List<Int> {
+    private fun getLastLineIndices(lines : List<Line>) : List<Int> {
         return lines.mapIndexed { i, line ->
             if (line.indent == PdfMarks.PageEnd.num && i - 1 >= 0) {
                 i - 1

@@ -1,11 +1,11 @@
-package preprint.server.ref
+package com.preprint.server.ref.custom
 
 import org.apache.logging.log4j.kotlin.logger
 
 object ReferenceParser {
     val logger = logger()
     fun parse(
-        lines: List<CustomReferenceExtractor.Line>,
+        lines: List<Line>,
         refType : ReferenceType,
         isTwoColumns: Boolean,
         pageWidth: Int
@@ -132,7 +132,7 @@ object ReferenceParser {
             var secondLineIndentRight = -1
 
             //current page side(0 -- left, 1 -- right)
-            fun getSide(line: CustomReferenceExtractor.Line): Int {
+            fun getSide(line: Line): Int {
                 return if (line.indent < pageWidth * 0.4) 0 else 1
             }
 

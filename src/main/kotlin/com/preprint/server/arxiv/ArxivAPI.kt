@@ -1,4 +1,4 @@
-package preprint.server.arxiv
+package com.preprint.server.arxiv
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost

@@ -1,11 +1,11 @@
-package preprint.server.ref
+package com.preprint.server.ref
 
+import com.preprint.server.ref.custom.*
 import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
 import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
-    data class Line(val indent : Int, val lastPos : Int, var str : String, val pn : Int)
 
     val logger = logger()
 
@@ -36,7 +36,11 @@ object CustomReferenceExtractor : ReferenceExtractor {
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
         val refList = Reference.toReferences(
-            parseReferences(lines, isTwoColumns, pageWidth.roundToInt()).map {it.trimIndent()}.filter { it.isNotEmpty() }
+            parseReferences(
+                lines,
+                isTwoColumns,
+                pageWidth.roundToInt()
+            ).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
         val isReferences = refList.any {it.isReference == false}
         if (refList.isEmpty() || isReferences) {
@@ -61,19 +65,36 @@ object CustomReferenceExtractor : ReferenceExtractor {
             val matchResBeg = """^$indentRegex""".toRegex().find(line)
             val matchResEnd = """$indentRegex$""".toRegex().find(line)
             if (matchResBeg != null && matchResEnd != null) {
-                val indent = matchResBeg.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
-                val lastPos = matchResEnd.value.drop(PdfMarks.IntBeg.str.length).dropLast(PdfMarks.IntEnd.str.length).toInt()
-                return@map Line(indent, lastPos, line.replace(indentRegex, ""), pageNumber)
+                val indent = matchResBeg.value.drop(PdfMarks.IntBeg.str.length).dropLast(
+                    PdfMarks.IntEnd.str.length).toInt()
+                val lastPos = matchResEnd.value.drop(PdfMarks.IntBeg.str.length).dropLast(
+                    PdfMarks.IntEnd.str.length).toInt()
+                return@map Line(
+                    indent,
+                    lastPos,
+                    line.replace(indentRegex, ""),
+                    pageNumber
+                )
             }
             else {
                 if (line == PdfMarks.PageStart.str) {
-                    return@map Line(PdfMarks.PageStart.num, 0, line, pageNumber)
+                    return@map Line(
+                        PdfMarks.PageStart.num,
+                        0,
+                        line,
+                        pageNumber
+                    )
                 }
                 if (line == PdfMarks.PageEnd.str) {
-                    return@map Line(PdfMarks.PageEnd.num, 0, line, pageNumber)
+                    return@map Line(
+                        PdfMarks.PageEnd.num,
+                        0,
+                        line,
+                        pageNumber
+                    )
                 }
             }
-            Line(-1, 0,"@", pageNumber)
+            Line(-1, 0, "@", pageNumber)
         }.filter { line -> line.indent != -1 || line.str != "@" }
     }
 
@@ -165,9 +186,14 @@ object CustomReferenceExtractor : ReferenceExtractor {
         if (type == null) {
             return listOf()
         }
-        return ReferenceParser.parse(lines, type, isTwoColumn, pageWidth)
+        return ReferenceParser.parse(
+            lines,
+            type,
+            isTwoColumn,
+            pageWidth
+        )
     }
 
     private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
-    private fun removeLeadingSpaces(lines : List<Line>) = lines.map {line -> line.str = line.str.trim(); line}
+    private fun removeLeadingSpaces(lines : List<Line>) = lines.map { line -> line.str = line.str.trim(); line}
 }

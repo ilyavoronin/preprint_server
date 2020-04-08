@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref.custom
 
 enum class PdfMarks(val str : String, val num: Int) {
     PageStart("\\@ps\\", -1),

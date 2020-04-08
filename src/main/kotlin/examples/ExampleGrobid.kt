@@ -1,16 +1,7 @@
-package examples
-
-import org.allenai.scienceparse.Parser
-import org.grobid.core.data.BibDataSet
-import org.grobid.core.engines.Engine
 import org.grobid.core.factory.GrobidFactory
 import org.grobid.core.main.GrobidHomeFinder
 import org.grobid.core.utilities.GrobidProperties
-import preprint.server.examples.prefix
-import preprint.server.examples.test_files
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.InputStream
 import java.util.*
 import kotlin.system.measureTimeMillis
 

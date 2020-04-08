@@ -1,7 +1,7 @@
-package preprint.server.arxiv
+package com.preprint.server.arxiv
 
-import preprint.server.data.Data
-import preprint.server.ref.Reference
+import com.preprint.server.data.Data
+import com.preprint.server.ref.Reference
 
 data class ArxivData(val identifier : String) : Data {
     data class Author(val name : String, val affiliation : String? = null)

@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref
 
 
 object GrobidReferenceExtractor : ReferenceExtractor {

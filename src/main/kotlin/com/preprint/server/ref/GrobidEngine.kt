@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref
 
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet

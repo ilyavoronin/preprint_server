@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref
 
 import pl.edu.icm.cermine.ContentExtractor
 import java.io.ByteArrayInputStream

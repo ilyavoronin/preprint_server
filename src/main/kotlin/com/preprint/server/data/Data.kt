@@ -1,6 +1,6 @@
-package preprint.server.data
+package com.preprint.server.data
 
-import preprint.server.ref.Reference
+import com.preprint.server.ref.Reference
 
 interface Data {
     var id : String

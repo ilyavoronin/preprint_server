@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref.custom
 
 enum class ReferenceType(val regex : Regex,
                          val firstRegex : Regex,

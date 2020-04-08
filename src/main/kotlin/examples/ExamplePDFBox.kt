@@ -1,6 +1,4 @@
-package preprint.server.examples
-
-import preprint.server.ref.CustomReferenceExtractor
+import com.preprint.server.ref.CustomReferenceExtractor
 
 import java.io.File
 import kotlin.system.measureTimeMillis

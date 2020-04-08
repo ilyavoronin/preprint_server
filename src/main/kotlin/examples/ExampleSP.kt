@@ -1,13 +1,6 @@
-package examples
-
-import org.allenai.scienceparse.ExtractedMetadata
 import org.allenai.scienceparse.Parser
-import pl.edu.icm.cermine.ContentExtractor
-import preprint.server.examples.prefix
-import preprint.server.examples.test_files
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.InputStream
 import kotlin.system.measureTimeMillis
 

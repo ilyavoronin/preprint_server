@@ -1,5 +1,3 @@
-package preprint.server.examples
-
 val prefix = "files/"
 
 val test_files = listOf(

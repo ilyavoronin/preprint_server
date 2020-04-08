@@ -1,11 +1,11 @@
-package preprint.server.pdf
+package com.preprint.server.pdf
 
-import preprint.server.data.Data
+import com.preprint.server.data.Data
+import com.preprint.server.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
 import org.apache.logging.log4j.kotlin.logger
-import preprint.server.ref.ReferenceExtractor
 import java.io.File
 import java.lang.Exception
 import java.lang.Thread.sleep

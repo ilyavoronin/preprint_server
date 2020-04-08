@@ -1,12 +1,10 @@
-package arxiv
+package com.preprint.server.arxiv
 
-import preprint.server.arxiv.ArxivAPI
-import preprint.server.arxiv.ArxivData
+import com.preprint.server.neo4j.DatabaseHandler
+import com.preprint.server.pdf.PdfHandler
+import com.preprint.server.ref.CustomReferenceExtractor
 
 import org.apache.logging.log4j.kotlin.logger
-import preprint.server.neo4j.DatabaseHandler
-import preprint.server.pdf.PdfHandler
-import preprint.server.ref.CustomReferenceExtractor
 
 object ArxivCollector {
     val logger = logger()

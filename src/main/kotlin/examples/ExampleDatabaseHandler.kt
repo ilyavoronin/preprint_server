@@ -1,8 +1,6 @@
-package preprint.server.examples
-
-import preprint.server.arxiv.ArxivData
-import preprint.server.neo4j.DatabaseHandler
-import preprint.server.ref.Reference
+import com.preprint.server.arxiv.ArxivData
+import com.preprint.server.neo4j.DatabaseHandler
+import com.preprint.server.ref.Reference
 
 fun main() {
     val dbh = DatabaseHandler("localhost", "7687", "neo4j", "qwerty")

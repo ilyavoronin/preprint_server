@@ -1,4 +1,4 @@
-package preprint.server.ref
+package com.preprint.server.ref
 
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem

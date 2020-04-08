@@ -1,4 +1,4 @@
-package neo4j
+package com.preprint.server.neo4j
 
 enum class DBLabels(val str: String) {
     PUBLICATION("Publication"),

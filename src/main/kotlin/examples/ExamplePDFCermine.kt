@@ -1,5 +1,3 @@
-package preprint.server.examples
-
 import pl.edu.icm.cermine.ContentExtractor
 import java.io.File
 import java.io.FileInputStream
