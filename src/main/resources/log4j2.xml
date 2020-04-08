@@ -20,8 +20,5 @@
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="logFile"/>
         </Logger>
-        <Logger name="preprint.server" level="debug" additivity="false">
-            <AppenderRef ref="debugFile"/>
-        </Logger>
     </Loggers>
 </Configuration>

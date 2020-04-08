@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.result.Result
 import org.apache.logging.log4j.kotlin.logger
+import java.lang.Thread.sleep
 
 object ArxivAPI {
 
@@ -21,13 +22,21 @@ object ArxivAPI {
                 else -> requestBulkUrlPrefix +
                             "verb=ListRecords&resumptionToken=$resumptionToken"
         }
-        val (_, _, result) = requestURL.httpGet().timeoutRead(60000).responseString() //TODO handle timeout exception
+        val (_, response, result) = requestURL.httpGet().timeoutRead(60000).responseString() //TODO handle timeout exception
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
-                logger.error(ex)
-                logger.info("Failed: $ex")
-                Pair(null, resumptionToken)
+                if (response.statusCode == 503) {
+                    logger.info("ArXiv OAI service is temporarily unavailable")
+                    logger.info("Waiting 600 seconds")
+                    sleep(6000)
+                    getBulkArxivRecords(startDate, resumptionToken)
+                }
+                else {
+                    logger.error(ex)
+                    logger.info("Failed: $ex")
+                    Pair(null, resumptionToken)
+                }
             }
             is Result.Success -> {
                 logger.info("Success")

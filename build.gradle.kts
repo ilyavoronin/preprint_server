@@ -28,6 +28,11 @@ dependencies {
     implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
 }
 
+configurations.all {
+    exclude(group = "ch.qos.logback", module = "logback-classic")
+    exclude(group = "org.slf4j", module = "slf4j-jdk14")
+}
+
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
