@@ -9,6 +9,7 @@ import org.apache.logging.log4j.kotlin.logger
 object ArxivCollector {
     val logger = logger()
     var resumptionToken = ""
+    const val limit = 5
     fun collect(
         startDate : String,
         dbHandler : DatabaseHandler,
@@ -18,7 +19,7 @@ object ArxivCollector {
         logger.info("Begin collecting arxiv metadata from $startDate with resumption token:$resumptionToken")
         resumptionToken = resumptionToken_
         do {
-            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, 5)
+            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
             resumptionToken = newResumptionToken
             if (newArxivRecords != null) {
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
