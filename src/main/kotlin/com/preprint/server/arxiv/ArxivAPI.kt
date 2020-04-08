@@ -11,9 +11,13 @@ object ArxivAPI {
     val logger = logger()
     const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
     const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
+    var recordsProcessed = 0
 
     //only 1000 records
-    fun getBulkArxivRecords(startDate : String, resumptionToken : String) : Pair<List<ArxivData>?, String> {
+    fun getBulkArxivRecords(startDate : String, resumptionToken : String) : Triple<List<ArxivData>?, String, Int> {
+        if (resumptionToken == "") {
+            recordsProcessed = 0
+        }
         logger.info("Begin api request from $startDate")
         logger.info("Using resumption token: $resumptionToken")
         val requestURL = when(resumptionToken) {
@@ -35,19 +39,22 @@ object ArxivAPI {
                 else {
                     logger.error(ex)
                     logger.info("Failed: $ex")
-                    Pair(null, resumptionToken)
+                    Triple(null, resumptionToken, 0)
                 }
             }
             is Result.Success -> {
                 logger.info("Success")
                 val data = result.get()
-                val (arxivRecords, newResumptionToken) = ArxivXMLParser.parseArxivRecords(data)
+                val (arxivRecords, newResumptionToken, recordsTotal) = ArxivXMLParser.parseArxivRecords(data)
+                if (resumptionToken == "") {
+                    logger.info("Total records: ${recordsTotal}")
+                }
                 logger.info("Receive ${arxivRecords.size} records")
                 val pdfLinks = getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })!!
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdfUrl = pdfLink
                 }
-                Pair(arxivRecords, newResumptionToken)
+                Triple(arxivRecords, newResumptionToken, recordsTotal)
             }
         }
     }

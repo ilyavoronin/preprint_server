@@ -14,15 +14,18 @@ object ArxivCollector {
         dbHandler : DatabaseHandler,
         resumptionToken_ : String = ""
     ) {
+        var recordsProcessed = 0
         logger.info("Begin collecting arxiv metadata from $startDate with resumption token:$resumptionToken")
         resumptionToken = resumptionToken_
         do {
-            val (newArxivRecords, newResumptionToken) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken)
+            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken)
             resumptionToken = newResumptionToken
             if (newArxivRecords != null) {
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
                 dbHandler.storeArxivData(newArxivRecords)
+                recordsProcessed += newArxivRecords.size
             }
+            logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
         } while (resumptionToken != "")
     }
 }
