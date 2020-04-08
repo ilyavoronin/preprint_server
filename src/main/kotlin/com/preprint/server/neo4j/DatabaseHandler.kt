@@ -73,6 +73,7 @@ class DatabaseHandler(
                         MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
                         RETURN pubTo
                     """.trimIndent(), params)
+
                     if (res.list().size == 0) {
                         //then the cited publication doesn't exist in database
                         //crete missing publication -> publication connection
@@ -80,9 +81,9 @@ class DatabaseHandler(
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                             MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
                             MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
-                            SET c.rawRef = ${parm("rRef")},
-                                ${if (ref.arxivId != null) """mpub.arxivId = ${parm("arxId")},""" else ""}
-                                ${if (ref.doi != null) """mpub.doi = ${parm("rdoi")}""" else ""}
+                            SET c.rawRef = ${parm("rRef")}
+                                ${if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""}
+                                ${if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""}
                         """.trimIndent(), params)
                     }
                 }
