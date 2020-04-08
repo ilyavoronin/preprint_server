@@ -3,6 +3,7 @@ package com.preprint.server.neo4j
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import com.preprint.server.arxiv.ArxivData
+import org.apache.logging.log4j.kotlin.logger
 import java.io.Closeable
 
 class DatabaseHandler(
@@ -13,8 +14,10 @@ class DatabaseHandler(
 ) : Closeable {
 
     private val driver = GraphDatabase.driver("bolt://$url:$port", AuthTokens.basic(user, password))
+    private val logger = logger()
 
     fun storeArxivData(arxivRecords : List<ArxivData>) {
+        logger.info("Begin storing ${arxivRecords.size} records to the database")
 
         val publications = mapOf("publications" to arxivRecords.map {arxivDataToMap(it)})
 
@@ -27,6 +30,7 @@ class DatabaseHandler(
                     RETURN pub
                 """.trimIndent(), publications
             )
+            logger.info("Publication nodes created")
 
             arxivRecords.forEach { record ->
                 //create publication -> author connection and author -> affiliation connection
@@ -45,6 +49,7 @@ class DatabaseHandler(
                         MERGE (pub)-[:${DBLabels.AUTHORED.str}]->(auth)
                     """.trimIndent())
                 }
+                logger.info("Publication->author connections created")
 
                 //create publication -> publication connections
                 record.refList.forEach {ref ->
@@ -68,6 +73,7 @@ class DatabaseHandler(
                         """.trimIndent())
                     }
                 }
+                logger.info("Publication->publication connections created")
 
                 //create publication -> journal connections
                 if (record.journalRef != null) {
@@ -77,6 +83,7 @@ class DatabaseHandler(
                        MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
                     """.trimIndent())
                 }
+                logger.info("Publication->journal connections created")
             }
 
             //create publication author connections
