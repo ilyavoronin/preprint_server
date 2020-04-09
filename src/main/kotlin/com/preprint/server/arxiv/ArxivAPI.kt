@@ -33,8 +33,8 @@ object ArxivAPI {
                 if (response.statusCode == 503) {
                     logger.info("ArXiv OAI service is temporarily unavailable")
                     logger.info("Waiting 600 seconds")
-                    sleep(6000)
-                    getBulkArxivRecords(startDate, resumptionToken)
+                    sleep(600000)
+                    getBulkArxivRecords(startDate, resumptionToken, limit)
                 }
                 else {
                     logger.error(ex)

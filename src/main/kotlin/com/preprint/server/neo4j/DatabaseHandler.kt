@@ -73,6 +73,7 @@ class DatabaseHandler(
                         MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
                         RETURN pubTo
                     """.trimIndent(), params)
+
                     if (res.list().size == 0 && ref.title != null) {
                         //then the cited publication doesn't exist in database
                         //crete missing publication -> publication connection
