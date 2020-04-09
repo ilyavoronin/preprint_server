@@ -4,7 +4,7 @@ import com.preprint.server.data.Data
 import com.preprint.server.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.result.Result;
+import com.github.kittinunf.result.Result
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.lang.Exception
@@ -16,7 +16,7 @@ object PdfHandler {
     fun getFullInfo(
         recordList : List <Data>,
         outputPath : String,
-        refExtractor : ReferenceExtractor,
+        refExtractor : ReferenceExtractor?,
         savePdf : Boolean
     ) {
         logger.info("Begin download of ${recordList.size} pdf")
@@ -30,18 +30,31 @@ object PdfHandler {
                 continue
             }
 
-            val pdf = downloadPdf(record.pdfUrl) ?: return
-
-            if (savePdf) {
-                File("$outputPath${record.id}.pdf").writeBytes(pdf)
+            // Load file from local storage or download if missing
+            // Assuming that the link always looks like "http://arxiv.org/pdf/{record.id}v{version}"
+            val pdfName = record.pdfUrl.split('/').last()
+            val pdfFile = File("$outputPath${pdfName}.pdf")
+            val pdf = if (pdfFile.exists()) {
+                pdfFile.readBytes()
+            } else {
+                downloadPdf(record.pdfUrl) ?: return
             }
 
-            record.refList =  try {
-                refExtractor.extract(pdf).toMutableList()
-            } catch (e : Exception) {
-                logger.error(e)
-                File(outputPath + "failed.txt").appendText("${record.id}\n")
-                continue
+            // Save if new file was downloaded and savePdf is true
+            if (pdfFile.exists()) {
+                logger.info("PDF file for record ${record.id} has been downloaded earlier")
+            } else if (savePdf) {
+                pdfFile.writeBytes(pdf)
+            }
+
+            refExtractor?.let {
+                record.refList = try {
+                    it.extract(pdf).toMutableList()
+                } catch (e: Exception) {
+                    logger.error(e)
+                    File(outputPath + "failed.txt").appendText("${record.id}\n")
+                    return
+                }
             }
 
             sleep(SLEEP_TIME)

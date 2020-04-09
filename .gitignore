@@ -4,3 +4,6 @@ build/
 files/
 grobid.log*
 logs/
+
+# Jupyter notebook
+**/.ipynb_checkpoints

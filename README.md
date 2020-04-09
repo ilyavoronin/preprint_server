@@ -18,3 +18,19 @@ Arxiv data class description
 * **license**(?)
 * **pdf** -- link to the pdf with preprint
 * **refList** -- list of references
+
+Benchmarking Extractors
+--------------------------
+Prerequisite: download and install Anaconda: https://docs.anaconda.com/anaconda/install/
+
+1. Launch `benchmarkExtractors.kt` with desired `FILES_FOLDER` in order to test implemented extractors on files from
+the folder. A `benchmark.csv` file will be produced in the `BENCHMARKS_FOLDER`.
+2. Launch Jupyter notebook from the project folder:
+
+   ```
+   jupyter notebook
+   ```
+
+3. Open `benchmarks/benchmark.ipynb` and click `Cell > Run All` to get summary and visualizations of the comparison.
+   
+    
