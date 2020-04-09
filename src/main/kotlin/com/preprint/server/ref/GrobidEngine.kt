@@ -1,5 +1,6 @@
 package com.preprint.server.ref
 
+import com.preprint.server.Config
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
@@ -7,7 +8,6 @@ import org.grobid.core.engines.Engine
 import org.grobid.core.factory.GrobidFactory
 import org.grobid.core.main.GrobidHomeFinder
 import org.grobid.core.utilities.GrobidProperties
-import org.jetbrains.bio.pubtrends.Config
 import java.io.File
 import java.util.*
 

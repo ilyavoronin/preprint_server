@@ -1,4 +1,4 @@
-package org.jetbrains.bio.pubtrends
+package com.preprint.server
 
 import java.io.BufferedReader
 import java.io.FileReader
