@@ -1,5 +1,6 @@
 package com.preprint.server.ref
 
+import com.preprint.server.Config
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
@@ -15,7 +16,7 @@ object GrobidEngine {
     var engine : Engine
     init {
         //the path to the grobid home folder
-        val homePath = "/home/ilya/staff/grobid/grobid-home"
+        val homePath = Config.config["grobid_home"].toString()
         val grobidHomeFinder = GrobidHomeFinder(Arrays.asList(homePath))
         GrobidProperties.getInstance(grobidHomeFinder)
 
