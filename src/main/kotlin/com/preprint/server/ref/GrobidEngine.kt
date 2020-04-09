@@ -7,6 +7,7 @@ import org.grobid.core.engines.Engine
 import org.grobid.core.factory.GrobidFactory
 import org.grobid.core.main.GrobidHomeFinder
 import org.grobid.core.utilities.GrobidProperties
+import org.jetbrains.bio.pubtrends.Config
 import java.io.File
 import java.util.*
 
@@ -15,7 +16,7 @@ object GrobidEngine {
     var engine : Engine
     init {
         //the path to the grobid home folder
-        val homePath = "/home/ilya/staff/grobid/grobid-home"
+        val homePath = Config.config["grobid_home"].toString()
         val grobidHomeFinder = GrobidHomeFinder(Arrays.asList(homePath))
         GrobidProperties.getInstance(grobidHomeFinder)
 

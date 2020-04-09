@@ -36,7 +36,7 @@ fun main() {
             files.forEachIndexed { i, file ->
                 extractors.keys.forEach { extractor ->
                     var referencesNumber = 0
-                    val progressPrefix = "($i / ${files.size})"
+                    val progressPrefix = "(${i + 1} / ${files.size})"
                     val timeMillis = measureTimeMillis {
                         try {
                             referencesNumber = extractor.extract(file.readBytes()).size
