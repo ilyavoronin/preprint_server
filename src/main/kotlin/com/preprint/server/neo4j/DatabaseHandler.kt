@@ -68,8 +68,8 @@ class DatabaseHandler(
                     val res = it.run("""
                         MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
-                        WHERE pubTo.arxivId = ${parm("arxId")} OR
-                            pubTo.doi = ${parm("rdoi")} OR pubTo.title = ${parm("rtit")}
+                        WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
+                            pubTo.doi = ${parm("rdoi")} OR pubTo.title = ${parm("rtit")})
                         MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
                         RETURN pubTo
                     """.trimIndent(), params)
