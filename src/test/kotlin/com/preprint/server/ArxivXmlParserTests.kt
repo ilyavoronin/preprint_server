@@ -5,6 +5,7 @@ import com.preprint.server.arxiv.ArxivXMLParser
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions.*
 import java.io.File
+import kotlin.math.exp
 
 class ArxivXmlParserTests {
     fun loadFromResourses(fileName : String) : String {
@@ -61,5 +62,15 @@ class ArxivXmlParserTests {
         assertTrue(arxivRecords.size == 2)
         assertEquals(expectedRecord1, arxivRecords[0])
         assertEquals(expectedRecord2, arxivRecords[1])
+    }
+
+    @Test
+    fun testMakeOneLineOneWord() {
+        val tstring = "  abacaba-  \ndaba-\n  caba  "
+        val expected = "abacabadabacaba"
+
+        val actual = ArxivXMLParser.makeOneLine(tstring)
+
+        assertEquals(expected, actual)
     }
 }

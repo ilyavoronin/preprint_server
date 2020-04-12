@@ -106,7 +106,7 @@ object ArxivXMLParser {
 
     //convert multiline string to oneline string
     fun makeOneLine(str: String) : String {
-        val lines = str.split("\n").map {it.trimIndent()}.filter { it.isNotEmpty() }
+        val lines = str.split("\n").map {it.trim()}.filter { it.isNotEmpty() }
         var res = ""
         for ((i, line) in lines.withIndex()) {
             if (i == 0) {
