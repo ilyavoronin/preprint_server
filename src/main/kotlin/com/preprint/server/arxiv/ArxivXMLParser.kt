@@ -42,7 +42,16 @@ object ArxivXMLParser {
             val authorsList = authorsNodeList.getElementsByTagName("author")
             for (j in 0 until authorsList.length) {
                 val authorInfo = authorsList.item(j) as Element
-                val name = authorInfo.getValue("forenames") + " " + authorInfo.getValue("keyname")
+                var name = authorInfo.getValue("keyname") ?: ""
+                val forenames = authorInfo.getValue("forenames")
+                val suffix = authorInfo.getValue("suffix")
+                if (forenames != null) {
+                    name = forenames + " " + name
+                }
+                if (suffix != null) {
+                    name = name + " " + suffix
+                }
+
                 val affiliation : String? = authorInfo.getValue("affiliation")
                 arxivData.authors.add(ArxivData.Author(name, affiliation))
             }

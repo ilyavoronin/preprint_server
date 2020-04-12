@@ -22,7 +22,7 @@ class ArxivXmlParserTests {
             id = "0801.2407",
             creationDate = "2008-01-15",
             authors = mutableListOf(
-                ArxivData.Author("Laetitia Abel-Tiberini", "LAOG"),
+                ArxivData.Author("Laetitia Abel-Tiberini II", "LAOG"),
                 ArxivData.Author("Pierre Labeye", "CEA Leti")
             ),
             title = "ABCD ABCD DEFG",
