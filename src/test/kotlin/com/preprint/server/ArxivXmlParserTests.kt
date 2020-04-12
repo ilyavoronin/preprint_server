@@ -65,6 +65,16 @@ class ArxivXmlParserTests {
     }
 
     @Test
+    fun testGetPdfLinks() {
+        val xmlText = loadFromResourses("/xmlParserTests/arxivApi.xml")
+        val expectedUrlList = listOf("http://arxiv.org/pdf/1507.00493v3", "", "http://arxiv.org/pdf/1608.08082v6")
+
+        val urlList = ArxivXMLParser.getPdfLinks(xmlText)
+
+        assertEquals(expectedUrlList, urlList)
+    }
+
+    @Test
     fun testMakeOneLineOneWord() {
         val tstring = "  abacaba-  \ndaba-\n  caba  "
         val expected = "abacabadabacaba"

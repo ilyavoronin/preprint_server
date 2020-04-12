@@ -84,11 +84,16 @@ object ArxivXMLParser {
         for (i in 0 until entryList.length) {
             val elem = entryList.item(i) as Element
             val links = elem.getElementsByTagName("link")
+            var added = false
             for (j in 0 until links.length) {
                 val linkElem = links.item(j) as Element
                 if (linkElem.hasAttribute("title") && linkElem.getAttribute("title") == "pdf") {
                     pdfList.add(linkElem.getAttribute("href"))
+                    added = true
                 }
+            }
+            if (!added) {
+                pdfList.add("")
             }
         }
         return pdfList
