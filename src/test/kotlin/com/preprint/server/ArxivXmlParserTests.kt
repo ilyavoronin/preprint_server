@@ -9,12 +9,12 @@ import kotlin.math.exp
 
 class ArxivXmlParserTests {
     fun loadFromResourses(fileName : String) : String {
-        return this.javaClass.getResource(fileName).readText()
+        return this.javaClass.getResource("/xmlParserTests/$fileName").readText()
     }
 
     @Test
     fun fullDataTest() {
-        val xmlText = loadFromResourses("/xmlParserTests/xmlArxivData.xml")
+        val xmlText = loadFromResourses("xmlArxivData.xml")
         val expectedResumptionToken = "4342418|1001"
         val expectedTotalRecords = 7002
         val expectedRecord1 = ArxivData(
@@ -65,8 +65,38 @@ class ArxivXmlParserTests {
     }
 
     @Test
+    fun parseArxivRecordsWithMissingRequiredInfo() {
+        val xmlText = loadFromResourses("misArxivData.xml")
+        val expectedRecord = ArxivData(
+            identifier = "oai:arXiv.org:0909.2882",
+            datestamp = "2020-03-24",
+            id = "0909.2882",
+            creationDate = "2009-09-15",
+            lastUpdateDate = "2020-03-21",
+            authors = mutableListOf(
+                ArxivData.Author("Wm. G. Hoover"),
+                ArxivData.Author("Carol G. Hoover")
+            ),
+            title = "Shockwaves and Local Hydrodynamics; Failure of the Navier-Stokes Equations",
+            categories = mutableListOf("physics.flu-dyn", "nlin.CD"),
+            comments = "many lines comment",
+            doi = "10.1142/9789814307543_0002",
+            license = "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+            abstract = "Big abstract abacaba DABA-DABA",
+            acmClass = "56asdf",
+            journalRef = "Phys.Rev.D76:013009,2007",
+            reportNo = "IGPG-07/03-2"
+        )
+
+        val (arxivRecords, _, _) = ArxivXMLParser.parseArxivRecords(xmlText)
+
+        assertTrue(arxivRecords.size == 1)
+        assertEquals(expectedRecord, arxivRecords[0])
+    }
+
+    @Test
     fun testGetPdfLinks() {
-        val xmlText = loadFromResourses("/xmlParserTests/arxivApi.xml")
+        val xmlText = loadFromResourses("arxivApi.xml")
         val expectedUrlList = listOf("http://arxiv.org/pdf/1507.00493v3", "", "http://arxiv.org/pdf/1608.08082v6")
 
         val urlList = ArxivXMLParser.getPdfLinks(xmlText)
