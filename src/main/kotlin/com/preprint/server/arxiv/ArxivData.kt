@@ -6,9 +6,11 @@ import com.preprint.server.ref.Reference
 data class ArxivData(
     val identifier : String,
     var datestamp: String = "",
+    override var id : String = "",
+    var abstract : String = "",
     var creationDate : String = "",
-    var lastUpdateDate : String? = null,
     var title : String = "",
+    var lastUpdateDate : String? = null,
     val authors : MutableList<Author> = mutableListOf(),
     var categories : MutableList<String> = mutableListOf(),
     var comments : String? = null,
@@ -18,8 +20,6 @@ data class ArxivData(
     var acmClass : String? = null,
     var doi : String? = null,
     var license : String? = null,
-    var abstract : String? = null,
-    override var id : String = "",
     override var refList : MutableList<Reference> = mutableListOf(),
     override var pdfUrl : String = ""
 ): Data {

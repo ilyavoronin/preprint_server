@@ -5,12 +5,13 @@ import com.github.kittinunf.result.Result;
 import java.io.File
 
 fun main() {
-    val requestURL = "http://export.arxiv.org/oai2?verb=ListRecords&from=2020-03-20&metadataPrefix=arXiv"
-    val outputXMLFile = File("files/response.xml")
+    val requestURL = "http://export.arxiv.org/oai2?verb=ListRecords&from=1992-03-20&metadataPrefix=arXiv"
+    val outputXMLFile = File("files/old_response.xml")
     val outputFile = File("files/metadata.txt")
     outputFile.writeText("")
-    val (request, response, result) = requestURL
+    val (_, _, result) = requestURL
         .httpGet()
+        .timeoutRead(60000)
         .responseString()
     when (result) {
         is Result.Failure -> {

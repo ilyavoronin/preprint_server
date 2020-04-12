@@ -6,6 +6,8 @@ import java.io.ByteArrayInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
 
+//fields that must always be presented: identifier, datestamp, id, title, abstract, creation date
+//otherwise the record won't be saved
 object ArxivXMLParser {
     fun parseArxivRecords(xmlText : String) : Triple<List<ArxivData>, String, Int> {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
@@ -23,19 +25,18 @@ object ArxivXMLParser {
 
             //create ArxivData from identifier string
             val arxivData = ArxivData(
-                recordHeader.getValue("identifier") ?: ""
-            ) //TODO throw exception
+                recordHeader.getValue("identifier") ?: continue
+            )
 
-            arxivData.datestamp = recordHeader.getValue("datestamp") ?: ""
+            //parse all required fields
+            arxivData.datestamp = recordHeader.getValue("datestamp") ?: continue
+            arxivData.id = recordMetadata.getValue("id") ?: continue
+            arxivData.creationDate = recordMetadata.getValue("created") ?: continue
+            arxivData.title = recordMetadata.getValue("title") ?: continue
+            arxivData.abstract = recordMetadata.getValue("abstract") ?: continue
 
-            arxivData.id = recordMetadata.getValue("id") ?: "" //TODO throw exception
-
-            arxivData.creationDate = recordMetadata.getValue("created") ?: ""
-
+            //parse optional fields
             arxivData.lastUpdateDate = recordMetadata.getValue("updated")
-
-            arxivData.title = recordMetadata.getValue("title") ?: ""
-
             //get authors' names with affiliations(if present)
             val authorsNodeList = recordMetadata.getElementsByTagName("authors").item(0) as Element
             val authorsList = authorsNodeList.getElementsByTagName("author")
@@ -55,12 +56,11 @@ object ArxivXMLParser {
             arxivData.mscClass = recordMetadata.getValue("msc-class")
             arxivData.acmClass = recordMetadata.getValue("acm-class")
             arxivData.doi = recordMetadata.getValue("doi")
-            arxivData.license = recordMetadata.getValue("license") ?: ""
-            arxivData.abstract = recordMetadata.getValue("abstract") ?: ""
+            arxivData.license = recordMetadata.getValue("license")
             arxivRecords.add(arxivData)
         }
         val resumptionTokenElem = xmlDoc.getElementsByTagName("resumptionToken").item(0) as Element //TODO throw an exception
-        val recordsTotal = resumptionTokenElem.getAttribute("completeListSize").toInt() ?: 0
+        val recordsTotal = resumptionTokenElem.getAttribute("completeListSize").toInt()
 
         return Triple(arxivRecords, resumptionTokenElem.textContent, recordsTotal)
     }
