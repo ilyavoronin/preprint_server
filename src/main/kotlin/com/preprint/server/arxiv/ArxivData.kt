@@ -6,7 +6,6 @@ import com.preprint.server.ref.Reference
 data class ArxivData(
     val identifier : String,
     var datestamp: String = "",
-    val specs : MutableList<String> = mutableListOf(),
     var creationDate : String = "",
     var lastUpdateDate : String? = null,
     var title : String = "",

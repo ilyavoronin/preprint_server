@@ -28,12 +28,6 @@ object ArxivXMLParser {
 
             arxivData.datestamp = recordHeader.getValue("datestamp") ?: ""
 
-            //get all specs from header
-            val specs = recordHeader.getElementsByTagName("setSpecs")
-            for (j in 0 until specs.length) {
-                arxivData.specs.add(specs.item(i).textContent)
-            }
-
             arxivData.id = recordMetadata.getValue("id") ?: "" //TODO throw exception
 
             arxivData.creationDate = recordMetadata.getValue("created") ?: ""
