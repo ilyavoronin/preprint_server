@@ -3,28 +3,29 @@ package com.preprint.server.arxiv
 import com.preprint.server.data.Data
 import com.preprint.server.ref.Reference
 
-data class ArxivData(val identifier : String) : Data {
+data class ArxivData(
+    val identifier : String,
+    var datestamp: String = "",
+    val specs : MutableList<String> = mutableListOf(),
+    var creationDate : String = "",
+    var lastUpdateDate : String? = null,
+    var title : String = "",
+    val authors : MutableList<Author> = mutableListOf(),
+    var categories : MutableList<String> = mutableListOf(),
+    var comments : String? = null,
+    var reportNo : String? = null,
+    var journalRef : String? = null,
+    var mscClass : String? = null,
+    var acmClass : String? = null,
+    var doi : String? = null,
+    var license : String? = null,
+    var abstract : String? = null,
+    override var id : String = "",
+    override var refList : MutableList<Reference> = mutableListOf(),
+    override var pdfUrl : String = ""
+): Data {
+
     data class Author(val name : String, val affiliation : String? = null)
-
-    override var id = ""
-    override var refList = mutableListOf<Reference>()
-    override var pdfUrl = ""
-
-    var datestamp = ""
-    val specs = mutableListOf<String>()
-    var creationDate = ""
-    var lastUpdateDate : String? = null
-    var title = ""
-    val authors = mutableListOf<Author>()
-    var categories = mutableListOf<String>()
-    var comments : String? = null
-    var reportNo : String? = null
-    var journalRef : String? = null
-    var mscClass : String? = null
-    var acmClass : String? = null
-    var doi : String? = null
-    var license = ""
-    var abstract = ""
 
     override fun toString(): String {
         var res = ""
