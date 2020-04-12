@@ -26,6 +26,8 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.13.1")
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
+    implementation(kotlin("stdlib-jdk8"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
 }
 
 configurations.all {
@@ -36,6 +38,14 @@ configurations.all {
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
