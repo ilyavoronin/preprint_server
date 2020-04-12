@@ -43,7 +43,7 @@ object ArxivXMLParser {
             for (j in 0 until authorsList.length) {
                 val authorInfo = authorsList.item(j) as Element
                 val name = authorInfo.getValue("forenames") + " " + authorInfo.getValue("keyname")
-                val affiliation : String? = authorInfo.getValue("affiliations")
+                val affiliation : String? = authorInfo.getValue("affiliation")
                 arxivData.authors.add(ArxivData.Author(name, affiliation))
             }
 
@@ -97,7 +97,7 @@ object ArxivXMLParser {
 
     //convert multiline string to oneline string
     fun makeOneLine(str: String) : String {
-        val lines = str.split("\n").map {it.trimIndent()}
+        val lines = str.split("\n").map {it.trimIndent()}.filter { it.isNotEmpty() }
         var res = ""
         for ((i, line) in lines.withIndex()) {
             if (i == 0) {
