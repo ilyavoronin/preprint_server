@@ -73,4 +73,34 @@ class ArxivXmlParserTests {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun testMakeOneLineCompoundWord1() {
+        val tstring = "  ABA-  \n   123  "
+        val expected = "ABA-123"
+
+        val actual = ArxivXMLParser.makeOneLine(tstring)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testMakeOneLineCompoundWord2() {
+        val tstring = "  ABA-  \n daba"
+        val expected = "ABA-daba"
+
+        val actual = ArxivXMLParser.makeOneLine(tstring)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testMakeOneLineCompoundWord3() {
+        val tstring = "  ABa-  \n Daba"
+        val expected = "ABa-Daba"
+
+        val actual = ArxivXMLParser.makeOneLine(tstring)
+
+        assertEquals(expected, actual)
+    }
 }
