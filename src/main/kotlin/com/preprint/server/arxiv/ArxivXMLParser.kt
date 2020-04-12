@@ -91,7 +91,32 @@ object ArxivXMLParser {
             return null
         }
         else {
-            return elems.item(0).textContent
+            return makeOneLine(elems.item(0).textContent)
         }
+    }
+
+    //convert multiline string to oneline string
+    fun makeOneLine(str: String) : String {
+        val lines = str.split("\n").map {it.trimIndent()}
+        var res = ""
+        for ((i, line) in lines.withIndex()) {
+            if (i == 0) {
+                res = line
+                continue
+            }
+            if (res.length > 1 && line.length > 0 && res.last() == '-') {
+                val lastC = res[res.lastIndex - 1]
+                if (lastC.isLowerCase() && line.first().isLowerCase()) {
+                    res = res.dropLast(1) + line
+                }
+                else {
+                    res += line
+                }
+            }
+            else {
+                res += " " + line
+            }
+        }
+        return res
     }
 }
