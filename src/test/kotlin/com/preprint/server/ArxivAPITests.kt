@@ -53,9 +53,9 @@ class ArxivAPITests {
         val (arxivRecords, newResToken, recTotal) =
             spyArxiApi.getBulkArxivRecords("", "token1111", 100)
 
-        assertTrue(arxivRecords?.size == 1)
-        assertEquals("id1", arxivRecords?.get(0)?.id)
-        assertEquals("pdf url id1", arxivRecords?.get(0)?.pdfUrl)
+        assertTrue(arxivRecords.size == 1)
+        assertEquals("id1", arxivRecords.get(0).id)
+        assertEquals("pdf url id1", arxivRecords.get(0).pdfUrl)
         assertEquals("new token", newResToken)
         assertEquals(1000, recTotal)
     }
@@ -84,9 +84,9 @@ class ArxivAPITests {
         val (arxivRecords, newResToken, recTotal) =
             spyArxiApi.getBulkArxivRecords("2020-01-10", "", 100)
 
-        assertTrue(arxivRecords?.size == 1)
-        assertEquals("id1", arxivRecords?.get(0)?.id)
-        assertEquals("pdf url id1", arxivRecords?.get(0)?.pdfUrl)
+        assertTrue(arxivRecords.size == 1)
+        assertEquals("id1", arxivRecords.get(0).id)
+        assertEquals("pdf url id1", arxivRecords.get(0).pdfUrl)
         assertEquals("new token", newResToken)
         assertEquals(1000, recTotal)
     }
@@ -121,12 +121,31 @@ class ArxivAPITests {
         val (arxivRecords, newResToken, recTotal) =
             spyArxiApi.getBulkArxivRecords("2020-01-10", "", 100)
 
-        assertTrue(arxivRecords?.size == 1)
-        assertEquals("id1", arxivRecords?.get(0)?.id)
-        assertEquals("pdf url id1", arxivRecords?.get(0)?.pdfUrl)
+        assertTrue(arxivRecords.size == 1)
+        assertEquals("id1", arxivRecords.get(0).id)
+        assertEquals("pdf url id1", arxivRecords.get(0).pdfUrl)
         assertEquals("new token", newResToken)
         assertEquals(1000, recTotal)
     }
 
+    @Test
+    fun testGetBulkApiRecordsException() {
+        val spyArxiApi = spyk(ArxivAPI, recordPrivateCalls = true)
+        val requestMock = mockk<Request>()
+        val resultFailMock = mockk<Result.Failure<FuelError>>()
+        val responseMock = mockk<Response>()
+
+        val url = ArxivAPI.requestBulkUrlPrefix + "verb=ListRecords&from=2020-01-10&metadataPrefix=arXiv"
+        mockkStatic("com.github.kittinunf.fuel.FuelKt")
+        every { url.httpGet().timeoutRead(any()).responseString() } returns
+                Triple(requestMock, responseMock, resultFailMock)
+        val fmock = mockk<FuelError>()
+        every { fmock.message } returns "error"
+        every { resultFailMock.getException()} returns fmock
+        every { responseMock.statusCode } returns 404
+
+        assertThrows(ArxivAPI.ApiRequestFailedException::class.java
+        ) {spyArxiApi.getBulkArxivRecords("2020-01-10", "", 100)}
+    }
 
 }
