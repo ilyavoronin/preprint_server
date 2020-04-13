@@ -55,7 +55,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
     }
 
     //get indent from each line
-    private fun getLines(text : String) : List<Line> {
+    fun getLines(text : String) : List<Line> {
         val indentRegex = """${PdfMarks.IntBeg.str}\d{1,3}${PdfMarks.IntEnd.str}""".toRegex()
         var pageNumber = 0
         return text.split('\n').map {line ->
