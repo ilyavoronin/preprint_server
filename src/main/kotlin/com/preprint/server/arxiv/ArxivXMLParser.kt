@@ -74,7 +74,7 @@ object ArxivXMLParser {
         return Triple(arxivRecords, resumptionTokenElem.textContent, recordsTotal)
     }
 
-    fun getPdfLinks(xmlText: String) : List<String>? {
+    fun getPdfLinks(xmlText: String) : List<String> {
         val pdfList = mutableListOf<String>()
 
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))

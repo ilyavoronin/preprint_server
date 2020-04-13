@@ -15,7 +15,7 @@ object ArxivAPI {
     val timeout = 60000
 
     //only 1000 records
-    fun getBulkArxivRecords(startDate : String, resumptionToken : String, limit : Int = 100000) : Triple<List<ArxivData>?, String, Int> {
+    fun getBulkArxivRecords(startDate : String, resumptionToken : String, limit : Int = 100000) : Triple<List<ArxivData>, String, Int> {
         logger.info("Begin api request from $startDate")
         logger.info("Using resumption token: $resumptionToken")
         val requestURL = when(resumptionToken) {
@@ -24,7 +24,11 @@ object ArxivAPI {
                 else -> requestBulkUrlPrefix +
                             "verb=ListRecords&resumptionToken=$resumptionToken"
         }
-        val (_, response, result) = requestURL.httpGet().timeoutRead(timeout).responseString() //TODO handle timeout exception
+        val (_, response, result) = try {
+            requestURL.httpGet().timeoutRead(timeout).responseString()
+        } catch (e: Exception) {
+            throw ApiRequestFailedException(e.message)
+        }
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
@@ -37,7 +41,7 @@ object ArxivAPI {
                 else {
                     logger.error(ex)
                     logger.info("Failed: $ex")
-                    Triple(null, resumptionToken, 0)
+                    throw ApiRequestFailedException(ex.message)
                 }
             }
             is Result.Success -> {
@@ -48,7 +52,12 @@ object ArxivAPI {
                     logger.info("Total records: ${recordsTotal}")
                 }
                 logger.info("Receive ${arxivRecords.size} records")
-                val pdfLinks = getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })!!
+                val pdfLinks = try {
+                    getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })
+                } catch (e : ApiRequestFailedException) {
+                    //try one more time
+                    getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })
+                }
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdfUrl = pdfLink
                 }
@@ -57,7 +66,7 @@ object ArxivAPI {
         }
     }
 
-    fun getRecordsLinks(idList : List <String>) : List<String>? {
+    fun getRecordsLinks(idList : List <String>) : List<String> {
         logger.info("Begin api request to get pdf urls")
         val idString = idList.foldIndexed("") {i, acc, s ->
             if (i < idList.lastIndex)"$acc$s," else "$acc$s"
@@ -70,7 +79,7 @@ object ArxivAPI {
             is Result.Failure -> {
                 val ex = result.getException()
                 logger.error("Failed: $ex")
-                null
+                throw ApiRequestFailedException(ex.message)
             }
             is Result.Success -> {
                 logger.info("Success: receive pdf urls")
@@ -79,4 +88,6 @@ object ArxivAPI {
             }
         }
     }
+
+    class ApiRequestFailedException(message : String? = null) : Throwable(message)
 }

@@ -5,6 +5,7 @@ import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.CustomReferenceExtractor
 
 import org.apache.logging.log4j.kotlin.logger
+import java.lang.Thread.sleep
 
 object ArxivCollector {
     val logger = logger()
@@ -19,14 +20,18 @@ object ArxivCollector {
         logger.info("Begin collecting arxiv metadata from $startDate with resumption token:$resumptionToken")
         resumptionToken = resumptionToken_
         do {
-            val (newArxivRecords, newResumptionToken, recordsTotal) = ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
-            resumptionToken = newResumptionToken
-            if (newArxivRecords != null) {
+            try {
+                val (newArxivRecords, newResumptionToken, recordsTotal) =
+                    ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
+                resumptionToken = newResumptionToken
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
                 dbHandler.storeArxivData(newArxivRecords)
                 recordsProcessed += newArxivRecords.size
+                logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
+            } catch (e: ArxivAPI.ApiRequestFailedException) {
+                sleep(600000)
+                continue
             }
-            logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
         } while (resumptionToken != "")
     }
 }
