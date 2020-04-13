@@ -11,13 +11,11 @@ object ArxivAPI {
     val logger = logger()
     const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
     const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
-    var recordsProcessed = 0
+    var sleepTime : Long = 600000
+    val timeout = 60000
 
     //only 1000 records
     fun getBulkArxivRecords(startDate : String, resumptionToken : String, limit : Int = 100000) : Triple<List<ArxivData>?, String, Int> {
-        if (resumptionToken == "") {
-            recordsProcessed = 0
-        }
         logger.info("Begin api request from $startDate")
         logger.info("Using resumption token: $resumptionToken")
         val requestURL = when(resumptionToken) {
@@ -26,14 +24,14 @@ object ArxivAPI {
                 else -> requestBulkUrlPrefix +
                             "verb=ListRecords&resumptionToken=$resumptionToken"
         }
-        val (_, response, result) = requestURL.httpGet().timeoutRead(60000).responseString() //TODO handle timeout exception
+        val (_, response, result) = requestURL.httpGet().timeoutRead(timeout).responseString() //TODO handle timeout exception
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
                 if (response.statusCode == 503) {
                     logger.info("ArXiv OAI service is temporarily unavailable")
                     logger.info("Waiting 600 seconds")
-                    sleep(600000)
+                    sleep(sleepTime)
                     getBulkArxivRecords(startDate, resumptionToken, limit)
                 }
                 else {
@@ -66,7 +64,7 @@ object ArxivAPI {
         }
         val (_, _, result) = requestApiUrlPrefix
             .httpPost(listOf("id_list" to idString, "max_results" to "1000"))
-            .timeoutRead(60000)
+            .timeoutRead(timeout)
             .responseString()
         return when (result) {
             is Result.Failure -> {

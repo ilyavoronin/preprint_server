@@ -1,6 +1,7 @@
 package com.preprint.server
 
 import com.github.kittinunf.fuel.*
+import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.result.Result
@@ -89,4 +90,43 @@ class ArxivAPITests {
         assertEquals("new token", newResToken)
         assertEquals(1000, recTotal)
     }
+
+    @Test
+    fun testGetBulkApiRecordsFailure() {
+        val spyArxiApi = spyk(ArxivAPI, recordPrivateCalls = true)
+        val requestMock = mockk<Request>()
+        val resultFailMock = mockk<Result.Failure<FuelError>>()
+        val resultSuccessMock = mockk<Result.Success<String>>()
+        val responseMock = mockk<Response>()
+
+        val url = ArxivAPI.requestBulkUrlPrefix + "verb=ListRecords&from=2020-01-10&metadataPrefix=arXiv"
+        mockkStatic("com.github.kittinunf.fuel.FuelKt")
+        every { url.httpGet().timeoutRead(any()).responseString() } returnsMany
+                listOf(Triple(requestMock, responseMock, resultFailMock),
+                       Triple(requestMock, responseMock, resultSuccessMock)
+                )
+        spyArxiApi.sleepTime = 20
+        every { resultFailMock.getException()} returns mockk()
+        every { responseMock.statusCode } returns 503
+
+        every { resultSuccessMock.get()} returns "xml text"
+
+        mockkObject(ArxivXMLParser)
+        every {ArxivXMLParser.parseArxivRecords("xml text")} returns
+                Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
+        val slot = slot<List<String>>()
+        every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
+
+
+        val (arxivRecords, newResToken, recTotal) =
+            spyArxiApi.getBulkArxivRecords("2020-01-10", "", 100)
+
+        assertTrue(arxivRecords?.size == 1)
+        assertEquals("id1", arxivRecords?.get(0)?.id)
+        assertEquals("pdf url id1", arxivRecords?.get(0)?.pdfUrl)
+        assertEquals("new token", newResToken)
+        assertEquals(1000, recTotal)
+    }
+
+
 }
