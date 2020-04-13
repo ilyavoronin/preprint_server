@@ -2,10 +2,8 @@ package com.preprint.server
 
 import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.arxiv.ArxivXMLParser
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import java.io.File
-import kotlin.math.exp
 
 class ArxivXmlParserTests {
     fun loadFromResourses(fileName : String) : String {

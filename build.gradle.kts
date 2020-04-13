@@ -28,6 +28,7 @@ dependencies {
     implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+    testImplementation("io.mockk:mockk:1.9.3")
 }
 
 configurations.all {
