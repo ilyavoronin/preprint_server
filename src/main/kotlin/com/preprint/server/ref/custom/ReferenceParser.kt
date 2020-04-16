@@ -44,7 +44,10 @@ object ReferenceParser {
                                 return listOf()
                             }
                         }
-                        else if (!refType.strict || lines[j].indent != secondLineIndent) {
+                        else if (refType.strict && lines[j].indent == secondLineIndent) {
+                            logger.info("Drop because first line indent is equal to second line indent")
+                            return listOf()
+                        } else {
                             break
                         }
                     }
