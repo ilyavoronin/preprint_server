@@ -142,4 +142,26 @@ class ReferenceParserTests {
 
         assertEquals(expected, refs)
     }
+
+    @Test
+    fun referenceTypeCOneColumnWithIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceC1"))
+        println(lines)
+        val expected = loadFromResourses("referenceC1.exp").split("\n")
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.C, false, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeCDropWithoutIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceC2"))
+        println(lines)
+        val expected = listOf<String>()
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.C, false, 900)
+
+        assertEquals(expected, refs)
+    }
 }
