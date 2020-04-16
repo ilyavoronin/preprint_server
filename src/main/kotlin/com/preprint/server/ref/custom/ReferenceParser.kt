@@ -163,6 +163,10 @@ object ReferenceParser {
                                 if (!refType.strict || lines[j].indent != secondLineIndent) {
                                     break
                                 }
+                                else {
+                                    logger.info("Drop because first line indent is equal to second line indent")
+                                    return listOf()
+                                }
                             }
                             else if (value == curRefNum) {
                                 return listOf()
