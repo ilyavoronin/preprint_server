@@ -37,7 +37,7 @@ object PdfHandler {
             val pdf = if (pdfFile.exists()) {
                 pdfFile.readBytes()
             } else {
-                downloadPdf(record.pdfUrl) ?: return
+                downloadPdf(record.pdfUrl) ?: continue
             }
 
             // Save if new file was downloaded and savePdf is true
@@ -47,13 +47,13 @@ object PdfHandler {
                 pdfFile.writeBytes(pdf)
             }
 
-            refExtractor?.let {
+            if (refExtractor != null) {
                 record.refList = try {
-                    it.extract(pdf).toMutableList()
+                    refExtractor.extract(pdf).toMutableList()
                 } catch (e: Exception) {
                     logger.error(e)
                     File(outputPath + "failed.txt").appendText("${record.id}\n")
-                    return
+                    continue
                 }
             }
 

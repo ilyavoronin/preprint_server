@@ -11,7 +11,7 @@ import java.lang.Thread.sleep
 object ArxivCollector {
     val logger = logger()
     var resumptionToken = ""
-    const val limit = 100
+    const val limit = 5
     fun collect(
         startDate : String,
         dbHandler : DatabaseHandler,
@@ -33,6 +33,7 @@ object ArxivCollector {
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
                 dbHandler.storeArxivData(newArxivRecords)
                 recordsProcessed += newArxivRecords.size
+
                 logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
             } catch (e: ArxivAPI.ApiRequestFailedException) {
                 sleep(600000)
