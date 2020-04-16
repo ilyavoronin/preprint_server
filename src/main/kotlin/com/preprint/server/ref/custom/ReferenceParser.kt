@@ -97,10 +97,15 @@ object ReferenceParser {
                         }
                     }
                 } else {
+                    var linesParsed = 0
                     //this is the last reference and we should find it's end
                     for (k in lineInd until lines.size) {
                         val newLine = if (k == lineInd) removeRefPattern(lines[k].str, refRegex) else lines[k].str
                         if (newLine == null) {
+                            return listOf()
+                        }
+                        linesParsed += 1
+                        if (linesParsed > 5) {
                             return listOf()
                         }
                         curRef = addLineToReference(curRef, newLine)
@@ -232,9 +237,14 @@ object ReferenceParser {
                 } else {
                     //this is the last reference and we should find it's end
                     var prevSide = 0
+                    var linesParsed = 0
                     for (k in lineInd until lines.size) {
                         val newLine = if (k == lineInd) removeRefPattern(lines[k].str, refRegex) else lines[k].str
                         if (newLine == null) {
+                            return listOf()
+                        }
+                        linesParsed += 1
+                        if (linesParsed > 9) {
                             return listOf()
                         }
                         curRef = addLineToReference(curRef, newLine)

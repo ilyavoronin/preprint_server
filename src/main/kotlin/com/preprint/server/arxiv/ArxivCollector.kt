@@ -11,7 +11,7 @@ import java.lang.Thread.sleep
 object ArxivCollector {
     val logger = logger()
     var resumptionToken = ""
-    const val limit = 5
+    const val limit = 100
     fun collect(
         startDate : String,
         dbHandler : DatabaseHandler,
@@ -26,7 +26,6 @@ object ArxivCollector {
                     ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
                 resumptionToken = newResumptionToken
 
-                newArxivRecords.forEach { println(it.journalRef) }
                 val journals = GrobidEngine.getJournalNames(newArxivRecords.map {it.journalRef ?: ""})
                 newArxivRecords.zip(journals).forEach { (record, journal) -> record.journalRef = journal }
 
