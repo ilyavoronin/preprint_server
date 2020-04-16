@@ -76,4 +76,70 @@ class ReferenceParserTests {
 
         assertEquals(expected, refs)
     }
+
+    @Test
+    fun referenceTypeBOneColumnWithIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB1"))
+        println(lines)
+        val expected = loadFromResourses("referenceB1.exp").split("\n")
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, false, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeBDropWithoutIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB2"))
+        println(lines)
+        val expected = listOf<String>()
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, false, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeBTwoColumnWithIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB3"))
+        println(lines)
+        val expected = loadFromResourses("referenceB3.exp").split("\n")
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, true, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeBDropTwoColumnWithoutIndentTest() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB4"))
+        println(lines)
+        val expected = listOf<String>()
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, true, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeBDrop1Test() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB5"))
+        println(lines)
+        val expected = listOf<String>()
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, false, 900)
+
+        assertEquals(expected, refs)
+    }
+
+    @Test
+    fun referenceTypeBDrop2Test() {
+        val lines = CustomReferenceExtractor.getLines(loadFromResourses("referenceB6"))
+        println(lines)
+        val expected = listOf<String>()
+
+        val refs = ReferenceParser.parse(lines, ReferenceType.B, false, 900)
+
+        assertEquals(expected, refs)
+    }
 }
