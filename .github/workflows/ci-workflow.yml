@@ -30,4 +30,4 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Kotlin Tests
-      run: ./gradlew test
+      run: ./gradlew test -s
