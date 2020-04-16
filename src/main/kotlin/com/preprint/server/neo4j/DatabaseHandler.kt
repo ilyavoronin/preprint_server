@@ -111,8 +111,8 @@ class DatabaseHandler(
             if (res.list().size == 0 && ref.title != null) {
                 //then the cited publication doesn't exist in database
                 //crete missing publication -> publication connection
-                val searchByArxivIdQuery = {if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""}
-                val searchByDoiQuery = {if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""}
+                val searchByArxivIdQuery = if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""
+                val searchByDoiQuery = if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""
                 session.run("""
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                             MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
