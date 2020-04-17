@@ -2,10 +2,24 @@ package com.preprint.server
 
 import com.preprint.server.ref.CustomReferenceExtractor
 import com.preprint.server.ref.custom.GarbageDeleter
+import io.mockk.*
+import org.apache.logging.log4j.kotlin.KotlinLogger
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GarbageDeleterTests {
+
+    @BeforeAll
+    fun initTest() {
+        mockkConstructor(KotlinLogger::class)
+        every {anyConstructed<KotlinLogger>().info(any<String>())} just Runs
+    }
+
+    @AfterAll
+    fun clear() {
+        unmockkAll()
+    }
 
     fun loadFromResourses(fileName : String) : String {
         return this.javaClass.getResource("/garbageDeleterTests/$fileName").readText()

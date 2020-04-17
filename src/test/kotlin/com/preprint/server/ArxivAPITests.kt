@@ -10,21 +10,20 @@ import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.arxiv.ArxivXMLParser
 import io.mockk.*
 import org.apache.logging.log4j.kotlin.KotlinLogger
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.*
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ArxivAPITests {
 
-    @BeforeEach
+    @BeforeAll
     fun initTest() {
         mockkConstructor(KotlinLogger::class)
         every {anyConstructed<KotlinLogger>().info(any<String>())} just Runs
     }
 
-    @AfterEach
+    @AfterAll
     fun clear() {
         unmockkAll()
     }

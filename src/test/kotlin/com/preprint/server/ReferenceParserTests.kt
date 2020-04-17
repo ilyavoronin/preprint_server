@@ -3,10 +3,25 @@ package com.preprint.server
 import com.preprint.server.ref.CustomReferenceExtractor
 import com.preprint.server.ref.custom.ReferenceParser
 import com.preprint.server.ref.custom.ReferenceType
+import io.mockk.*
 import junit.framework.Assert.assertEquals
-import org.junit.jupiter.api.Test
+import org.apache.logging.log4j.kotlin.KotlinLogger
+import org.junit.jupiter.api.*
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ReferenceParserTests {
+
+    @BeforeAll
+    fun initTest() {
+        mockkConstructor(KotlinLogger::class)
+        every {anyConstructed<KotlinLogger>().info(any<String>())} just Runs
+    }
+
+    @AfterAll
+    fun clear() {
+        unmockkAll()
+    }
+
     fun loadFromResourses(fileName : String) : String {
         return this.javaClass.getResource("/referenceParserTests/$fileName").readText()
     }
