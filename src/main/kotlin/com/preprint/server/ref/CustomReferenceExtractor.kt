@@ -42,7 +42,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 pageWidth.roundToInt()
             ).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
-        val isReferences = refList.all {it.isReference && !it.authors.isNullOrEmpty()}
+        val isReferences = refList.all {it.isReference}
         if (refList.isEmpty() || !isReferences) {
             if (!isReferences) {
                 logger.info("Drop because grobid can't identify parsed string as reference")

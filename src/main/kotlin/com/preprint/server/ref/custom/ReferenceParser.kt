@@ -1,5 +1,7 @@
 package com.preprint.server.ref.custom
 
+import com.preprint.server.ref.GrobidEngine
+import com.preprint.server.ref.Reference
 import org.apache.logging.log4j.kotlin.logger
 
 object ReferenceParser {
@@ -132,9 +134,11 @@ object ReferenceParser {
                     }
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
-                if (refs.size > 1 && refs.any{it.length < 40}) {
-                    logger.info("Drop because can't parse reference with semicolon")
-                    return listOf()
+                if (refs.size > 1) {
+                    if (refs.any { rejectAsReference(it)}) {
+                        logger.info("Drop because can't parse reference with semicolon")
+                        return listOf()
+                    }
                 }
                 refList.addAll(refs)
             }
@@ -285,9 +289,11 @@ object ReferenceParser {
                     }
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
-                if (refs.size > 1 && refs.any{it.length < 40}) {
-                    logger.info("Drop because can't parse reference with semicolon")
-                    return listOf()
+                if (refs.size > 1) {
+                    if (refs.any { rejectAsReference(it)}) {
+                        logger.info("Drop because can't parse reference with semicolon")
+                        return listOf()
+                    }
                 }
                 refList.addAll(refs)
             }
@@ -315,5 +321,10 @@ object ReferenceParser {
     private fun removeRefPattern(ref : String, regex : Regex) : String? {
         val match = regex.find(ref) ?: return null
         return ref.drop(match.range.last + 1).trimIndent()
+    }
+
+    private fun rejectAsReference(ref : String) : Boolean {
+        val reference = Reference(ref, GrobidEngine.processRawReference(ref, 0))
+        return reference.authors.isNullOrEmpty()
     }
 }
