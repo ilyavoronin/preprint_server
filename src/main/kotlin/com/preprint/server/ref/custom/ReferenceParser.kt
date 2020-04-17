@@ -131,7 +131,12 @@ object ReferenceParser {
                         }
                     }
                 }
-                refList.addAll(curRef.split(";"))
+                val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
+                if (refs.size > 1 && refs.any{it.length < 40}) {
+                    logger.info("")
+                    return listOf("Drop because can't parse reference with semicolon")
+                }
+                refList.addAll(refs)
             }
         } else {
             var canUseSecondIndentPattern = true
@@ -279,7 +284,12 @@ object ReferenceParser {
                         prevSide = curSide
                     }
                 }
-                refList.addAll(curRef.split(";").map{it.trimIndent()})
+                val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
+                if (refs.size > 1 && refs.any{it.length < 40}) {
+                    logger.info("")
+                    return listOf("Drop because can't parse reference with semicolon")
+                }
+                refList.addAll(refs)
             }
         }
         logger.debug(refList.mapIndexed {i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
