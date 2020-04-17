@@ -12,6 +12,7 @@ object ArxivCollector {
     val logger = logger()
     var resumptionToken = ""
     const val limit = 100
+    var sleepTime : Long = 600000
     fun collect(
         startDate : String,
         dbHandler : DatabaseHandler,
@@ -35,7 +36,7 @@ object ArxivCollector {
 
                 logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
             } catch (e: ArxivAPI.ApiRequestFailedException) {
-                sleep(600000)
+                sleep(sleepTime)
                 continue
             }
         } while (resumptionToken != "")
