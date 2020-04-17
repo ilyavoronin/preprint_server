@@ -42,10 +42,13 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 pageWidth.roundToInt()
             ).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
-        val isReferences = refList.any {it.isReference == false}
-        if (refList.isEmpty() || isReferences) {
-            if (isReferences) {
+        val isReferences = refList.all {it.isReference && !it.authors.isNullOrEmpty()}
+        if (refList.isEmpty() || !isReferences) {
+            if (!isReferences) {
                 logger.info("Drop because grobid can't identify parsed string as reference")
+                for (ref in refList) {
+                    println(ref.authors)
+                }
             }
             logger.info("done by GROBID")
             return GrobidReferenceExtractor.extract(pdf)

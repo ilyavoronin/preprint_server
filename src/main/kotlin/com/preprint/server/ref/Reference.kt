@@ -40,7 +40,7 @@ class Reference() {
         doi = p.doi
         booktitle = p.bookTitle
         address = p.address
-        authors = p.fullAuthors?.map {author -> author.toString() ?: ""}
+        authors = p.fullAuthors?.map {author -> author.toString()}
         title = p.title
         isbn10 = p.isbN10
         isbn13 = p.isbN13

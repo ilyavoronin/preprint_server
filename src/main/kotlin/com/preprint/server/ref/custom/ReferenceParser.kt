@@ -133,8 +133,8 @@ object ReferenceParser {
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1 && refs.any{it.length < 40}) {
-                    logger.info("")
-                    return listOf("Drop because can't parse reference with semicolon")
+                    logger.info("Drop because can't parse reference with semicolon")
+                    return listOf()
                 }
                 refList.addAll(refs)
             }
@@ -286,8 +286,8 @@ object ReferenceParser {
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1 && refs.any{it.length < 40}) {
-                    logger.info("")
-                    return listOf("Drop because can't parse reference with semicolon")
+                    logger.info("Drop because can't parse reference with semicolon")
+                    return listOf()
                 }
                 refList.addAll(refs)
             }
