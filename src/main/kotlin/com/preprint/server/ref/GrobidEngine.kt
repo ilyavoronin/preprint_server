@@ -39,12 +39,4 @@ object GrobidEngine {
         logger.info("Begin process raw references")
         return engine.processRawReferences(refList, consolidate)
     }
-
-    fun getFullJournalInfo(journal : JournalRef) {
-        val bibitem = processRawReference(journal.rawRef, 0)
-        journal.name = bibitem.journal
-        journal.pages = bibitem.pageRange
-        journal.volume = bibitem.volume
-        journal.year = bibitem.year
-    }
 }
