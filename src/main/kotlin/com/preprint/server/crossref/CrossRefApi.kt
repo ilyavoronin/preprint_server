@@ -13,8 +13,8 @@ object CrossRefApi {
     val email = Config.config["email"].toString()
     val maxRecordsNumber = 3
 
-    fun findRecord(ref : String) {
-        val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=3&mailto=$email"
+    fun findRecord(ref : String) : List<CRData> {
+        val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"
         val (_, response, result) = url.httpGet().responseString()
         when (result) {
             is Result.Failure -> {
@@ -24,7 +24,8 @@ object CrossRefApi {
                 throw ApiRequestFailedException(ex.message)
             }
             is Result.Success -> {
-                println(result.value)
+                val records = CrossrefJsonParser.parse(result.value)
+                return records
             }
         }
     }
