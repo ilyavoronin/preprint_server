@@ -9,7 +9,8 @@ data class JournalRef(
     var volume : String? = null,
     var pages : String? = null,
     var year : String? = null,
-    var number : String? = null
+    var number : String? = null,
+    var issn : String? = null
 ) {
     constructor(rawRef: String, parse : Boolean) : this(rawRef) {
         getFullJournalInfo(this)
@@ -21,6 +22,7 @@ data class JournalRef(
         volume = bib.volumeBlock
         year = bib.publicationDate
         number = bib.issue
+        issn = bib.issn
     }
 
     companion object {
@@ -31,6 +33,7 @@ data class JournalRef(
             journal.volume = bibitem.volumeBlock
             journal.year = bibitem.publicationDate
             journal.number = bibitem.issue
+            journal.issn = bibitem.issn
         }
     }
 }

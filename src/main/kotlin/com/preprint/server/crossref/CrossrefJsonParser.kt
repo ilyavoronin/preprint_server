@@ -20,6 +20,7 @@ object CrossrefJsonParser {
                     record.volume?.let {journal.volume = it}
                     record.page?.let {journal.pages = it}
                     record.issue?.let {journal.number = it}
+                    record.ISSN?.let {journal.issn = it[0]}
                     crRecord.journal = journal
                 }
                 crRecord.authors.addAll(record.author?.map {auth -> Author(auth.family + " " + auth.given) } ?: listOf())
