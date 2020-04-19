@@ -1,5 +1,6 @@
-package com.preprint.server.ref
+package com.preprint.server.data
 
+import com.preprint.server.ref.GrobidEngine
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
 

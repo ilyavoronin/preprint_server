@@ -3,7 +3,7 @@ package com.preprint.server.crossref
 import com.preprint.server.data.Author
 import com.preprint.server.data.JournalRef
 import com.preprint.server.data.PubData
-import com.preprint.server.ref.Reference
+import com.preprint.server.data.Reference
 
 data class CRData(
     override var id: String = "",

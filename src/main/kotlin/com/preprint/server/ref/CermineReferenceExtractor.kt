@@ -1,5 +1,6 @@
 package com.preprint.server.ref
 
+import com.preprint.server.data.Reference
 import pl.edu.icm.cermine.ContentExtractor
 import java.io.ByteArrayInputStream
 import java.io.InputStream

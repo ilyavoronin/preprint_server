@@ -1,7 +1,7 @@
 package com.preprint.server.ref.custom
 
 import com.preprint.server.ref.GrobidEngine
-import com.preprint.server.ref.Reference
+import com.preprint.server.data.Reference
 import org.apache.logging.log4j.kotlin.logger
 
 object ReferenceParser {
@@ -324,7 +324,8 @@ object ReferenceParser {
     }
 
     private fun rejectAsReference(ref : String) : Boolean {
-        val reference = Reference(ref, GrobidEngine.processRawReference(ref, 0))
+        val reference =
+            Reference(ref, GrobidEngine.processRawReference(ref, 0))
         return reference.authors.isNullOrEmpty()
     }
 }

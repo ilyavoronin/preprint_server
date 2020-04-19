@@ -2,7 +2,7 @@ import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.data.Author
 import com.preprint.server.data.JournalRef
 import com.preprint.server.neo4j.DatabaseHandler
-import com.preprint.server.ref.Reference
+import com.preprint.server.data.Reference
 
 fun main() {
     val dbh = DatabaseHandler("localhost", "7687", "neo4j", "qwerty")
