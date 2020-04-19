@@ -1,6 +1,7 @@
 package com.preprint.server.arxiv
 
-import com.preprint.server.data.Data
+import com.preprint.server.data.Author
+import com.preprint.server.data.PubData
 import com.preprint.server.ref.Reference
 
 data class ArxivData(
@@ -22,7 +23,4 @@ data class ArxivData(
     var license : String? = null,
     override var refList : MutableList<Reference> = mutableListOf(),
     override var pdfUrl : String = ""
-): Data {
-
-    data class Author(val name : String, val affiliation : String? = null)
-}
+): PubData

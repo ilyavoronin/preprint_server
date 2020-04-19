@@ -1,6 +1,6 @@
 package com.preprint.server.pdf
 
-import com.preprint.server.data.Data
+import com.preprint.server.data.PubData
 import com.preprint.server.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
@@ -14,7 +14,7 @@ object PdfHandler {
     val logger = logger()
     private const val SLEEP_TIME : Long = 0
     fun getFullInfo(
-        recordList : List <Data>,
+        recordList : List <PubData>,
         outputPath : String,
         refExtractor : ReferenceExtractor?,
         savePdf : Boolean
