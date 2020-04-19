@@ -8,14 +8,10 @@ class Reference() {
     var rawReference : String = ""
     var arxivId : String? = null
     var doi : String? = null
-    var booktitle : String? = null
-    var address : String? = null
     var authors : List<String>? = null
     var title : String? = null
-    var isbn10 : String? = null
-    var isbn13 : String? = null
     var journal : String? = null
-    var pubnum : String? = null
+    var issue : String? = null
     var pages : String? = null
     var volume : String? = null
     var year : String? = null
@@ -39,14 +35,10 @@ class Reference() {
     private fun setBib(p : BiblioItem) {
         arxivId = p.arXivId
         doi = p.doi
-        booktitle = p.bookTitle
-        address = p.address
         authors = p.fullAuthors?.map {author -> author.toString()}
         title = p.title
-        isbn10 = p.isbN10
-        isbn13 = p.isbN13
         journal = p.journal
-        pubnum = p.pubnum
+        issue = p.issue
         pages = p.pageRange
         volume = p.volumeBlock
         year = p.publicationDate
@@ -62,7 +54,6 @@ class Reference() {
         }
         addField("raw:", rawReference)
         addField("  title", title)
-        addField("  book title", booktitle)
         addField("  authors", authors?.joinToString { it })
         addField("  arxiv id", arxivId)
         addField("  doi", doi)
@@ -70,10 +61,6 @@ class Reference() {
         addField("  volume", volume)
         addField("  year", year)
         addField("  pages", pages)
-        addField( " adress", address)
-        addField("  isbn10", isbn10)
-        addField("  isbn13", isbn13)
-        addField("  pubnum", pubnum)
         res += "\n\n"
         return res
     }
