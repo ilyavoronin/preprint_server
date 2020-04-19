@@ -127,13 +127,14 @@ class DatabaseHandler(
 
     //create publication -> journal connections
     private fun createJournalPublicationConnections(session: Session, record: ArxivData) {
-        val params = mapOf(
-            "arxId" to record.id,
-            "rjrl" to record.journal?.name,
-            "vol" to record.journal?.volume,
-            "pages" to record.journal?.pages
-        )
         if (record.journal != null && record.journal?.name != null) {
+            val params = mapOf(
+                "arxId" to record.id,
+                "rjrl" to record.journal?.name,
+                "vol" to record.journal?.volume,
+                "pages" to record.journal?.pages,
+                "number" to record.journal?.number
+            )
             session.run("""
                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxId")}})
                        MERGE (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
