@@ -127,10 +127,10 @@ class DatabaseHandler(
 
     //create publication -> journal connections
     private fun createJournalPublicationConnections(session: Session, record: ArxivData) {
-        if (record.journal != null && record.journal?.name != null) {
+        if (record.journal != null && record.journal?.rawTitle != null) {
             val params = mapOf(
                 "arxId" to record.id,
-                "rjrl" to record.journal?.name,
+                "rjrl" to record.journal?.rawTitle,
                 "vol" to record.journal?.volume,
                 "pages" to record.journal?.pages,
                 "no" to record.journal?.number,

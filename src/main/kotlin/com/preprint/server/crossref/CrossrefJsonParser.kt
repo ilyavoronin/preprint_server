@@ -14,9 +14,10 @@ object CrossrefJsonParser {
                 val crRecord = CRData()
                 record.DOI?.let {crRecord.doi = it}
                 record.title?.let {crRecord.title = it[0]}
-                if (record.short_container_title != null) {
+                if (record.container_title != null) {
                     val journal = JournalRef("")
-                    journal.name = record.short_container_title[0]
+                    record.short_container_title?.let {journal.shortTitle = it[0]}
+                    journal.fullTitle = record.container_title[0]
                     record.volume?.let {journal.volume = it}
                     record.page?.let {journal.pages = it}
                     record.issue?.let {journal.number = it}
