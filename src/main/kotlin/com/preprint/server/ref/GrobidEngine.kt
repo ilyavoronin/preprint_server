@@ -1,6 +1,8 @@
 package com.preprint.server.ref
 
 import com.preprint.server.Config
+import com.preprint.server.data.JournalRef
+import com.preprint.server.data.PubData
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
@@ -38,7 +40,11 @@ object GrobidEngine {
         return engine.processRawReferences(refList, consolidate)
     }
 
-    fun getJournalNames(journalList : List<String>) : List<String?> {
-        return journalList.map { processRawReference(it, 0).journal }
+    fun getFullJournalInfo(journal : JournalRef) {
+        val bibitem = processRawReference(journal.rawRef, 0)
+        journal.name = bibitem.journal
+        journal.pages = bibitem.pageRange
+        journal.volume = bibitem.volume
+        journal.year = bibitem.year
     }
 }

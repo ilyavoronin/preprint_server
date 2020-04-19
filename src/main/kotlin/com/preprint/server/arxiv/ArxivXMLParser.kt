@@ -1,5 +1,7 @@
 package com.preprint.server.arxiv
 
+import com.preprint.server.data.Author
+import com.preprint.server.data.JournalRef
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
@@ -53,15 +55,17 @@ object ArxivXMLParser {
                 }
 
                 val affiliation : String? = authorInfo.getValue("affiliation")
-                arxivData.authors.add(ArxivData.Author(name, affiliation))
+                arxivData.authors.add(Author(name, affiliation))
             }
 
             arxivData.categories = recordMetadata.getValue("categories")
                 ?.split(" ")?.toMutableList() ?: mutableListOf()
 
+            recordMetadata.getValue("journal-ref")?.let {
+                arxivData.journal = JournalRef(it, true)
+            }
             arxivData.comments = recordMetadata.getValue("comments")
             arxivData.reportNo = recordMetadata.getValue("report-no")
-            arxivData.journalRef = recordMetadata.getValue("journal-ref")
             arxivData.mscClass = recordMetadata.getValue("msc-class")
             arxivData.acmClass = recordMetadata.getValue("acm-class")
             arxivData.doi = recordMetadata.getValue("doi")

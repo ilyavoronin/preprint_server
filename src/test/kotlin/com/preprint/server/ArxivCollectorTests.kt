@@ -22,7 +22,7 @@ class ArxivCollectorTests {
         every { PdfHandler.getFullInfo(any(), any(), any(), any()) } just Runs
         mockkObject(GrobidEngine)
         val slot2 = slot<List<String>>()
-        every {GrobidEngine.getJournalNames(capture(slot2))} answers
+        every {GrobidEngine.getFullJournalInfo(capture(slot2))} answers
                 {slot2.captured.map { if(it != "") it + "r" else null }}
         mockkObject(ArxivAPI)
     }

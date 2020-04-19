@@ -27,9 +27,6 @@ object ArxivCollector {
                     ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
                 resumptionToken = newResumptionToken
 
-                val journals = GrobidEngine.getJournalNames(newArxivRecords.map {it.journalRef ?: ""})
-                newArxivRecords.zip(journals).forEach { (record, journal) -> record.journalRef = journal }
-
                 PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
                 dbHandler.storeArxivData(newArxivRecords)
                 recordsProcessed += newArxivRecords.size
