@@ -133,13 +133,15 @@ class DatabaseHandler(
                 "rjrl" to record.journal?.name,
                 "vol" to record.journal?.volume,
                 "pages" to record.journal?.pages,
-                "number" to record.journal?.number
+                "no" to record.journal?.number,
+                "rr" to record.journal?.rawRef
             )
             session.run("""
                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxId")}})
                        MERGE (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
                        MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
-                       ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")}
+                       ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
+                           jref.number = ${parm("no")}, jref.rawRef = ${parm("rr")}
                     """.trimIndent(), params)
         }
     }
