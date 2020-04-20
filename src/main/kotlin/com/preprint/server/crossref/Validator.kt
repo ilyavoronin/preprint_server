@@ -43,25 +43,25 @@ object Validator {
             if (ref.rawReference.contains(record.title)) {
                 return true
             }
-            val j = record.journal
-            if (ref.volume == null || j?.volume == null || ref.pages == null || j.pages == null) {
-                return false
+            var score = 0;
+            val j = record.journal ?: return false
+            if (ref.issue != null && j.number != null && ref.issue == j.number) {
+                score += 1
             }
-            if (ref.issue != null && j.number != null) {
-                if (ref.issue != j.number) {
-                    return false
+            val pages1 = ref.pages?.split("--")
+            val pages2 = ref.pages?.split("-")
+            if (pages1 != null && pages2 != null && pages1[0] == pages2[0]) {
+                if (pages1.size > 1 && pages2.size > 1) {
+                    if (pages1[1] == pages2[1]) {
+                        score += 1
+                    }
                 }
             }
-            val pages1 = ref.pages!!.split("--")
-            val pages2 = ref.pages!!.split("-")
-            if (pages1[0] != pages2[0]) {
-                return false
+            if (ref.volume != null && j.volume != null && ref.volume == j.volume) {
+                score += 1
             }
-            if (pages1.size > 1 && pages2.size > 1) {
-                if (pages1[1] != pages2[1]) {
-                    return false
-                }
-            }
+
+            return score >= 2
         }
         return true
     }
