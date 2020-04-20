@@ -14,7 +14,6 @@ object Validator {
     fun validate(ref : Reference) {
         val records = CrossRefApi.findRecord(ref.rawReference)
         for (record in records) {
-            println(record)
             if (checkSim(ref, record)) {
                 ref.validated = true
                 ref.title = record.title
@@ -40,6 +39,9 @@ object Validator {
             return d < distThreshold
         }
         else {
+            if (ref.rawReference.contains(record.title)) {
+                return true
+            }
             val j = record.journal
             if (ref.volume == null || j?.volume == null || ref.pages == null || j.pages == null) {
                 return false
