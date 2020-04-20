@@ -15,6 +15,7 @@ class Reference() {
     var pages : String? = null
     var volume : String? = null
     var year : String? = null
+    var issn : String? = null
     var isReference = false
     var validated = false
     constructor(ref : String, shouldParse : Boolean = false) : this() {
@@ -43,6 +44,7 @@ class Reference() {
         pages = p.pageRange
         volume = p.volumeBlock
         year = p.publicationDate
+        issn = p.issn
         isReference = !p.rejectAsReference()
     }
 
