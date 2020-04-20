@@ -26,7 +26,10 @@ object CrossrefJsonParser {
                     record.page?.let {journal.pages = it}
                     record.issue?.let {journal.number = it}
                     record.ISSN?.let {journal.issn = it[0]}
-                    record.issued?.let {it.date_parts?.get(0)?.let {journal.year = it[0].toString()}}
+                    val date = record.issued?.date_parts
+                    if (!date.isNullOrEmpty() && !date[0].isNullOrEmpty() && date[0][0] != null) {
+                        journal.year = date[0][0].toString()
+                    }
                     crRecord.journal = journal
                 }
                 records.add(crRecord)
