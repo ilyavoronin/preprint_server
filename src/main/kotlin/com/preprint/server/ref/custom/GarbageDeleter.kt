@@ -1,5 +1,7 @@
 package com.preprint.server.ref.custom
 
+import com.preprint.server.algo.LCS
+
 
 object GarbageDeleter {
     fun removePageNumbers(lines : List<Line>) : List<Line> {
@@ -132,42 +134,7 @@ object GarbageDeleter {
 
     fun removePageHeaders(lines : List<Line>) : List<Line> {
         //find longest common substring
-        fun findLGS(s1 : String, s2 : String) : String {
-            if (s1 == s2) {
-                return s1
-            }
-            val dp = Array(s1.length + 1) {IntArray(s2.length + 1)}
-            for (i in 0 until s1.length + 1) {
-                for (j in 0 until s2.length + 1) {
-                    dp[i][j] = 0
-                }
-            }
-            for (i in 1 until s1.length + 1) {
-                for (j in 1 until s2.length + 1) {
-                    dp[i][j] = Integer.max(dp[i - 1][j], dp[i][j - 1])
-                    if (s1[i - 1] == s2[j - 1]) {
-                        dp[i][j] = Integer.max(dp[i][j], dp[i - 1][j - 1] + 1)
-                    }
-                }
-            }
-            var li : Int = s1.length
-            var lj : Int = s2.length
-            var res = ""
-            while (li > 0 && lj > 0) {
-                if (dp[li][lj] == dp[li - 1][lj]) {
-                    li -= 1
-                    continue
-                }
-                if (dp[li][lj] == dp[li][lj - 1]) {
-                    lj -= 1
-                    continue
-                }
-                res += s1[li - 1]
-                li -= 1
-                lj -= 1
-            }
-            return res.reversed()
-        }
+
 
         //make all lines with indices from the list, that contains headers, empty
         fun removeHeaders(listIndices : List<Int>) {
@@ -181,7 +148,7 @@ object GarbageDeleter {
                 val cur = listIndices[i]
                 val prev = listIndices[i - 1]
                 if (state == 0) {
-                    curMaxString = findLGS(lines[prev].str, lines[cur].str)
+                    curMaxString = LCS.find(lines[prev].str, lines[cur].str)
                     if (curMaxString.length > lines[cur].str.length * 0.75 &&
                         curMaxString.length > lines[prev].str.length * 0.75
                     ) {
@@ -194,7 +161,7 @@ object GarbageDeleter {
                     continue
                 }
                 if (state == 1) {
-                    val newString = findLGS(curMaxString, lines[cur].str)
+                    val newString = LCS.find(curMaxString, lines[cur].str)
                     if (newString.length == curMaxString.length
                         || curMaxString.length > 15 && curMaxString.length - newString.length < 4) {
                         runLength += 1
