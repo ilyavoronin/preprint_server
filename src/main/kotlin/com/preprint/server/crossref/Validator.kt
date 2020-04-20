@@ -61,6 +61,10 @@ object Validator {
                 score += 1
             }
 
+            if (record.authors.all {it.secondName != null && ref.rawReference.contains(it.secondName)}) {
+                score += 1
+            }
+
             return score >= 2
         }
         return true
