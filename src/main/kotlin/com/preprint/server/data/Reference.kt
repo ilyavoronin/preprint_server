@@ -16,6 +16,7 @@ class Reference() {
     var volume : String? = null
     var year : String? = null
     var isReference = false
+    var validated = false
     constructor(ref : String, shouldParse : Boolean = false) : this() {
         rawReference = ref
         if (shouldParse) {
