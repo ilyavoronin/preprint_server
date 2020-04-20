@@ -59,6 +59,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
             logger.info("done by CUSTOM")
         }
         Validator.validate(refList)
+        logger.info("Validated ${refList.count{it.validated}} out of ${refList.size}")
         return refList
     }
 

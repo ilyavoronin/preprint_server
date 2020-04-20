@@ -11,7 +11,7 @@ import java.net.URLEncoder
 object CrossRefApi {
     const val prefix = "https://api.crossref.org"
     val email = Config.config["email"].toString()
-    val maxRecordsNumber = 3
+    val maxRecordsNumber = 5
 
     fun findRecord(ref : String) : List<CRData> {
         val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"

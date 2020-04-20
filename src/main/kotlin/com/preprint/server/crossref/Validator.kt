@@ -31,18 +31,13 @@ object Validator {
     }
 
     private fun checkSim(ref : Reference, record : CRData) : Boolean {
-        if (ref.volume != null && record.journal?.volume != null) {
-            if (ref.volume != record.journal?.volume) {
-                return false
-            }
-        }
         if (ref.title != null && ref.title != "") {
             val dist = LvnstDist.findDist(ref.title!!, record.title)
             val d = dist.toDouble() / ref.title!!.length.toDouble()
             return d < distThreshold
         }
         else {
-            val lcs = LCS.find(ref.rawReference, record.title)
+            val lcs = LCS.find(ref.rawReference, record.title).length
             if (lcs.toDouble() / record.title.length > 1 - distThreshold) {
                 return true
             }
@@ -60,6 +55,9 @@ object Validator {
                         score += 1
                     }
                 }
+                else {
+                    score += 1
+                }
             }
             if (ref.volume != null && j.volume != null && ref.volume == j.volume) {
                 score += 1
@@ -72,7 +70,6 @@ object Validator {
             if (j.year != null && ref.year != null && j.year == ref.year) {
                 score += 1
             }
-
             return score >= 2
         }
     }
