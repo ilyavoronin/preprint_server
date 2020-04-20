@@ -22,6 +22,7 @@ object Validator {
                 ref.issue = record.journal?.number
                 ref.volume = record.journal?.volume
                 ref.year = record.journal?.year
+                ref.authors = record.authors
                 break
             }
         }

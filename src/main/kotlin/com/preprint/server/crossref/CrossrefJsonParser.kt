@@ -15,7 +15,7 @@ object CrossrefJsonParser {
                 record.DOI?.let {crRecord.doi = it}
                 record.title?.let {crRecord.title = it[0]}
                 crRecord.authors.addAll(record.author?.map {auth ->
-                    Author(auth.family + " " + auth.given)
+                    Author(auth.family + " " + auth.given, firstName = auth.given, secondName = auth.family)
                 } ?: listOf())
                 record.URL?.let {crRecord.pdfUrl = it}
                 if (record.container_title != null) {

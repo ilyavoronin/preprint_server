@@ -8,7 +8,7 @@ class Reference() {
     var rawReference : String = ""
     var arxivId : String? = null
     var doi : String? = null
-    var authors : List<String>? = null
+    var authors : List<Author>? = null
     var title : String? = null
     var journal : String? = null
     var issue : String? = null
@@ -36,7 +36,7 @@ class Reference() {
     private fun setBib(p : BiblioItem) {
         arxivId = p.arXivId
         doi = p.doi
-        authors = p.fullAuthors?.map {author -> author.toString()}
+        authors = p.fullAuthors?.map {author -> Author(author.rawName)}
         title = p.title
         journal = p.journal
         issue = p.issue
@@ -55,7 +55,7 @@ class Reference() {
         }
         addField("raw:", rawReference)
         addField("  title", title)
-        addField("  authors", authors?.joinToString { it })
+        addField("  authors", authors?.joinToString { it.toString() })
         addField("  arxiv id", arxivId)
         addField("  doi", doi)
         addField("  journal", journal)
