@@ -37,7 +37,7 @@ class Reference() {
     private fun setBib(p : BiblioItem) {
         arxivId = p.arXivId
         doi = p.doi
-        authors = p.fullAuthors?.map {author -> Author(author.rawName)}
+        authors = p.fullAuthors?.map {author -> Author(author.toString())}
         title = p.title
         journal = p.journal
         issue = p.issue
