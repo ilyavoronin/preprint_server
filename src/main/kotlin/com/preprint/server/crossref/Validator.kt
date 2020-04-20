@@ -69,6 +69,10 @@ object Validator {
                 score += 1
             }
 
+            if (j.year != null && ref.year != null && j.year == ref.year) {
+                score += 1
+            }
+
             return score >= 2
         }
     }
