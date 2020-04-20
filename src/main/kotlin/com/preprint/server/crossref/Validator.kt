@@ -1,5 +1,6 @@
 package com.preprint.server.crossref
 
+import com.preprint.server.algo.LCS
 import com.preprint.server.algo.LvnstDist
 import com.preprint.server.data.Reference
 
@@ -40,9 +41,11 @@ object Validator {
             return d < distThreshold
         }
         else {
-            if (ref.rawReference.contains(record.title)) {
+            val lcs = LCS.find(ref.rawReference, record.title)
+            if (lcs.toDouble() / record.title.length > 1 - distThreshold) {
                 return true
             }
+
             var score = 0;
             val j = record.journal ?: return false
             if (ref.issue != null && j.number != null && ref.issue == j.number) {
@@ -67,6 +70,5 @@ object Validator {
 
             return score >= 2
         }
-        return true
     }
 }
