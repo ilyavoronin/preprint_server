@@ -68,7 +68,7 @@ class Reference() {
 
     companion object {
         fun toReferences(refList: List<String>): List<Reference> {
-            val p = GrobidEngine.processRawReferences(refList, 1)
+            val p = GrobidEngine.processRawReferences(refList, 0)
             return refList.zip(p).map { (ref, bib) -> Reference(ref, bib) }
         }
     }

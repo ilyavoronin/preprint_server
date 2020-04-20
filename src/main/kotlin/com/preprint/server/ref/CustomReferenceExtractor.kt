@@ -1,5 +1,6 @@
 package com.preprint.server.ref
 
+import com.preprint.server.crossref.Validator
 import com.preprint.server.data.Reference
 import com.preprint.server.ref.custom.*
 import org.apache.logging.log4j.kotlin.logger
@@ -36,7 +37,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         lines = lines.drop(ind)
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
-        val refList = Reference.toReferences(
+        var refList = Reference.toReferences(
             parseReferences(
                 lines,
                 isTwoColumns,
@@ -52,9 +53,12 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 }
             }
             logger.info("done by GROBID")
-            return GrobidReferenceExtractor.extract(pdf)
+            refList = GrobidReferenceExtractor.extract(pdf)
         }
-        logger.info("done by CUSTOM")
+        else {
+            logger.info("done by CUSTOM")
+        }
+        Validator.validate(refList)
         return refList
     }
 
