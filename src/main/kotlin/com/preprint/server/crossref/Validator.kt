@@ -20,9 +20,7 @@ object Validator {
     }
 
     fun validate(ref : Reference) {
-        println("Searching for ${ref.rawReference}")
         val records = CrossRefApi.findRecord(ref.rawReference)
-        println("Found ${ref.title}")
         for (record in records) {
             if (checkSim(ref, record)) {
                 ref.validated = true

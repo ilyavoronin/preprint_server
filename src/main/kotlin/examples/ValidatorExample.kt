@@ -14,7 +14,7 @@ fun main() = runBlocking {
             Reference("Black Holes"),
             Reference("BWT")
         )
-        for (i in 0..20) {
+        for (i in 0..70) {
             refs.add(refs[0])
         }
         val job = launch {
