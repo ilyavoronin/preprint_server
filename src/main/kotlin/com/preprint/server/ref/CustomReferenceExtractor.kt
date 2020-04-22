@@ -3,6 +3,8 @@ package com.preprint.server.ref
 import com.preprint.server.crossref.Validator
 import com.preprint.server.data.Reference
 import com.preprint.server.ref.custom.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
 import kotlin.math.roundToInt
@@ -48,9 +50,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
         if (refList.isEmpty() || !isReferences) {
             if (!isReferences) {
                 logger.info("Drop because grobid can't identify parsed string as reference")
-                for (ref in refList) {
-                    println(ref.authors)
-                }
             }
             logger.info("done by GROBID")
             refList = GrobidReferenceExtractor.extract(pdf)
@@ -58,7 +57,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         else {
             logger.info("done by CUSTOM")
         }
-        Validator.validate(refList)
+        runBlocking {Validator.validate(refList)}
         logger.info("Validated ${refList.count{it.validated}} out of ${refList.size}")
         return refList
     }

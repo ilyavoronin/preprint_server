@@ -3,17 +3,26 @@ package com.preprint.server.crossref
 import com.preprint.server.algo.LCS
 import com.preprint.server.algo.LvnstDist
 import com.preprint.server.data.Reference
+import kotlinx.coroutines.*
+import org.apache.logging.log4j.kotlin.logger
 
 object Validator {
+    val logger = logger()
+
     private val distThreshold = 0.05
-    fun validate(refList : List<Reference>) {
+    suspend fun validate(refList : List<Reference>) = withContext(Dispatchers.IO) {
+        logger.info("Begin validation of ${refList.size} references")
+        val jobs = mutableListOf<Job>()
         for (ref in refList) {
-            validate(ref)
+            jobs.add(launch { validate(ref) })
         }
+        jobs.forEach {it.join()}
     }
 
     fun validate(ref : Reference) {
+        println("Searching for ${ref.rawReference}")
         val records = CrossRefApi.findRecord(ref.rawReference)
+        println("Found ${ref.title}")
         for (record in records) {
             if (checkSim(ref, record)) {
                 ref.validated = true
