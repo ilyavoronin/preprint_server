@@ -25,7 +25,7 @@ class DatabaseHandler(
             val publications = mapOf("publications" to arxivRecords.map {arxivDataToMap(it)})
             it.run("""
                     UNWIND ${"$"}publications as pubData
-                    MERGE (pub:${DBLabels.PUBLICATION.str} {arxivId : pubData.arxivId}) 
+                    MERGE (pub:${DBLabels.PUBLICATION.str}:${DBLabels.ARXIV_LBL.str} {arxivId : pubData.arxivId}) 
                     ON CREATE SET pub += pubData
                     RETURN pub
                 """.trimIndent(), publications

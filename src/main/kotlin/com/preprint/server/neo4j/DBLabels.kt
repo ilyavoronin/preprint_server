@@ -10,5 +10,6 @@ enum class DBLabels(val str: String) {
     WORKS("WORKS"),
     CITES("CITES"),
     CITED_BY("CITED_BY"),
-    PUBLISHED_IN("PUBLISHED_IN")
+    PUBLISHED_IN("PUBLISHED_IN"),
+    ARXIV_LBL("Arxiv")
 }
