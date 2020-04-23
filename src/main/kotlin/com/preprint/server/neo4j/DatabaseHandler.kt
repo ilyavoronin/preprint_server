@@ -4,6 +4,7 @@ import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.data.Author
+import com.preprint.server.data.JournalRef
 import com.preprint.server.data.Reference
 import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Session
@@ -40,7 +41,9 @@ class DatabaseHandler(
 
                 createCitationsConnections(it, record)
 
-                createJournalPublicationConnections(it, record)
+                if (record.journal != null) {
+                    createJournalPublicationConnections(it, record.journal, id)
+                }
             }
             logger.info("All connections created")
         }
@@ -167,24 +170,28 @@ class DatabaseHandler(
                         """.trimIndent(), params
                     ).list().map {it.get("id(cpub)").asLong()}.get(0)
                     ref.authors?.let {createAuthorConnections(session, it, id)}
+                    val journal = JournalRef(rawTitle = ref.title, volume = ref.volume, pages = ref.pages,
+                                             number = ref.issue, issn = ref.issn, rawRef = "")
+                    createJournalPublicationConnections(session, journal, id)
                 }
             }
         }
     }
 
     //create publication -> journal connections
-    private fun createJournalPublicationConnections(session: Session, record: ArxivData) {
-        if (record.journal != null && record.journal?.rawTitle != null) {
+    private fun createJournalPublicationConnections(session: Session, journal : JournalRef?, id : Long) {
+        if (journal?.rawTitle != null) {
             val params = mapOf(
-                "arxId" to record.id,
-                "rjrl" to record.journal?.rawTitle,
-                "vol" to record.journal?.volume,
-                "pages" to record.journal?.pages,
-                "no" to record.journal?.number,
-                "rr" to record.journal?.rawRef
+                "pubId" to id,
+                "rjrl" to journal.rawTitle,
+                "vol" to journal.volume,
+                "pages" to journal.pages,
+                "no" to journal.number,
+                "rr" to journal.rawRef
             )
             session.run("""
-                       MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxId")}})
+                       MATCH (pub:${DBLabels.PUBLICATION.str})
+                       WHERE id(pub) = ${parm("pubId")}
                        MERGE (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
                        MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
                        ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
