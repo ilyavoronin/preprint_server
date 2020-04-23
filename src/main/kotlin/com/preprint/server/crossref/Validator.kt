@@ -70,7 +70,8 @@ object Validator {
                 score += 1
             }
 
-            if (record.authors.all {it.secondName != null && ref.rawReference.contains(it.secondName)}) {
+            if (!record.authors.isNullOrEmpty() &&
+                    record.authors.all {it.secondName != null && ref.rawReference.contains(it.secondName)}) {
                 score += 1
             }
 
