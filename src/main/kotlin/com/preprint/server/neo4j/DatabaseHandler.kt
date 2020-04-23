@@ -3,6 +3,7 @@ package com.preprint.server.neo4j
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import com.preprint.server.arxiv.ArxivData
+import com.preprint.server.data.Author
 import com.preprint.server.data.Reference
 import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Session
@@ -24,18 +25,18 @@ class DatabaseHandler(
         driver.session().use {
             //create new or update publication node
             val publications = mapOf("publications" to arxivRecords.map {arxivDataToMap(it)})
-            it.run("""
+            val pubIds = it.run("""
                     UNWIND ${"$"}publications as pubData
                     MERGE (pub:${DBLabels.PUBLICATION.str} {arxivId : pubData.arxivId}) 
                     ON CREATE SET pub += pubData, pub:${DBLabels.ARXIV_LBL.str}
                     ON MATCH SET pub:${DBLabels.ARXIV_LBL.str}
-                    RETURN pub
+                    RETURN id(pub)
                 """.trimIndent(), publications
-            )
+            ).list().map {it.get("id(pub)").asLong()}
             logger.info("Publication nodes created")
 
-            arxivRecords.forEach { record ->
-                createAuthorConnections(it, record)
+            pubIds.zip(arxivRecords).forEach { (id, record) ->
+                createAuthorConnections(it, record.authors, id)
 
                 createCitationsConnections(it, record)
 
@@ -83,12 +84,12 @@ class DatabaseHandler(
     }
 
     //create publication -> author connection and author -> affiliation connection
-    private fun createAuthorConnections(session : Session, record: ArxivData) {
-        record.authors.forEach {author ->
+    private fun createAuthorConnections(session : Session, authors : List<Author>, id : Long) {
+        authors.forEach {author ->
             val params = mapOf(
                 "name" to author.name,
                 "aff" to author.affiliation,
-                "recordId" to record.id
+                "pubId" to id
             )
             val createAffiliationQuery =
                 if (author.affiliation != null) {
@@ -102,7 +103,8 @@ class DatabaseHandler(
                         MERGE (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
                         $createAffiliationQuery
                         WITH auth
-                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("recordId")}})
+                        MATCH (pub:${DBLabels.PUBLICATION.str})
+                        WHERE id(pub) = ${parm("pubId")}
                         MERGE (pub)-[:${DBLabels.AUTHORED.str}]->(auth)
                     """.trimIndent(), params)
         }
@@ -148,18 +150,23 @@ class DatabaseHandler(
                 }
                 else {
                     val params = mapOf("cdata" to refDataToMap(ref),
-                                       "arxivId" to record.id)
+                                       "arxivId" to record.id,
+                                       "rawRef" to ref.rawReference)
                     val matchString =
                         if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
                         else "title: ${parm("cdata.title")}"
-                    session.run(
+                    val id = session.run(
                         """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
                             MERGE (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
                             ON CREATE SET cpub += ${parm("cdata")}
                             ON MATCH SET cpub += ${parm("cdata")}
+                            MERGE (pub)-[cites:${DBLabels.CITES.str}]->(cpub)
+                            SET cites.rawRef = ${parm("rawRef")}
+                            RETURN id(cpub)
                         """.trimIndent(), params
-                    )
+                    ).list().map {it.get("id(cpub)").asLong()}.get(0)
+                    ref.authors?.let {createAuthorConnections(session, it, id)}
                 }
             }
         }
