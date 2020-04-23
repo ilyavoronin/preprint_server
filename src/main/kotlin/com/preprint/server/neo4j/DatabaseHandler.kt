@@ -3,6 +3,7 @@ package com.preprint.server.neo4j
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import com.preprint.server.arxiv.ArxivData
+import com.preprint.server.data.Reference
 import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Session
 import java.io.Closeable
@@ -60,6 +61,23 @@ class DatabaseHandler(
         return res
     }
 
+    private fun refDataToMap(ref : Reference) : Map<String, String> {
+        val res = mutableMapOf<String, String>()
+        if (!ref.title.isNullOrEmpty()) {
+            res += "title" to ref.title!!
+        }
+        if (!ref.arxivId.isNullOrEmpty()) {
+            res += "arxivId" to ref.arxivId!!
+        }
+        if (!ref.doi.isNullOrEmpty()) {
+            res += "doi" to ref.doi!!
+        }
+        if (!ref.year.isNullOrEmpty()) {
+            res += "pubYear" to ref.year!!
+        }
+        return res
+    }
+
     fun parm(paramName : String) : String {
         return "\$$paramName"
     }
@@ -109,19 +127,38 @@ class DatabaseHandler(
                         RETURN pubTo
                     """.trimIndent(), params)
 
-            if (res.list().size == 0 && ref.title != null) {
-                //then the cited publication doesn't exist in database
-                //crete missing publication -> publication connection
-                val searchByArxivIdQuery = if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""
-                val searchByDoiQuery = if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""
-                session.run("""
+            if (res.list().isEmpty() && !ref.title.isNullOrEmpty()) {
+                if (!ref.validated) {
+                    //then the cited publication doesn't exist in database
+                    //crete missing publication -> publication connection
+                    val searchByArxivIdQuery = if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""
+                    val searchByDoiQuery = if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""
+                    session.run(
+                        """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                             MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
                             MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
                             SET c.rawRef = ${parm("rRef")}
                                 $searchByArxivIdQuery
                                 $searchByDoiQuery
-                        """.trimIndent(), params)
+                        """.trimIndent(), params
+                    )
+                }
+                else {
+                    val params = mapOf("cdata" to refDataToMap(ref),
+                                       "arxivId" to record.id)
+                    val matchString =
+                        if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
+                        else "title: ${parm("cdata.title")}"
+                    session.run(
+                        """
+                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
+                            MERGE (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
+                            ON CREATE SET cpub += ${parm("cdata")}
+                            ON MATCH SET cpub += ${parm("cdata")}
+                        """.trimIndent(), params
+                    )
+                }
             }
         }
     }
