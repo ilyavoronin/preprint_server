@@ -116,13 +116,15 @@ class DatabaseHandler(
                 "arxId" to ref.arxivId,
                 "rdoi" to ref.doi,
                 "rtit" to ref.title,
-                "rRef" to ref.rawReference
+                "rRef" to ref.rawReference,
+                "cdata" to refDataToMap(ref)
             )
             val res = session.run("""
                         MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
                         WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
                             pubTo.doi = ${parm("rdoi")} OR pubTo.title = ${parm("rtit")})
+                        SET pubTo += ${parm("cdata")}
                         MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
                         RETURN pubTo
                     """.trimIndent(), params)
