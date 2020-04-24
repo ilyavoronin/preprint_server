@@ -3,6 +3,7 @@ package com.preprint.server
 import com.preprint.server.arxiv.ArxivAPI
 import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.arxiv.ArxivData
+import com.preprint.server.data.Reference
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.GrobidEngine
@@ -19,11 +20,8 @@ class ArxivCollectorTests {
         mockkConstructor(KotlinLogger::class)
         every {anyConstructed<KotlinLogger>().info(any<String>())} just Runs
         mockkObject(PdfHandler)
-        every { PdfHandler.getFullInfo(any(), any(), any(), any()) } just Runs
+        every { PdfHandler.getFullInfo(any(), any(), any(), any(), any()) } just Runs
         mockkObject(GrobidEngine)
-        val slot2 = slot<List<String>>()
-        every {GrobidEngine.getFullJournalInfo(capture(slot2))} answers
-                {slot2.captured.map { if(it != "") it + "r" else null }}
         mockkObject(ArxivAPI)
     }
 

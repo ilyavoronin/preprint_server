@@ -2,6 +2,8 @@ package com.preprint.server
 
 import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.arxiv.ArxivXMLParser
+import com.preprint.server.data.Author
+import com.preprint.server.data.JournalRef
 import io.mockk.*
 import org.apache.logging.log4j.kotlin.KotlinLogger
 import org.junit.jupiter.api.*
@@ -35,8 +37,8 @@ class ArxivXmlParserTests {
             id = "0801.2407",
             creationDate = "2008-01-15",
             authors = mutableListOf(
-                ArxivData.Author("Laetitia Abel-Tiberini II", "LAOG"),
-                ArxivData.Author("Pierre Labeye", "CEA Leti")
+                Author("Laetitia Abel-Tiberini II", "LAOG"),
+                Author("Pierre Labeye", "CEA Leti")
             ),
             title = "ABCD ABCD DEFG",
             categories = mutableListOf("astro-ph"),
@@ -53,8 +55,8 @@ class ArxivXmlParserTests {
             creationDate = "2009-09-15",
             lastUpdateDate = "2020-03-21",
             authors = mutableListOf(
-                ArxivData.Author("Wm. G. Hoover"),
-                ArxivData.Author("Carol G. Hoover")
+                Author("Wm. G. Hoover"),
+                Author("Carol G. Hoover")
             ),
             title = "Shockwaves and Local Hydrodynamics; Failure of the Navier-Stokes Equations",
             categories = mutableListOf("physics.flu-dyn", "nlin.CD"),
@@ -63,7 +65,6 @@ class ArxivXmlParserTests {
             license = "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
             abstract = "Big abstract abacaba DABA-DABA",
             acmClass = "56asdf",
-            journalRef = "Phys.Rev.D76:013009,2007",
             reportNo = "IGPG-07/03-2"
         )
 
@@ -86,8 +87,8 @@ class ArxivXmlParserTests {
             creationDate = "2009-09-15",
             lastUpdateDate = "2020-03-21",
             authors = mutableListOf(
-                ArxivData.Author("Wm. G. Hoover"),
-                ArxivData.Author("Carol G. Hoover")
+                Author("Wm. G. Hoover"),
+                Author("Carol G. Hoover")
             ),
             title = "Shockwaves and Local Hydrodynamics; Failure of the Navier-Stokes Equations",
             categories = mutableListOf("physics.flu-dyn", "nlin.CD"),
@@ -96,7 +97,6 @@ class ArxivXmlParserTests {
             license = "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
             abstract = "Big abstract abacaba DABA-DABA",
             acmClass = "56asdf",
-            journalRef = "Phys.Rev.D76:013009,2007",
             reportNo = "IGPG-07/03-2"
         )
 
