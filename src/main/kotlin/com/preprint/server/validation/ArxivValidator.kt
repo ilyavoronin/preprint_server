@@ -7,9 +7,9 @@ import java.io.File
 object ArxivValidator : Validator {
     val ids = this.javaClass.getResource("/ids.txt").readText().lines()
     override fun validate(ref: Reference) {
-        val beg = ref.rawReference.lastIndexOf("arxiv:")
+        val beg = ref.rawReference.lastIndexOf("arxiv:", ignoreCase = true)
         if (beg != -1) {
-            val arx = ref.rawReference.substringAfter(":")
+            val arx = ref.rawReference.substring(beg).substringAfter(":")
             if (arx.length > 8) {
                 var res : String? = null
                 if (arx.substring(0, 4).all {it.isDigit()} && arx[4] == '.') {
@@ -22,7 +22,7 @@ object ArxivValidator : Validator {
                 else {
                     val i = arx.indexOf('/')
                     if (i != -1) {
-                        res = ""
+                        res = arx.substring(0, i + 1)
                         for (c in arx.substring(i + 1)) {
                             if (!c.isDigit()) {
                                 break
@@ -41,7 +41,7 @@ object ArxivValidator : Validator {
             ids.forEach {idPrefix ->
                 val beg = ref.rawReference.indexOf(idPrefix + "/")
                 if (beg != -1) {
-                    var res = idPrefix
+                    var res = idPrefix + "/"
                     var i = ref.rawReference.indexOf('/', beg) + 1
                     while (ref.rawReference[i].isDigit()) {
                         res += ref.rawReference[i]
