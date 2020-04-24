@@ -1,9 +1,8 @@
 package com.preprint.server.ref
 
-import com.preprint.server.crossref.Validator
+import com.preprint.server.validation.CrossRefValidator
 import com.preprint.server.data.Reference
 import com.preprint.server.ref.custom.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -57,7 +56,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         else {
             logger.info("done by CUSTOM")
         }
-        runBlocking {Validator.validate(refList)}
+        runBlocking { CrossRefValidator.validate(refList)}
         logger.info("Validated ${refList.count{it.validated}} out of ${refList.size}")
         return refList
     }

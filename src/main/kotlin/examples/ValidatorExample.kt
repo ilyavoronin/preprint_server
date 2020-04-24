@@ -1,9 +1,8 @@
 package examples
 
-import com.preprint.server.crossref.Validator
+import com.preprint.server.validation.CrossRefValidator
 import com.preprint.server.data.Reference
 import kotlinx.coroutines.*
-import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 
 fun main() = runBlocking {
@@ -18,7 +17,7 @@ fun main() = runBlocking {
             refs.add(refs[0])
         }
         val job = launch {
-            Validator.validate(refs)
+            CrossRefValidator.validate(refs)
         }
         job.join()
         println(refs)
