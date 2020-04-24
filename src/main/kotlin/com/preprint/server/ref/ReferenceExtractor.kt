@@ -8,12 +8,14 @@ import org.apache.logging.log4j.kotlin.logger
 interface ReferenceExtractor {
     fun getReferences(pdf : ByteArray, validators : List<Validator> = listOf()) : List<Reference> {
         val refs = extractUnverifiedReferences(pdf)
-        validators.forEach {validator ->
-            runBlocking {
+        runBlocking {
+            validators.forEach { validator ->
                 validator.validate(refs)
             }
         }
-        logger().info("Validated ${refs.count{it.validated}} out of ${refs.size}")
+        if (validators.isNotEmpty()) {
+            logger().info("Validated ${refs.count { it.validated }} out of ${refs.size}")
+        }
         return refs
     }
     fun extractUnverifiedReferences(pdf : ByteArray) : List<Reference>

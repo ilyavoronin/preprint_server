@@ -5,7 +5,7 @@ import com.preprint.server.utils.*
 import java.io.File
 
 object ArxivValidator : Validator {
-    val ids = File("ids.txt").loadTextFromResources().lines()
+    val ids = this.javaClass.getResource("/ids.txt").readText().lines()
     override fun validate(ref: Reference) {
         val beg = ref.rawReference.lastIndexOf("arxiv:")
         if (beg != -1) {
