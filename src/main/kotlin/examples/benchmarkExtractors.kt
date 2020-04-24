@@ -39,7 +39,7 @@ fun main() {
                     val progressPrefix = "(${i + 1} / ${files.size})"
                     val timeMillis = measureTimeMillis {
                         try {
-                            referencesNumber = extractor.extract(file.readBytes()).size
+                            referencesNumber = extractor.getReferences(file.readBytes()).size
                         } catch (e: Exception) {
                             println("$progressPrefix ${file.nameWithoutExtension},${extractors[extractor]} - e.message")
                         }

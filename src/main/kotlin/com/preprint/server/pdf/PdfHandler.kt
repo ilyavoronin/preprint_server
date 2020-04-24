@@ -5,6 +5,7 @@ import com.preprint.server.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
+import com.preprint.server.validation.Validator
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.lang.Exception
@@ -17,6 +18,7 @@ object PdfHandler {
         recordList : List <PubData>,
         outputPath : String,
         refExtractor : ReferenceExtractor?,
+        validators : List<Validator>,
         savePdf : Boolean
     ) {
         logger.info("Begin download of ${recordList.size} pdf")
@@ -49,7 +51,7 @@ object PdfHandler {
 
             if (refExtractor != null) {
                 record.refList = try {
-                    refExtractor.extract(pdf).toMutableList()
+                    refExtractor.getReferences(pdf, validators).toMutableList()
                 } catch (e: Exception) {
                     logger.error(e)
                     File(outputPath + "failed.txt").appendText("${record.id}\n")

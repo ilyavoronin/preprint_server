@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 object CermineReferenceExtractor : ReferenceExtractor {
-    override fun extract(pdf : ByteArray): List<Reference> {
+    override fun extractUnverifiedReferences(pdf: ByteArray): List<Reference> {
         val extractor = ContentExtractor()
         val inputStream: InputStream = ByteArrayInputStream(pdf)
         extractor.setPDF(inputStream)

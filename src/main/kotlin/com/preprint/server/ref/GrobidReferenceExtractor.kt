@@ -4,7 +4,7 @@ import com.preprint.server.data.Reference
 
 
 object GrobidReferenceExtractor : ReferenceExtractor {
-    override fun extract(pdf: ByteArray): List<Reference> {
+    override fun extractUnverifiedReferences(pdf: ByteArray): List<Reference> {
         val tmpFile = createTempFile()
         tmpFile.writeBytes(pdf)
         val res = GrobidEngine.processReferences(tmpFile, 0)

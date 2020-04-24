@@ -3,6 +3,7 @@ package com.preprint.server.ref
 import com.preprint.server.validation.CrossRefValidator
 import com.preprint.server.data.Reference
 import com.preprint.server.ref.custom.*
+import com.preprint.server.validation.ArxivValidator
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -12,7 +13,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
 
     val logger = logger()
 
-    override fun extract(pdf : ByteArray) : List <Reference> {
+    override fun extractUnverifiedReferences(pdf : ByteArray) : List <Reference> {
         logger.info("Begin reference extraction")
 
         val doc = PDDocument.load(pdf)
@@ -51,13 +52,11 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 logger.info("Drop because grobid can't identify parsed string as reference")
             }
             logger.info("done by GROBID")
-            refList = GrobidReferenceExtractor.extract(pdf)
+            refList = GrobidReferenceExtractor.getReferences(pdf)
         }
         else {
             logger.info("done by CUSTOM")
         }
-        runBlocking { CrossRefValidator.validate(refList)}
-        logger.info("Validated ${refList.count{it.validated}} out of ${refList.size}")
         return refList
     }
 

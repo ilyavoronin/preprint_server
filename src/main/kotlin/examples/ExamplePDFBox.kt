@@ -11,7 +11,7 @@ fun main() {
 
             val pdf = inputFile.readBytes()
 
-            val refs = CustomReferenceExtractor.extract(pdf)
+            val refs = CustomReferenceExtractor.getReferences(pdf)
 
             outputFile.writeText("")
             refs.forEach { outputFile.appendText(it.toString() + "\n") }

@@ -4,6 +4,8 @@ import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.CustomReferenceExtractor
 import com.preprint.server.ref.GrobidEngine
+import com.preprint.server.validation.ArxivValidator
+import com.preprint.server.validation.CrossRefValidator
 
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
@@ -25,12 +27,20 @@ object ArxivCollector {
             try {
                 val (newArxivRecords, newResumptionToken, recordsTotal) =
                     ArxivAPI.getBulkArxivRecords(startDate, resumptionToken, limit)
+
                 resumptionToken = newResumptionToken
 
-                PdfHandler.getFullInfo(newArxivRecords, "files/", CustomReferenceExtractor, false)
-                dbHandler.storeArxivData(newArxivRecords)
-                recordsProcessed += newArxivRecords.size
+                PdfHandler.getFullInfo(
+                    newArxivRecords,
+                    "files/",
+                    CustomReferenceExtractor,
+                    listOf(CrossRefValidator, ArxivValidator),
+                    false
+                )
 
+                dbHandler.storeArxivData(newArxivRecords)
+
+                recordsProcessed += newArxivRecords.size
                 logger.info("Records processed ${recordsProcessed} out of $recordsTotal")
             } catch (e: ArxivAPI.ApiRequestFailedException) {
                 sleep(sleepTime)
