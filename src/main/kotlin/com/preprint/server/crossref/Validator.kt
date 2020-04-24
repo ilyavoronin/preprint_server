@@ -31,6 +31,7 @@ object Validator {
                 ref.volume = record.journal?.volume
                 ref.year = record.journal?.year
                 ref.issn = record.journal?.issn
+                ref.journal = record.journal?.shortTitle ?: record.journal?.fullTitle
                 ref.authors = record.authors
                 break
             }

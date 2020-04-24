@@ -170,7 +170,7 @@ class DatabaseHandler(
                         """.trimIndent(), params
                     ).list().map {it.get("id(cpub)").asLong()}.get(0)
                     ref.authors?.let {createAuthorConnections(session, it, id)}
-                    val journal = JournalRef(rawTitle = ref.title, volume = ref.volume, pages = ref.pages,
+                    val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, pages = ref.pages,
                                              number = ref.issue, issn = ref.issn, rawRef = "")
                     createJournalPublicationConnections(session, journal, id)
                 }
