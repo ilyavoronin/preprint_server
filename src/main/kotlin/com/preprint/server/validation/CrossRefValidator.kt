@@ -49,7 +49,7 @@ object CrossRefValidator : Validator {
                 score += 1
             }
             val pages1 = ref.pages?.split("--")
-            val pages2 = ref.pages?.split("-")
+            val pages2 = j.pages?.split("-")
             if (pages1 != null && pages2 != null && pages1[0] == pages2[0]) {
                 if (pages1.size > 1 && pages2.size > 1) {
                     if (pages1[1] == pages2[1]) {

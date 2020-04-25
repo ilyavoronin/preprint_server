@@ -8,14 +8,9 @@ import kotlin.system.measureTimeMillis
 fun main() = runBlocking {
     println(measureTimeMillis {
         val refs = mutableListOf(
-            Reference("Napiwotzki, R., Koester, D., & Nelemans, G., et al., 2002, A&A, 386, 957"),
-            Reference("White Dwarfs"),
-            Reference("Black Holes"),
-            Reference("BWT")
+            Reference("L. Infeld and J. Plebański, Bull. Acad. Polon. III, 4, 749 (1956).", true)
         )
-        for (i in 0..70) {
-            refs.add(refs[0])
-        }
+        refs.forEach {println(it)}
         val job = launch {
             CrossRefValidator.validate(refs)
         }

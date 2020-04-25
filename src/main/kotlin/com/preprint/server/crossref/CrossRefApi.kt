@@ -16,7 +16,7 @@ object CrossRefApi {
     const val prefix = "https://api.crossref.org"
     val email = Config.config["email"].toString()
     val maxRecordsNumber = 5
-    val reqLimiter = RequestLimiter(50, 2000)
+    val reqLimiter = RequestLimiter(49, 2100)
 
     fun findRecord(ref : String) : List<CRData> {
         reqLimiter.waitForRequest()

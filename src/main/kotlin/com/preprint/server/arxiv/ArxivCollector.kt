@@ -13,7 +13,7 @@ import java.lang.Thread.sleep
 object ArxivCollector {
     val logger = logger()
     var resumptionToken = ""
-    const val limit = 1
+    const val limit = 100
     var sleepTime : Long = 600000
     fun collect(
         startDate : String,
