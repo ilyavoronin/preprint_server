@@ -3,7 +3,6 @@ package com.preprint.server.arxiv
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.CustomReferenceExtractor
-import com.preprint.server.ref.GrobidEngine
 import com.preprint.server.validation.ArxivValidator
 import com.preprint.server.validation.CrossRefValidator
 

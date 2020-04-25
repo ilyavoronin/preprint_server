@@ -2,7 +2,6 @@ package examples
 
 import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.neo4j.DatabaseHandler
-import org.apache.logging.log4j.kotlin.logger
 
 fun main() {
     val START_DATE = "2018-05-10"

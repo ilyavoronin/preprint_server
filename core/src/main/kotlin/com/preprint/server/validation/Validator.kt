@@ -1,9 +1,5 @@
 package com.preprint.server.validation
 
-import com.preprint.server.algo.LCS
-import com.preprint.server.algo.LvnstDist
-import com.preprint.server.crossref.CRData
-import com.preprint.server.crossref.CrossRefApi
 import com.preprint.server.data.Reference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

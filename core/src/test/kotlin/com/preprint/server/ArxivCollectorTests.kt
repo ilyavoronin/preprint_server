@@ -3,7 +3,6 @@ package com.preprint.server
 import com.preprint.server.arxiv.ArxivAPI
 import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.arxiv.ArxivData
-import com.preprint.server.data.Reference
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.GrobidEngine

@@ -5,11 +5,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import com.preprint.server.Config
 import com.preprint.server.arxiv.ArxivAPI
-import com.preprint.server.arxiv.ArxivXMLParser
-import com.preprint.server.data.PubData
 import com.preprint.server.utils.RequestLimiter
-import org.apache.logging.log4j.kotlin.logger
-import java.net.CacheResponse
 import java.net.URLEncoder
 
 object CrossRefApi {

@@ -1,8 +1,6 @@
 package com.preprint.server.ref
 
 import com.preprint.server.Config
-import com.preprint.server.data.JournalRef
-import com.preprint.server.data.PubData
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem

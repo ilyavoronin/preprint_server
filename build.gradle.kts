@@ -1,59 +1,31 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    java
-    kotlin("jvm") version "1.3.70"
+    base
+    kotlin("jvm") version "1.3.71"
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+allprojects {
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven("http://maven.icm.edu.pl/artifactory/repo/")
-    maven("https://dl.bintray.com/rookies/maven" )
+    group = "com.preprint.server"
+
+    version = "1.0"
+
+    repositories {
+        jcenter()
+    }
 }
-
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    testCompile("junit", "junit", "4.12")
-    implementation("pl.edu.icm.cermine:cermine-impl:1.12")
-    implementation("org.apache.pdfbox:pdfbox:2.0.19")
-    implementation("com.github.kittinunf.fuel:fuel:2.2.1")
-    compile("org.grobid:grobid-core:0.5.6")
-    compile("org.grobid:grobid-trainer:0.5.6")
-    implementation("org.allenai:science-parse_2.11:2.0.3")
-    implementation("org.apache.logging.log4j:log4j-api:2.13.1")
-    implementation("org.apache.logging.log4j:log4j-core:2.13.1")
-    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
-    implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
-    implementation("com.beust:klaxon:5.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
-    implementation(kotlin("stdlib-jdk8"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation("io.mockk:mockk:1.9.3")
 }
-
-configurations.all {
-    exclude(group = "ch.qos.logback", module = "logback-classic")
-    exclude(group = "org.slf4j", module = "slf4j-jdk14")
+repositories {
+    mavenCentral()
 }
-
-configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-}
-
-tasks {
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

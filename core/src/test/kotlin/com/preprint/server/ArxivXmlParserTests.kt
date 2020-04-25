@@ -3,7 +3,6 @@ package com.preprint.server
 import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.arxiv.ArxivXMLParser
 import com.preprint.server.data.Author
-import com.preprint.server.data.JournalRef
 import io.mockk.*
 import org.apache.logging.log4j.kotlin.KotlinLogger
 import org.junit.jupiter.api.*

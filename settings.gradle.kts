@@ -1,2 +1,4 @@
-rootProject.name = "pdf_test"
+rootProject.name = "preprint_server"
 
+include("core")
+include("arxiv-s3")

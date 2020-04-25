@@ -1,8 +1,6 @@
 package com.preprint.server.validation
 
 import com.preprint.server.data.Reference
-import com.preprint.server.utils.*
-import java.io.File
 
 object ArxivValidator : Validator {
     val ids = this.javaClass.getResource("/ids.txt").readText().lines()
