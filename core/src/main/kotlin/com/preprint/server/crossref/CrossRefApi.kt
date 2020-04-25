@@ -17,7 +17,7 @@ object CrossRefApi {
     fun findRecord(ref : String) : List<CRData> {
         reqLimiter.waitForRequest()
         val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"
-        val (_, response, result) = url.httpGet().responseString()
+        val (_, response, result) = url.httpGet().timeoutRead(10000).responseString()
         val (newLimit, newInterval) = getNewInterval(response)
         reqLimiter.set(newLimit, newInterval)
         when (result) {
@@ -38,10 +38,10 @@ object CrossRefApi {
         val newLimit =  response.headers.get("X-Rate-Limit-Limit").toList()
         val newInterval = response.headers.get("X-Rate-Limit-Interval").toList()
         if (newLimit.isEmpty() || newInterval.isEmpty()) {
-            return Pair(50, 2000.toLong())
+            return Pair(50, 2100.toLong())
         }
         else {
-            return Pair(newLimit[0].toInt(), newInterval[0].dropLast(1).toLong() * 1000 * 2 + 50)
+            return Pair(newLimit[0].toInt() - 1, newInterval[0].dropLast(1).toLong() * 1000 * 2 + 100)
         }
     }
 

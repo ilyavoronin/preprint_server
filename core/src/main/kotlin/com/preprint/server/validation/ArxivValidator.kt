@@ -41,7 +41,7 @@ object ArxivValidator : Validator {
                 if (beg != -1) {
                     var res = idPrefix + "/"
                     var i = ref.rawReference.indexOf('/', beg) + 1
-                    while (ref.rawReference[i].isDigit()) {
+                    while (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
                         res += ref.rawReference[i]
                         i += 1
                     }
