@@ -53,7 +53,7 @@ object PdfHandler {
                 record.refList = try {
                     refExtractor.getReferences(pdf, validators).toMutableList()
                 } catch (e: Exception) {
-                    logger.error(e)
+                    logger.error(e.stackTrace)
                     File(outputPath + "failed.txt").appendText("${record.id}\n")
                     continue
                 }
