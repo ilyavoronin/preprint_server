@@ -10,7 +10,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import java.io.File
 import java.lang.Exception
 
-object S3Downloader {
+object ArxivS3Downloader {
     const val bucketName = "arxiv"
     const val region = "us-east-1"
     const val manifestKey = "pdf/arXiv_pdf_manifest.xml"
