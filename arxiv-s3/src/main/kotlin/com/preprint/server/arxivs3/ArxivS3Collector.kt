@@ -9,8 +9,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.lang.Exception
-import java.nio.file.Path
 import java.nio.file.Paths
 
 
@@ -44,11 +42,10 @@ object ArxivS3Collector {
     private fun processFile(filename : String) {
         val outputDir = File("$path/tmp")
         outputDir.mkdir()
-        val filenames = try {
-            unzip(filename, outputDir)
-        } catch (e : Exception) {
+        try {
+            val filenames = unzip(filename, outputDir)
+        } finally {
             deleteDir(outputDir)
-            throw e
         }
     }
 
