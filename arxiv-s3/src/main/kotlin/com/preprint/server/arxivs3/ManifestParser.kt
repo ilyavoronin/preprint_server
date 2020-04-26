@@ -7,11 +7,10 @@ import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
 
 object ManifestParser {
-    lateinit var parser: SAXParser
     fun parseFilenames(path : String) : List<String> {
         val file = File(path)
         val factory = SAXParserFactory.newInstance()
-        parser = factory.newSAXParser()
+        val parser = factory.newSAXParser()
 
         val handler = object: DefaultHandler() {
             val filenames = mutableListOf<String>()
