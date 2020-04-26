@@ -8,10 +8,16 @@ version = "1.0"
 
 repositories {
     mavenCentral()
+    jcenter()
+    maven("http://maven.icm.edu.pl/artifactory/repo/")
+    maven("https://dl.bintray.com/rookies/maven" )
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation(platform("com.amazonaws:aws-java-sdk-bom:1.11.769"))
+    implementation("com.amazonaws:aws-java-sdk-s3")
+    compile(project(":core"))
     testCompile("junit", "junit", "4.12")
 }
 
