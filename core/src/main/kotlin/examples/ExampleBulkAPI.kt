@@ -1,4 +1,4 @@
-import com.preprint.server.arxiv.ArxivXMLParser
+import com.preprint.server.arxiv.ArxivXMLDomParser
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
@@ -23,7 +23,7 @@ fun main() {
             println("Success")
             val data = result.get()
             outputXMLFile.writeText(data)
-            for (elem in ArxivXMLParser.parseArxivRecords(data).first) {
+            for (elem in ArxivXMLDomParser.parseArxivRecords(data).first) {
                 outputFile.appendText(elem.toString())
             }
         }

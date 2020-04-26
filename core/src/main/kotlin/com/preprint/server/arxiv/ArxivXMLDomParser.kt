@@ -10,7 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 //fields that must always be presented: identifier, datestamp, id, title, abstract, creation date
 //otherwise the record won't be saved
-object ArxivXMLParser {
+object ArxivXMLDomParser {
     fun parseArxivRecords(xmlText : String) : Triple<List<ArxivData>, String, Int> {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)

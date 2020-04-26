@@ -1,7 +1,7 @@
 package com.preprint.server
 
 import com.preprint.server.arxiv.ArxivData
-import com.preprint.server.arxiv.ArxivXMLParser
+import com.preprint.server.arxiv.ArxivXMLDomParser
 import com.preprint.server.data.Author
 import io.mockk.*
 import org.apache.logging.log4j.kotlin.KotlinLogger
@@ -67,7 +67,7 @@ class ArxivXmlParserTests {
             reportNo = "IGPG-07/03-2"
         )
 
-        val (arxivRecords, resumptionToken, recordsTotal) = ArxivXMLParser.parseArxivRecords(xmlText)
+        val (arxivRecords, resumptionToken, recordsTotal) = ArxivXMLDomParser.parseArxivRecords(xmlText)
 
         assertTrue(resumptionToken == expectedResumptionToken)
         assertTrue(recordsTotal == expectedTotalRecords)
@@ -99,7 +99,7 @@ class ArxivXmlParserTests {
             reportNo = "IGPG-07/03-2"
         )
 
-        val (arxivRecords, _, _) = ArxivXMLParser.parseArxivRecords(xmlText)
+        val (arxivRecords, _, _) = ArxivXMLDomParser.parseArxivRecords(xmlText)
 
         assertTrue(arxivRecords.size == 1)
         assertEquals(expectedRecord, arxivRecords[0])
@@ -110,7 +110,7 @@ class ArxivXmlParserTests {
         val xmlText = loadFromResourses("arxivApi.xml")
         val expectedUrlList = listOf("http://arxiv.org/pdf/1507.00493v3", "", "http://arxiv.org/pdf/1608.08082v6")
 
-        val urlList = ArxivXMLParser.getPdfLinks(xmlText)
+        val urlList = ArxivXMLDomParser.getPdfLinks(xmlText)
 
         assertEquals(expectedUrlList, urlList)
     }
@@ -120,7 +120,7 @@ class ArxivXmlParserTests {
         val tstring = "  abacaba-  \ndaba-\n  caba  "
         val expected = "abacabadabacaba"
 
-        val actual = ArxivXMLParser.makeOneLine(tstring)
+        val actual = ArxivXMLDomParser.makeOneLine(tstring)
 
         assertEquals(expected, actual)
     }
@@ -130,7 +130,7 @@ class ArxivXmlParserTests {
         val tstring = "  ABA-  \n   123  "
         val expected = "ABA-123"
 
-        val actual = ArxivXMLParser.makeOneLine(tstring)
+        val actual = ArxivXMLDomParser.makeOneLine(tstring)
 
         assertEquals(expected, actual)
     }
@@ -140,7 +140,7 @@ class ArxivXmlParserTests {
         val tstring = "  ABA-  \n daba"
         val expected = "ABA-daba"
 
-        val actual = ArxivXMLParser.makeOneLine(tstring)
+        val actual = ArxivXMLDomParser.makeOneLine(tstring)
 
         assertEquals(expected, actual)
     }
@@ -150,7 +150,7 @@ class ArxivXmlParserTests {
         val tstring = "  ABa-  \n Daba"
         val expected = "ABa-Daba"
 
-        val actual = ArxivXMLParser.makeOneLine(tstring)
+        val actual = ArxivXMLDomParser.makeOneLine(tstring)
 
         assertEquals(expected, actual)
     }

@@ -7,7 +7,7 @@ import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.result.Result
 import com.preprint.server.arxiv.ArxivAPI
 import com.preprint.server.arxiv.ArxivData
-import com.preprint.server.arxiv.ArxivXMLParser
+import com.preprint.server.arxiv.ArxivXMLDomParser
 import io.mockk.*
 import org.apache.logging.log4j.kotlin.KotlinLogger
 import org.junit.jupiter.api.*
@@ -42,8 +42,8 @@ class ArxivAPITests {
 
         every { resultMock.get()} returns "xml text"
 
-        mockkObject(ArxivXMLParser)
-        every {ArxivXMLParser.parseArxivRecords("xml text")} returns
+        mockkObject(ArxivXMLDomParser)
+        every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
         every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
@@ -73,8 +73,8 @@ class ArxivAPITests {
 
         every { resultMock.get()} returns "xml text"
 
-        mockkObject(ArxivXMLParser)
-        every {ArxivXMLParser.parseArxivRecords("xml text")} returns
+        mockkObject(ArxivXMLDomParser)
+        every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
         every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
@@ -110,8 +110,8 @@ class ArxivAPITests {
 
         every { resultSuccessMock.get()} returns "xml text"
 
-        mockkObject(ArxivXMLParser)
-        every {ArxivXMLParser.parseArxivRecords("xml text")} returns
+        mockkObject(ArxivXMLDomParser)
+        every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
         every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}

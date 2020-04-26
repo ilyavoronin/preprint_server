@@ -47,7 +47,7 @@ object ArxivAPI {
             is Result.Success -> {
                 logger.info("Success")
                 val data = result.get()
-                val (arxivRecords, newResumptionToken, recordsTotal) = ArxivXMLParser.parseArxivRecords(data)
+                val (arxivRecords, newResumptionToken, recordsTotal) = ArxivXMLDomParser.parseArxivRecords(data)
                 if (resumptionToken == "") {
                     logger.info("Total records: ${recordsTotal}")
                 }
@@ -67,12 +67,22 @@ object ArxivAPI {
     }
 
     fun getRecordsLinks(idList : List <String>) : List<String> {
-        logger.info("Begin api request to get pdf urls")
+        val metadata = getArxivMetadata(idList)
+        return ArxivXMLDomParser.getPdfLinks(metadata)
+    }
+
+    fun getArxivRecords(idList : List <String>) : List<ArxivData> {
+        val metadata = getArxivMetadata(idList)
+        return ArxivXMLSaxParser.parse(metadata)
+    }
+
+    fun getArxivMetadata(idList : List <String>) : String {
+        logger.info("Begin api request to get arxiv metadata for ${idList.size} records")
         val idString = idList.foldIndexed("") {i, acc, s ->
             if (i < idList.lastIndex)"$acc$s," else "$acc$s"
         }
         val (_, _, result) = requestApiUrlPrefix
-            .httpPost(listOf("id_list" to idString, "max_results" to "1000"))
+            .httpPost(listOf("id_list" to idString, "max_results" to idList.size.toString()))
             .timeoutRead(timeout)
             .responseString()
         return when (result) {
@@ -83,8 +93,7 @@ object ArxivAPI {
             }
             is Result.Success -> {
                 logger.info("Success: receive pdf urls")
-                val data = result.get()
-                ArxivXMLParser.getPdfLinks(data)
+                result.get()
             }
         }
     }
