@@ -4,7 +4,7 @@ import com.preprint.server.Config
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 
-object ArxivS3PdfHandler {
+object ArxivS3Collector {
     val logger = logger()
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
