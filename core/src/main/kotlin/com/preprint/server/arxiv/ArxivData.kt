@@ -6,7 +6,7 @@ import com.preprint.server.data.PubData
 import com.preprint.server.data.Reference
 
 data class ArxivData(
-    val identifier : String,
+    val identifier : String = "",
     var datestamp: String = "",
     override var id : String = "",
     override var abstract : String = "",

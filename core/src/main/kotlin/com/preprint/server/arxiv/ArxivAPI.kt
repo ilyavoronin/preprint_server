@@ -92,7 +92,7 @@ object ArxivAPI {
                 throw ApiRequestFailedException(ex.message)
             }
             is Result.Success -> {
-                logger.info("Success: receive pdf urls")
+                logger.info("Success: receive metadata")
                 result.get()
             }
         }

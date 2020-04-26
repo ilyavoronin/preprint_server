@@ -3,7 +3,6 @@ package com.preprint.server.arxivs3
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.DefaultHandler
 import java.io.File
-import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
 
 object ManifestParser {
