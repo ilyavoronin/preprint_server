@@ -52,5 +52,5 @@ object CrossRefApi {
         }
     }
 
-    class ApiRequestFailedException(override val message : String?) : Throwable(message)
+    class ApiRequestFailedException(override val message : String?) : Exception(message)
 }
