@@ -113,12 +113,13 @@ object ArxivS3Collector {
         val refs = referenceExtractor.extractUnverifiedReferences(
             File(filepath).readBytes()
         ).toMutableList()
-        println(validators.size)
+        logger.info("Begin validation")
         runBlocking {
             validators.forEach { validator ->
                 validator.validate(refs)
             }
         }
+        logger.info("Validated ${refs.count {it.validated}} out of ${refs.size}")
         return refs
     }
 }
