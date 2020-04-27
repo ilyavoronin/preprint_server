@@ -68,12 +68,27 @@ object ArxivAPI {
 
     fun getRecordsLinks(idList : List <String>) : List<String> {
         val metadata = getArxivMetadata(idList)
-        return ArxivXMLDomParser.getPdfLinks(metadata)
+        val records = ArxivXMLDomParser.getPdfLinks(metadata)
+        if (records.size != idList.size) {
+            throw ApiRequestFailedException(
+                ("The number of records received from arxiv api(${records.size})" +
+                        "differs from the number of ids(${idList.size})")
+            )
+        }
+        return records
     }
 
     fun getArxivRecords(idList : List <String>) : List<ArxivData> {
         val metadata = getArxivMetadata(idList)
-        return ArxivXMLSaxParser.parse(metadata)
+        val records = ArxivXMLSaxParser.parse(metadata)
+        if (records.size != idList.size) {
+            throw ApiRequestFailedException(
+                ("The number of records received from arxiv api(${records.size})" +
+                        "differs from the number of ids(${idList.size})")
+            )
+        }
+        records.forEachIndexed {i, record -> record.id = idList[i]}
+        return records
     }
 
     fun getArxivMetadata(idList : List <String>) : String {
