@@ -15,6 +15,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.Exception
 import java.nio.file.Paths
 
 
@@ -110,16 +111,20 @@ object ArxivS3Collector {
         referenceExtractor: ReferenceExtractor,
         validators: List<Validator>
     ) : MutableList<Reference>{
-        val refs = referenceExtractor.extractUnverifiedReferences(
-            File(filepath).readBytes()
-        ).toMutableList()
-        logger.info("Begin validation")
-        runBlocking {
-            validators.forEach { validator ->
-                validator.validate(refs)
+        try {
+            val refs = referenceExtractor.extractUnverifiedReferences(
+                File(filepath).readBytes()
+            ).toMutableList()
+            logger.info("Begin validation")
+            runBlocking {
+                validators.forEach { validator ->
+                    validator.validate(refs)
+                }
             }
+            logger.info("Validated ${refs.count { it.validated }} out of ${refs.size}")
+            return refs
+        } catch (e : Exception) {
+            return mutableListOf()
         }
-        logger.info("Validated ${refs.count {it.validated}} out of ${refs.size}")
-        return refs
     }
 }
