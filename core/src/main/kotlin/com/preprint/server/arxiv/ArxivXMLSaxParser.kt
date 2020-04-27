@@ -20,8 +20,21 @@ object ArxivXMLSaxParser {
         val records = mutableListOf<ArxivData>()
         private val tagStatus = mutableMapOf<String, Boolean>().withDefault { false }
         private var curRecord = ArxivData()
-        private val titleLines = mutableListOf<String>()
-        private val abstractLines = mutableListOf<String>()
+        private val lines = mutableMapOf<String, MutableList<String>>()
+
+        override fun startDocument() {
+            curRecord = ArxivData()
+            lines.clear()
+            tagStatus.clear()
+            records.clear()
+        }
+
+        override fun endDocument() {
+            curRecord = ArxivData()
+            lines.clear()
+            tagStatus.clear()
+        }
+
         override fun startElement(uri: String?, localName: String?, qName: String?, attributes: Attributes?) {
             if (qName == null) {
                 return
@@ -44,15 +57,10 @@ object ArxivXMLSaxParser {
                         }
                     }
                 }
-                "summary"  -> {
-                    abstractLines.clear()
+                else       -> {
                     tagStatus[qName] = true
+                    lines[qName] = mutableListOf()
                 }
-                "title"    -> {
-                    titleLines.clear()
-                    tagStatus[qName] = true
-                }
-                else       -> tagStatus[qName] = true
             }
         }
 
@@ -62,9 +70,19 @@ object ArxivXMLSaxParser {
             }
             tagStatus[qName] = false
             when (qName) {
-                "entry" -> records.add(curRecord)
-                "title" -> curRecord.title = makeOneLine(titleLines)
-                "summary" -> curRecord.abstract = makeOneLine(abstractLines)
+                "entry"     -> records.add(curRecord)
+                "title"     -> curRecord.title = getFullText("title")!!
+                "summary"   -> curRecord.abstract = getFullText("summary")!!
+                "published" -> curRecord.creationDate = getFullString("published")!!
+                "updated"   -> curRecord.lastUpdateDate = getFullString("updated")
+                "author"    -> {
+                                    val aff = getFullString("arxiv:affiliation")
+                                    curRecord.authors.add(Author(getFullString("name")!!, aff))
+                               }
+                "arxiv:doi" -> curRecord.doi = getFullString("arxiv:doi")
+                "arxiv:journal_ref" -> getFullString("arxiv:journal_ref")?.let {
+                                   curRecord.journal = JournalRef(it, true)
+                               }
             }
         }
 
@@ -75,35 +93,42 @@ object ArxivXMLSaxParser {
             }
             val value = getValue(ch, start, length)
             if (tagStatus.getValue("published")) {
-                curRecord.creationDate = value.substring(0, 10)
+                lines["published"]!!.add(value)
             }
             if (tagStatus.getValue("updated")) {
-                curRecord.lastUpdateDate = value.substring(0, 10)
+                lines["updated"]!!.add(value)
             }
             if (tagStatus.getValue("title")) {
-                titleLines.add(value)
+                lines["title"]!!.add(value)
             }
             if (tagStatus.getValue("summary")) {
-                abstractLines.add(value)
+                lines["summary"]!!.add(value)
             }
             if (tagStatus.getValue("author") && tagStatus.getValue("name")) {
-                val author = Author(value)
-                curRecord.authors.add(author)
+                lines["name"]!!.add(value)
             }
             if (tagStatus.getValue("author") && tagStatus.getValue("arxiv:affiliation")) {
-                val author = curRecord.authors.removeLastOrNull() ?: return
-                curRecord.authors.add(Author(author.name, value))
+                lines["arxiv:affiliation"]!!.add(value)
             }
             if (tagStatus.getValue("arxiv:doi")) {
-                curRecord.doi = value
+                lines["arxiv:doi"]!!.add(value)
+
             }
             if (tagStatus.getValue("arxiv:journal_ref")) {
-                curRecord.journal = JournalRef(value, true)
+                lines["arxiv:journal_ref"]!!.add(value)
             }
         }
 
         private fun getValue(ch: CharArray, start : Int, length: Int) : String {
             return String(ch, start, length)
+        }
+
+        private fun getFullText(tagName : String) : String? {
+            return makeOneLine(lines[tagName]?.toList() ?: return null)
+        }
+
+        private fun getFullString(tagName : String) : String? {
+            return makeOneLineNotText(lines[tagName]?.toList() ?: return null)
         }
 
         //convert multiline string to oneline string
@@ -129,6 +154,10 @@ object ArxivXMLSaxParser {
                 }
             }
             return res
+        }
+
+        private fun makeOneLineNotText(rawLines : List<String>) : String {
+            return rawLines.joinToString()
         }
     }
 }
