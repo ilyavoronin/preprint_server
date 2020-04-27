@@ -1,6 +1,12 @@
 package com.preprint.server.arxivs3
 
 import com.preprint.server.Config
+import com.preprint.server.arxiv.ArxivAPI
+import com.preprint.server.data.Reference
+import com.preprint.server.neo4j.DatabaseHandler
+import com.preprint.server.ref.ReferenceExtractor
+import com.preprint.server.validation.Validator
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -16,7 +22,11 @@ object ArxivS3Collector {
     val logger = logger()
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
-    fun beginBulkDownload() {
+    fun beginBulkDownload(
+        dbHandler : DatabaseHandler,
+        referenceExtractor: ReferenceExtractor?,
+        validators : List<Validator>
+    ) {
         File("$path/pdf/").mkdir()
         val manifestPath = "$path/$manifestFileName"
         if (!File(manifestPath).exists()) {
@@ -35,16 +45,30 @@ object ArxivS3Collector {
             else {
                 logger.info("$filename is already downloaded")
             }
-            processFile(pdfPath)
+            processFile(pdfPath, dbHandler, referenceExtractor, validators)
         }
     }
 
-    private fun processFile(filename : String) {
+    private fun processFile(
+        filename : String,
+        dbHandler: DatabaseHandler,
+        referenceExtractor: ReferenceExtractor?,
+        validators: List<Validator>
+    ) {
         val outputDir = File("$path/tmp")
         outputDir.mkdir()
         try {
             val filenames = unzip(filename, outputDir)
-        } finally {
+            val ids = filenames.map {getIdFromFilename(it)}
+            val records = ArxivAPI.getArxivRecords(ids)
+            if (referenceExtractor != null) {
+               records.zip(filenames).forEach { (record, filepath) ->
+                   record.refList = getRefList(filepath, referenceExtractor, validators)
+               }
+            }
+            dbHandler.storeArxivData(records)
+        }
+        finally {
             deleteDir(outputDir)
         }
     }
@@ -73,5 +97,28 @@ object ArxivS3Collector {
             file.delete()
         }
         dir.delete()
+    }
+
+    private fun getIdFromFilename(filename: String) : String {
+        val fn = Paths.get(filename).fileName.toString()
+        val i = fn.indexOfFirst { it.isDigit() }
+        return fn.substring(0, i) + "/" + fn.substring(i).dropLast(4)
+    }
+
+    private fun getRefList(
+        filepath : String,
+        referenceExtractor: ReferenceExtractor,
+        validators: List<Validator>
+    ) : MutableList<Reference>{
+        val refs = referenceExtractor.extractUnverifiedReferences(
+            File(filepath).readBytes()
+        ).toMutableList()
+        println(validators.size)
+        runBlocking {
+            validators.forEach { validator ->
+                validator.validate(refs)
+            }
+        }
+        return refs
     }
 }

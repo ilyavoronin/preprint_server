@@ -21,6 +21,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.13.1")
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     compile("org.apache.commons:commons-compress:1.20")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
     compile(project(":core"))
     testCompile("junit", "junit", "4.12")
 }
