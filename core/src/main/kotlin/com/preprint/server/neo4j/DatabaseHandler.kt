@@ -8,6 +8,7 @@ import com.preprint.server.data.JournalRef
 import com.preprint.server.data.Reference
 import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Session
+import org.neo4j.driver.Transaction
 import java.io.Closeable
 
 class DatabaseHandler(
@@ -25,24 +26,29 @@ class DatabaseHandler(
 
         driver.session().use {
             //create new or update publication node
-            val publications = mapOf("publications" to arxivRecords.map {arxivDataToMap(it)})
-            val pubIds = it.run("""
+            var pubIds : List<Long> = mutableListOf()
+            it.writeTransaction { tr ->
+                val publications = mapOf("publications" to arxivRecords.map { arxivDataToMap(it) })
+                pubIds = tr.run(
+                    """
                     UNWIND ${"$"}publications as pubData
                     MERGE (pub:${DBLabels.PUBLICATION.str} {arxivId : pubData.arxivId}) 
                     ON CREATE SET pub += pubData, pub:${DBLabels.ARXIV_LBL.str}
                     ON MATCH SET pub:${DBLabels.ARXIV_LBL.str}
                     RETURN id(pub)
                 """.trimIndent(), publications
-            ).list().map {it.get("id(pub)").asLong()}
+                ).list().map { it.get("id(pub)").asLong() }
+            }
             logger.info("Publication nodes created")
-
             pubIds.zip(arxivRecords).forEach { (id, record) ->
-                createAuthorConnections(it, record.authors, id)
+                it.writeTransaction {tr ->
+                    createAuthorConnections(tr, record.authors, id)
 
-                createCitationsConnections(it, record)
+                    createCitationsConnections(tr, record)
 
-                if (record.journal != null) {
-                    createJournalPublicationConnections(it, record.journal, id)
+                    if (record.journal != null) {
+                        createJournalPublicationConnections(tr, record.journal, id)
+                    }
                 }
             }
             logger.info("All connections created")
@@ -104,7 +110,7 @@ class DatabaseHandler(
     }
 
     //create publication -> author connection and author -> affiliation connection
-    private fun createAuthorConnections(session : Session, authors : List<Author>, id : Long) {
+    private fun createAuthorConnections(tr : Transaction, authors : List<Author>, id : Long) {
         authors.forEach {author ->
             val params = mapOf(
                 "name" to author.name,
@@ -119,7 +125,7 @@ class DatabaseHandler(
                     """.trimIndent()
                 } else ""
 
-            session.run("""
+            tr.run("""
                         MERGE (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
                         $createAffiliationQuery
                         WITH auth
@@ -131,7 +137,7 @@ class DatabaseHandler(
     }
 
     //create publication -> publication connections and create MissingPublication nodes
-    private fun createCitationsConnections(session : Session, record : ArxivData) {
+    private fun createCitationsConnections(tr : Transaction, record : ArxivData) {
         record.refList.forEach {ref ->
             val params = mapOf(
                 "rid" to record.id,
@@ -142,7 +148,7 @@ class DatabaseHandler(
                 "cdata" to refDataToMap(ref),
                 "jdata" to journalDataToMap(ref)
             )
-            val res = session.run("""
+            val res = tr.run("""
                         MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                         MATCH (pubTo:${DBLabels.PUBLICATION.str})
                         WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
@@ -157,7 +163,7 @@ class DatabaseHandler(
                     if (!ref.title.isNullOrEmpty()) {
                         //then the cited publication doesn't exist in database
                         //crete missing publication -> publication connection
-                        session.run(
+                        tr.run(
                             """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                             MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
@@ -172,7 +178,7 @@ class DatabaseHandler(
                         val searchByArxivIdQuery =
                             if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""
                         val searchByDoiQuery = if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""
-                        session.run(
+                        tr.run(
                             """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                             CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})
@@ -191,7 +197,7 @@ class DatabaseHandler(
                     val matchString =
                         if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
                         else "title: ${parm("cdata.title")}"
-                    val id = session.run(
+                    val id = tr.run(
                         """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
                             MERGE (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
@@ -202,17 +208,17 @@ class DatabaseHandler(
                             RETURN id(cpub)
                         """.trimIndent(), params
                     ).list().map {it.get("id(cpub)").asLong()}.get(0)
-                    ref.authors?.let {createAuthorConnections(session, it, id)}
+                    ref.authors?.let {createAuthorConnections(tr, it, id)}
                     val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, pages = ref.pages,
                                              number = ref.issue, issn = ref.issn, rawRef = "")
-                    createJournalPublicationConnections(session, journal, id)
+                    createJournalPublicationConnections(tr, journal, id)
                 }
             }
         }
     }
 
     //create publication -> journal connections
-    private fun createJournalPublicationConnections(session: Session, journal : JournalRef?, id : Long) {
+    private fun createJournalPublicationConnections(tr: Transaction, journal : JournalRef?, id : Long) {
         if (journal?.rawTitle != null) {
             val params = mapOf(
                 "pubId" to id,
@@ -222,7 +228,7 @@ class DatabaseHandler(
                 "no" to journal.number,
                 "rr" to journal.rawRef
             )
-            session.run("""
+            tr.run("""
                        MATCH (pub:${DBLabels.PUBLICATION.str})
                        WHERE id(pub) = ${parm("pubId")}
                        MERGE (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
