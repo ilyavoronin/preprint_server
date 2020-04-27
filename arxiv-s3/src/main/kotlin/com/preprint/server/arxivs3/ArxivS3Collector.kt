@@ -7,6 +7,7 @@ import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.ref.ReferenceExtractor
 import com.preprint.server.validation.Validator
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -17,6 +18,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.lang.Exception
 import java.nio.file.Paths
+import java.security.MessageDigest
 
 
 object ArxivS3Collector {
@@ -38,10 +40,10 @@ object ArxivS3Collector {
         }
 
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        fileNames.forEach {filename ->
+        fileNames.forEach {(filename, md5sum) ->
             val pdfPath = "$path/$filename"
-            if (!File(pdfPath).exists()) {
-                ArxivS3Downloader.download(filename, pdfPath)
+            if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
+                ArxivS3Downloader.download(filename, path + "/" + pdfPath)
             }
             else {
                 logger.info("$filename is already downloaded")
@@ -126,5 +128,10 @@ object ArxivS3Collector {
         } catch (e : Exception) {
             return mutableListOf()
         }
+    }
+
+    private fun compareMD5(path : String, md5sumToCompare : String) : Boolean {
+        val md = DigestUtils.md5Hex(File(path).readBytes())
+        return md == md5sumToCompare
     }
 }
