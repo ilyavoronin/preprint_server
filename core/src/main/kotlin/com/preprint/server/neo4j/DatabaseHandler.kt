@@ -20,6 +20,19 @@ class DatabaseHandler(
 
     private val driver = GraphDatabase.driver("bolt://$url:$port", AuthTokens.basic(user, password))
     private val logger = logger()
+    private val INDEX_COUNT = 6
+
+    init {
+        val existingIndexes = driver.session().use { session ->
+            session.run("CALL db.indexes() YIELD name").list().map {
+                it["indexName"].asString()
+            }
+        }
+
+        if (existingIndexes.size != INDEX_COUNT) {
+            initIndexes()
+        }
+    }
 
     fun storeArxivData(arxivRecords : List<ArxivData>) {
         logger.info("Begin storing ${arxivRecords.size} records to the database")
@@ -52,6 +65,42 @@ class DatabaseHandler(
                 }
             }
             logger.info("All connections created")
+        }
+    }
+
+    private fun initIndexes() {
+        driver.session().use {
+            it.writeTransaction { tr ->
+                tr.run("""CREATE INDEX publication_arxivId FOR (p:${DBLabels.PUBLICATION.str})
+                          ON (p.arxivId)"""
+                    .trimIndent()
+                )
+
+                tr.run("""CREATE INDEX publication_doi FOR (p:${DBLabels.PUBLICATION.str})
+                          ON (p.doi)"""
+                    .trimIndent()
+                )
+
+                tr.run("""CREATE INDEX publication_title FOR (p:${DBLabels.PUBLICATION.str})
+                          ON (p.title)"""
+                    .trimIndent()
+                )
+
+                tr.run("""CREATE INDEX author_name FOR (a:${DBLabels.AUTHOR.str})
+                          ON (a.name)"""
+                    .trimIndent()
+                )
+
+                tr.run("""CREATE INDEX journal_title FOR (j:${DBLabels.JOURNAL.str})
+                          ON (j.title)"""
+                    .trimIndent()
+                )
+
+                tr.run("""CREATE INDEX affiliation_name FOR (a:${DBLabels.AFFILIATION.str})
+                          ON (a.name)"""
+                    .trimIndent()
+                )
+            }
         }
     }
 
@@ -166,7 +215,7 @@ class DatabaseHandler(
                         tr.run(
                             """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                            MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
+                            CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
                             MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
                             SET c.rawRef = ${parm("rRef")}, 
                                 mpub += ${parm("cdata")},
