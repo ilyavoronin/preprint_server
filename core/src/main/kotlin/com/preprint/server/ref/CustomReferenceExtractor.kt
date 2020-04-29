@@ -14,7 +14,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
         logger.info("Begin reference extraction")
 
         val doc = PDDocument.load(pdf)
-        val textWithMarks = PDFRefTextStripper.getMarkedText(doc)
+        val textWithMarks = synchronized(PDFRefTextStripper) {
+             PDFRefTextStripper.getMarkedText(doc)
+        }
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
         val isTwoColumns = PDFRefTextStripper.isTwoColumns
 

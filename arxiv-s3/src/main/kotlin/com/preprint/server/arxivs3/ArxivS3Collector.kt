@@ -6,6 +6,8 @@ import com.preprint.server.data.Reference
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.ref.ReferenceExtractor
 import com.preprint.server.validation.Validator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
@@ -65,9 +67,13 @@ object ArxivS3Collector {
             val ids = filenames.map {getIdFromFilename(it)}
             val records = ArxivAPI.getArxivRecords(ids)
             if (referenceExtractor != null) {
-               records.zip(filenames).forEach { (record, filepath) ->
-                   record.refList = getRefList(filepath, referenceExtractor, validators)
-               }
+                runBlocking(Dispatchers.Default) {
+                    records.zip(filenames).forEach { (record, filepath) ->
+                        launch {
+                            record.refList = getRefList(filepath, referenceExtractor, validators)
+                        }
+                    }
+                }
             }
             dbHandler.storeArxivData(records)
         }
