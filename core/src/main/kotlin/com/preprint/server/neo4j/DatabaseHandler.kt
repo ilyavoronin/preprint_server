@@ -6,10 +6,15 @@ import com.preprint.server.arxiv.ArxivData
 import com.preprint.server.data.Author
 import com.preprint.server.data.JournalRef
 import com.preprint.server.data.Reference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Session
 import org.neo4j.driver.Transaction
 import java.io.Closeable
+import java.lang.Exception
+import kotlin.math.log
 
 class DatabaseHandler(
     url : String,
@@ -34,9 +39,10 @@ class DatabaseHandler(
     fun storeArxivData(arxivRecords : List<ArxivData>) {
         logger.info("Begin storing ${arxivRecords.size} records to the database")
 
+        var pubIds : List<Long> = listOf()
         driver.session().use {
             //create new or update publication node
-            var pubIds : List<Long> = mutableListOf()
+            pubIds = mutableListOf()
             it.writeTransaction { tr ->
                 val publications = mapOf("publications" to arxivRecords.map { arxivDataToMap(it) })
                 pubIds = tr.run(
@@ -49,20 +55,33 @@ class DatabaseHandler(
                 """.trimIndent(), publications
                 ).list().map { it.get("id(pub)").asLong() }
             }
-            logger.info("Publication nodes created")
+        }
+        logger.info("Publication nodes created")
+        val failedTransactions = mutableListOf<Pair<Long, ArxivData>>()
+        runBlocking(Dispatchers.IO) {
             pubIds.zip(arxivRecords).forEach { (id, record) ->
-                it.writeTransaction {tr ->
-                    createAuthorConnections(tr, record.authors, id)
-
-                    createCitationsConnections(tr, record)
-
-                    if (record.journal != null) {
-                        createJournalPublicationConnections(tr, record.journal, id)
+                launch {
+                    driver.session().use {
+                        try {
+                            it.writeTransaction { tr -> createConnections(tr, id, record)}
+                        } catch (e : Exception) {
+                            logger.error("Connections creation failed for ${record.id}")
+                            failedTransactions.add(Pair(id, record))
+                        }
                     }
                 }
             }
-            logger.info("All connections created")
         }
+        logger.info("Failed ${failedTransactions.size} transactions")
+        logger.info("Retrying failed transactions")
+        driver.session().use {session ->
+            failedTransactions.forEach { (id, record) ->
+                session.writeTransaction {tr ->
+                    createConnections(tr, id, record)
+                }
+            }
+        }
+        logger.info("All connections created")
     }
 
     private fun initIndexes(existingIndexes : List<String>) {
@@ -177,8 +196,18 @@ class DatabaseHandler(
         return res
     }
 
-    fun parm(paramName : String) : String {
+    private fun parm(paramName : String) : String {
         return "\$$paramName"
+    }
+
+    private fun createConnections(tr : Transaction, id : Long, record: ArxivData) {
+        createAuthorConnections(tr, record.authors, id)
+
+        createCitationsConnections(tr, record)
+
+        if (record.journal != null) {
+            createJournalPublicationConnections(tr, record.journal, id)
+        }
     }
 
     //create publication -> author connection and author -> affiliation connection
