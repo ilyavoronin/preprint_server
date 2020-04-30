@@ -14,6 +14,7 @@ import org.neo4j.driver.Session
 import org.neo4j.driver.Transaction
 import java.io.Closeable
 import java.lang.Exception
+import java.sql.Ref
 import kotlin.math.log
 
 class DatabaseHandler(
@@ -57,6 +58,9 @@ class DatabaseHandler(
             }
         }
         logger.info("Publication nodes created")
+
+        createAllNodes(arxivRecords)
+
         val failedTransactions = mutableListOf<Pair<Long, ArxivData>>()
         runBlocking(Dispatchers.IO) {
             pubIds.zip(arxivRecords).forEach { (id, record) ->
@@ -144,6 +148,200 @@ class DatabaseHandler(
                 }
             }
         }
+    }
+
+    private fun createAllNodes(arxivRecords: List<ArxivData>) {
+        val authors = getAllAuthors(arxivRecords)
+        val journals = getAllJouranls(arxivRecords)
+        val affiliations = getAllAffiliations(arxivRecords)
+        val mpubs = getAllMissingPublicationsWithTitle(arxivRecords)
+        val pubs = getAllPublications(arxivRecords)
+
+        createAllAuthors(authors)
+        logger.info("Author nodes created")
+        createAllJournals(journals)
+        logger.info("Journal nodes created")
+        createAllAffiliations(affiliations)
+        logger.info("Affiliation nodes created")
+        createAllMissingPublicationsWithTitle(mpubs)
+        logger.info("MissingPublication nodes created")
+        createAllPublications(pubs)
+        logger.info("Publication nodes created")
+    }
+
+    private fun createAllAuthors(authors: List<Author>) {
+        val params = mapOf(
+            "authors" to authors.map {it.name}
+        )
+
+        driver.session().use {
+            it.writeTransaction {tr ->
+                tr.run("""
+                    UNWIND ${parm("authors")} as authorName
+                    MERGE (a:${DBLabels.AUTHOR.str} {name : authorName})
+                """.trimIndent(), params)
+            }
+        }
+    }
+
+    private fun createAllJournals(journals : List<String>) {
+        val params = mapOf(
+            "journals" to journals
+        )
+
+        driver.session().use {
+            it.writeTransaction { tr ->
+                tr.run("""
+                    UNWIND ${parm("journals")} as journalTitle
+                    MERGE (j:${DBLabels.JOURNAL.str} {title : journalTitle})
+                """.trimIndent(), params)
+            }
+        }
+    }
+
+    private fun createAllAffiliations(affs : List<String>) {
+        val params = mapOf(
+            "affs" to affs
+        )
+
+        driver.session().use {
+            it.writeTransaction { tr ->
+                tr.run("""
+                    UNWIND ${parm("affs")} as aname
+                    MERGE (a:${DBLabels.AFFILIATION.str} {name : aname})
+                """.trimIndent(), params)
+            }
+        }
+    }
+
+    private fun createAllMissingPublicationsWithTitle(mpubs : List<Reference>) {
+        driver.session().use {
+            it.writeTransaction { tr ->
+                mpubs.forEach { ref ->
+                    val params = mapOf(
+                        "doi" to ref.doi,
+                        "arxivId" to ref.arxivId,
+                        "title" to ref.title
+                    )
+                    val pubs = tr.run("""
+                        MATCH (p:Publication)
+                        WHERE p.doi = ${parm("doi")} 
+                              OR p.arxivId = ${parm("arxivId")}
+                              OR p.title = ${parm("title")}
+                        RETURN p
+                    """.trimIndent(), params)
+                    if (pubs.list().isEmpty()) {
+                        tr.run("""
+                            MERGE (p:${DBLabels.MISSING_PUBLICATION.str} {title : ${parm("title")}})
+                        """.trimIndent(), params)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun createAllPublications(pubs : List<Reference>) {
+        driver.session().use {
+            it.writeTransaction { tr ->
+                pubs.forEach { ref ->
+                    val params = mapOf(
+                        "doi" to ref.doi,
+                        "arxivId" to ref.arxivId,
+                        "title" to ref.title
+                    )
+                    val resp = tr.run("""
+                        MATCH (p:Publication)
+                        WHERE p.doi = ${parm("doi")} 
+                              OR p.arxivId = ${parm("arxivId")}
+                              OR p.title = ${parm("title")}
+                        RETURN p
+                    """.trimIndent(), params)
+                    if (resp.list().isEmpty()) {
+                        val matchString =
+                            if (!ref.doi.isNullOrEmpty()) "doi: ${parm("doi")}"
+                            else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("arxivId")}"
+                            else "title: ${parm("title")}"
+                        tr.run("""
+                            MERGE (p:${DBLabels.PUBLICATION.str} {${matchString}})
+                        """.trimIndent(), params)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getAllAuthors(records : List<ArxivData>) : List<Author> {
+        val authors = mutableSetOf<Author>()
+        records.forEach { record ->
+            record.authors.forEach { authors.add(it) }
+            record.refList.forEach { ref ->
+                if (ref.validated) {
+                    ref.authors?.forEach { authors.add(it) }
+                }
+            }
+        }
+        return authors.toList()
+    }
+
+    private fun getAllJouranls(records : List<ArxivData>) : List<String> {
+        val journals = mutableSetOf<String>()
+        records.forEach { record ->
+            if (!record.journal?.rawTitle.isNullOrBlank()) {
+                journals.add(record.journal!!.rawTitle!!)
+            }
+            record.refList.forEach { ref ->
+                if (ref.validated && !ref.journal.isNullOrBlank()) {
+                    journals.add(ref.journal!!)
+                }
+            }
+        }
+        return journals.toList()
+    }
+
+    private fun getAllAffiliations(records : List<ArxivData>) : List <String> {
+        val affiliations = mutableSetOf<String>()
+        records.forEach {record ->
+            record.authors.forEach {
+                if (!it.affiliation.isNullOrBlank()) {
+                    affiliations.add(it.affiliation)
+                }
+            }
+
+            record.refList.forEach {ref ->
+                if (ref.validated) {
+                    ref.authors?.forEach { author ->
+                        if (!author.affiliation.isNullOrBlank()) {
+                            affiliations.add(author.affiliation)
+                        }
+                    }
+                }
+            }
+        }
+        return affiliations.toList()
+    }
+
+    private fun getAllMissingPublicationsWithTitle(records : List<ArxivData>) : List <Reference> {
+        val mpubs = mutableSetOf<Reference>()
+        records.forEach { record ->
+            record.refList.forEach {ref ->
+                if (!ref.validated && !ref.title.isNullOrBlank()) {
+                    mpubs.add(ref)
+                }
+            }
+        }
+        return mpubs.toList()
+    }
+
+    private fun getAllPublications(records: List<ArxivData>) : List<Reference> {
+        val pubs = mutableSetOf<Reference>()
+        records.forEach { record ->
+            record.refList.forEach {ref ->
+                if (ref.validated) {
+                    pubs.add(ref)
+                }
+            }
+        }
+        return pubs.toList()
     }
 
     private fun arxivDataToMap(record : ArxivData) : Map<String, String> {
@@ -297,6 +495,7 @@ class DatabaseHandler(
                                        "rawRef" to ref.rawReference)
                     val matchString =
                         if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
+                        else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
                         else "title: ${parm("cdata.title")}"
                     val id = tr.run(
                         """
