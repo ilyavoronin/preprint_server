@@ -51,4 +51,8 @@ object ArxivValidator : Validator {
             }
         }
     }
+
+    fun containsId(ref : String) : Boolean {
+        return ids.any {ref.contains(it)}
+    }
 }

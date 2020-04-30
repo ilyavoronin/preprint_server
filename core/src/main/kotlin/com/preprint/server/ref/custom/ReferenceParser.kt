@@ -2,6 +2,7 @@ package com.preprint.server.ref.custom
 
 import com.preprint.server.ref.GrobidEngine
 import com.preprint.server.data.Reference
+import com.preprint.server.validation.ArxivValidator
 import org.apache.logging.log4j.kotlin.logger
 
 object ReferenceParser {
@@ -326,16 +327,24 @@ object ReferenceParser {
     private fun rejectAsReference(ref : String) : Boolean {
         val reference =
             Reference(ref, GrobidEngine.processRawReference(ref, 0))
-        var score = 0
+        var containsAuthors = false
+        var containsJournal = false
+        var containsYear = false
+        var containsArxivId = false
         if (!reference.authors.isNullOrEmpty()) {
-            score += 1
+            containsAuthors = true
         }
         if (!reference.journal.isNullOrEmpty()) {
-            score += 2
+            containsJournal = true
         }
         if (!reference.year.isNullOrEmpty()) {
-            score += 1
+            containsYear = true
         }
-        return score < 2
+        if (ArxivValidator.containsId(ref)) {
+            containsArxivId = true
+        }
+        return !(containsJournal ||
+                containsAuthors && containsYear ||
+                containsArxivId && containsAuthors)
     }
 }
