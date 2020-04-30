@@ -326,6 +326,16 @@ object ReferenceParser {
     private fun rejectAsReference(ref : String) : Boolean {
         val reference =
             Reference(ref, GrobidEngine.processRawReference(ref, 0))
-        return reference.authors.isNullOrEmpty()
+        var score = 0
+        if (!reference.authors.isNullOrEmpty()) {
+            score += 1
+        }
+        if (!reference.journal.isNullOrEmpty()) {
+            score += 2
+        }
+        if (!reference.year.isNullOrEmpty()) {
+            score += 1
+        }
+        return score < 2
     }
 }
