@@ -474,7 +474,16 @@ class DatabaseHandler(
                         )
                     }
                     else {
-
+                        tr.run(
+                            """	
+                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})	
+                            CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})	
+                            MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)	
+                            SET c.rawRef = ${parm("rRef")}, 	
+                                mpub += ${parm("cdata")},	
+                                mpub += ${parm("jdata")}	
+                        """.trimIndent(), params
+                        )
                     }
                 }
                 else {
