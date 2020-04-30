@@ -17,6 +17,7 @@ fun main() {
     ArxivS3Collector.beginBulkDownload(
         dbHandler,
         CustomReferenceExtractor,
-        listOf(ArxivValidator)
+        listOf(ArxivValidator),
+        1
     )
 }

@@ -7,6 +7,7 @@ import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.ref.ReferenceExtractor
 import com.preprint.server.validation.Validator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.codec.digest.DigestUtils
@@ -21,6 +22,7 @@ import java.io.InputStream
 import java.lang.Exception
 import java.nio.file.Paths
 import java.security.MessageDigest
+import java.util.concurrent.Executors
 
 
 object ArxivS3Collector {
@@ -30,7 +32,8 @@ object ArxivS3Collector {
     fun beginBulkDownload(
         dbHandler : DatabaseHandler,
         referenceExtractor: ReferenceExtractor?,
-        validators : List<Validator>
+        validators : List<Validator>,
+        maxThreads : Int = -1
     ) {
         File("$path/pdf/").mkdir()
         val manifestPath = "$path/$manifestFileName"
@@ -50,7 +53,7 @@ object ArxivS3Collector {
             else {
                 logger.info("$filename is already downloaded")
             }
-            processFile(pdfPath, dbHandler, referenceExtractor, validators)
+            processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
         }
     }
 
@@ -58,7 +61,8 @@ object ArxivS3Collector {
         filename : String,
         dbHandler: DatabaseHandler,
         referenceExtractor: ReferenceExtractor?,
-        validators: List<Validator>
+        validators: List<Validator>,
+        maxThreads: Int
     ) {
         val outputDir = File("$path/tmp")
         outputDir.mkdir()
@@ -67,9 +71,13 @@ object ArxivS3Collector {
             val ids = filenames.map {getIdFromFilename(it)}
             val records = ArxivAPI.getArxivRecords(ids)
             if (referenceExtractor != null) {
-                runBlocking(Dispatchers.Default) {
+                val dispatcher =
+                    if (maxThreads == -1) Dispatchers.Default
+                    else Executors.newFixedThreadPool(maxThreads).asCoroutineDispatcher()
+                runBlocking(dispatcher) {
                     records.zip(filenames).forEach { (record, filepath) ->
                         launch {
+                            println(record.pdfUrl)
                             record.refList = getRefList(filepath, referenceExtractor, validators)
                         }
                     }
