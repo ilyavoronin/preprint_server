@@ -419,13 +419,13 @@ class DatabaseHandler(
             val createAffiliationQuery =
                 if (author.affiliation != null) {
                     """
-                        MERGE (aff:${DBLabels.AFFILIATION.str} {name: ${parm("aff")}})
+                        MATCH (aff:${DBLabels.AFFILIATION.str} {name: ${parm("aff")}})
                         MERGE (auth)-[:${DBLabels.WORKS.str}]->(aff)
                     """.trimIndent()
                 } else ""
 
             tr.run("""
-                        MERGE (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
+                        MATCH (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
                         $createAffiliationQuery
                         WITH auth
                         MATCH (pub:${DBLabels.PUBLICATION.str})
@@ -465,7 +465,7 @@ class DatabaseHandler(
                         tr.run(
                             """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                            MERGE (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
+                            MATCH (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
                             MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
                             SET c.rawRef = ${parm("rRef")}, 
                                 mpub += ${parm("cdata")},
@@ -474,19 +474,7 @@ class DatabaseHandler(
                         )
                     }
                     else {
-                        val searchByArxivIdQuery =
-                            if (ref.arxivId != null) """,mpub.arxivId = ${parm("arxId")}""" else ""
-                        val searchByDoiQuery = if (ref.doi != null) """,mpub.doi = ${parm("rdoi")}""" else ""
-                        tr.run(
-                            """
-                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                            CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})
-                            MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
-                            SET c.rawRef = ${parm("rRef")}, 
-                                mpub += ${parm("cdata")},
-                                mpub += ${parm("jdata")}
-                        """.trimIndent(), params
-                        )
+
                     }
                 }
                 else {
@@ -500,9 +488,8 @@ class DatabaseHandler(
                     val id = tr.run(
                         """
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
-                            MERGE (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
-                            ON CREATE SET cpub += ${parm("cdata")}
-                            ON MATCH SET cpub += ${parm("cdata")}
+                            MATCH (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
+                            SET cpub += ${parm("cdata")}
                             MERGE (pub)-[cites:${DBLabels.CITES.str}]->(cpub)
                             SET cites.rawRef = ${parm("rawRef")}
                             RETURN id(cpub)
@@ -531,7 +518,7 @@ class DatabaseHandler(
             tr.run("""
                        MATCH (pub:${DBLabels.PUBLICATION.str})
                        WHERE id(pub) = ${parm("pubId")}
-                       MERGE (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
+                       MATCH (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
                        MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
                        ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
                            jref.number = ${parm("no")}, jref.rawRef = ${parm("rr")}
