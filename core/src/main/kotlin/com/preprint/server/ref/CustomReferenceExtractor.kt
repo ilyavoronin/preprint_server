@@ -8,7 +8,7 @@ import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
 
-    val logger = logger()
+    private val logger = logger()
 
     override fun extractUnverifiedReferences(pdf : ByteArray) : List <Reference> {
         logger.info("Begin reference extraction")
@@ -48,14 +48,15 @@ object CustomReferenceExtractor : ReferenceExtractor {
         val isReferences = refList.all {it.isReference}
         if (refList.isEmpty() || !isReferences) {
             if (!isReferences) {
-                logger.info("Drop because grobid can't identify parsed string as reference")
+                logger.debug("Drop because grobid can't identify parsed string as reference")
             }
-            logger.info("done by GROBID")
+            logger.debug("done by GROBID")
             refList = GrobidReferenceExtractor.getReferences(pdf)
         }
         else {
-            logger.info("done by CUSTOM")
+            logger.debug("done by CUSTOM")
         }
+        logger.debug(refList.mapIndexed { i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
         return refList
     }
 
@@ -186,8 +187,8 @@ object CustomReferenceExtractor : ReferenceExtractor {
         //futher if we return empty list
         // means that we want grobid to parse this document later
 
-        logger.info("References type: $type")
-        logger.info("Has two columns: $isTwoColumn")
+        logger.debug("References type: $type")
+        logger.debug("Has two columns: $isTwoColumn")
         if (type == null) {
             return listOf()
         }

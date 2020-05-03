@@ -13,7 +13,7 @@
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY" />
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
-        <File name="debugFile" fileName="${debugFilename}">
+        <File name="debugFile" fileName="${debugFilename}" append="false">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
     </Appenders>

@@ -6,13 +6,13 @@ import com.preprint.server.validation.ArxivValidator
 import org.apache.logging.log4j.kotlin.logger
 
 object ReferenceParser {
-    val logger = logger()
+    private val logger = logger()
     fun parse(
         lines: List<Line>,
-        refType : ReferenceType,
+        refType: ReferenceType,
         isTwoColumns: Boolean,
         pageWidth: Int
-    ) : List<String> {
+    ): List<String> {
         logger.info("Begin reference parsing")
         val refList = mutableListOf<String>()
         val refRegex = refType.regex
@@ -36,7 +36,7 @@ object ReferenceParser {
                             val value = match.value.drop(refType.firstLen).dropLast(refType.lastLen).toInt()
                             if (value == curRefNum + 1) {
                                 if (refType.strict && lines[j].indent == secondLineIndent) {
-                                    logger.info("Drop because first line indent is equal to second line indent")
+                                    logger.debug("Drop because first line indent is equal to second line indent")
                                     return listOf()
                                 }
                                 else {
@@ -48,7 +48,7 @@ object ReferenceParser {
                             }
                         }
                         else if (refType.strict && lines[j].indent == secondLineIndent) {
-                            logger.info("Drop because first line indent is equal to second line indent")
+                            logger.debug("Drop because first line indent is equal to second line indent")
                             return listOf()
                         } else {
                             break
@@ -75,7 +75,7 @@ object ReferenceParser {
             }
 
             if (refType.strict && !canUseSecondIndentPattern) {
-                logger.info("Drop because can't use indent pattern")
+                logger.debug("Drop because can't use indent pattern")
                 return listOf()
             }
 
@@ -137,7 +137,7 @@ object ReferenceParser {
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1) {
                     if (refs.any { rejectAsReference(it)}) {
-                        logger.info("Drop because can't parse reference with semicolon")
+                        logger.debug("Drop because can't parse reference with semicolon")
                         return listOf()
                     }
                 }
@@ -177,7 +177,7 @@ object ReferenceParser {
                                     break
                                 }
                                 else {
-                                    logger.info("Drop because first line indent is equal to second line indent")
+                                    logger.debug("Drop because first line indent is equal to second line indent")
                                     return listOf()
                                 }
                             }
@@ -186,7 +186,7 @@ object ReferenceParser {
                             }
                         }
                         else if (refType.strict && lines[j].indent == secondLineIndent) {
-                            logger.info("Drop because first line indent is equal to second line indent")
+                            logger.debug("Drop because first line indent is equal to second line indent")
                             return listOf()
                         } else {
                             break
@@ -222,7 +222,7 @@ object ReferenceParser {
             }
 
             if (refType.strict && !canUseSecondIndentPattern) {
-                logger.info("Drop because can't use indent pattern")
+                logger.debug("Drop because can't use indent pattern")
                 return listOf()
             }
 
@@ -292,14 +292,13 @@ object ReferenceParser {
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1) {
                     if (refs.any { rejectAsReference(it)}) {
-                        logger.info("Drop because can't parse reference with semicolon")
+                        logger.debug("Drop because can't parse reference with semicolon")
                         return listOf()
                     }
                 }
                 refList.addAll(refs)
             }
         }
-        logger.debug(refList.mapIndexed {i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
         return refList
     }
 
