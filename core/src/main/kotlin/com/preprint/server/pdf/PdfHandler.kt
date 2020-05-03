@@ -11,19 +11,27 @@ import java.io.File
 import java.lang.Exception
 import java.lang.Thread.sleep
 
+
+/**
+ * Used to download pdf and extract references from them
+ */
 object PdfHandler {
-    val logger = logger()
-    private const val SLEEP_TIME : Long = 0
+    private val logger = logger()
+    var sleepTime : Long = 0
+
+    /**
+     * Donwload pdf and extract references
+     */
     fun getFullInfo(
-        recordList : List <PubData>,
-        outputPath : String,
-        refExtractor : ReferenceExtractor?,
-        validators : List<Validator>,
-        savePdf : Boolean
+        recordList: List <PubData>,
+        outputPath: String,
+        refExtractor: ReferenceExtractor?,
+        validators: List<Validator>,
+        savePdf: Boolean
     ) {
         logger.info("Begin download of ${recordList.size} pdf")
         for ((i, record) in recordList.withIndex()) {
-            logger.info("downloading $i: ${record.id}")
+            logger.info("downloading $i out of ${recordList.size}: ${record.id}")
             logger.info("pdf url: ${record.pdfUrl}")
 
             if (record.pdfUrl == "") {
@@ -32,14 +40,20 @@ object PdfHandler {
                 continue
             }
 
+            File(outputPath).mkdirs()
             // Load file from local storage or download if missing
             // Assuming that the link always looks like "http://arxiv.org/pdf/{record.id}v{version}"
             val pdfName = record.pdfUrl.split('/').last()
             val pdfFile = File("$outputPath${pdfName}.pdf")
-            val pdf = if (pdfFile.exists()) {
-                pdfFile.readBytes()
-            } else {
-                downloadPdf(record.pdfUrl) ?: continue
+            val pdf = try {
+                if (pdfFile.exists()) {
+                    pdfFile.readBytes()
+                } else {
+                    downloadPdf(record.pdfUrl) ?: continue
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to download: ${e.message}")
+                continue
             }
 
             // Save if new file was downloaded and savePdf is true
@@ -59,7 +73,7 @@ object PdfHandler {
                 }
             }
 
-            sleep(SLEEP_TIME)
+            sleep(sleepTime)
         }
     }
 
