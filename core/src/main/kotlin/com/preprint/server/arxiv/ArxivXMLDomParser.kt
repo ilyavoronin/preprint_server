@@ -8,10 +8,20 @@ import java.io.ByteArrayInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
 
-//fields that must always be presented: identifier, datestamp, id, title, abstract, creation date
-//otherwise the record won't be saved
+/**
+ * DOM parser that is used to parse data from arxiv API xml responses
+ */
 object ArxivXMLDomParser {
-    fun parseArxivRecords(xmlText : String) : Triple<List<ArxivData>, String, Int> {
+    /**
+     * Parses data from the response of the arxiv bulk API response
+     * Returns parsed data, resumption token, and total number of records
+     * that we will receive information about
+     *
+     * Fields that must always be presented:
+     * identifier, datestamp, id, title, abstract, creation date
+     * otherwise the record will be ignored and won't be added to the list
+     */
+    fun parseArxivRecords(xmlText: String): Triple<List<ArxivData>, String, Int> {
         val inputStream = InputSource(ByteArrayInputStream(xmlText.toByteArray()))
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
         xmlDoc.documentElement.normalize()
@@ -72,12 +82,22 @@ object ArxivXMLDomParser {
             arxivData.license = recordMetadata.getValue("license")
             arxivRecords.add(arxivData)
         }
-        val resumptionTokenElem = xmlDoc.getElementsByTagName("resumptionToken").item(0) as Element //TODO throw an exception
-        val recordsTotal = resumptionTokenElem.getAttribute("completeListSize").toInt()
 
-        return Triple(arxivRecords, resumptionTokenElem.textContent, recordsTotal)
+        val resumptionTokenElems = xmlDoc.getElementsByTagName("resumptionToken")
+        var recordsTotal = 0
+        val resumptionToken = ""
+        if (resumptionTokenElems.length != 0) {
+            val resumptionTokenElem = resumptionTokenElems.item(0) as Element
+            recordsTotal = resumptionTokenElem.getAttribute("completeListSize").toInt()
+            resumptionTokenElem.textContent
+        }
+
+        return Triple(arxivRecords, resumptionToken, recordsTotal)
     }
 
+    /**
+     * Parses only pdf urls from the arxiv api response for multiple records
+     */
     fun getPdfLinks(xmlText: String) : List<String> {
         val pdfList = mutableListOf<String>()
 
@@ -113,8 +133,12 @@ object ArxivXMLDomParser {
         }
     }
 
-    //convert multiline string to oneline string
-    fun makeOneLine(str: String) : String {
+    /**
+     * Converts multiline string(with '\n') to one line string
+     * Examines cases when line ends with '-', which can mean that
+     * this word continues in the next string
+     */
+    fun makeOneLine(str: String): String {
         val lines = str.split("\n").map {it.trim()}.filter { it.isNotEmpty() }
         var res = ""
         for ((i, line) in lines.withIndex()) {
