@@ -9,29 +9,42 @@ import com.preprint.server.utils.RequestLimiter
 import org.apache.logging.log4j.kotlin.logger
 import java.net.URLEncoder
 
+
+/**
+ * Used for accessing CrossRef API
+ */
 object CrossRefApi {
     val logger = logger()
     const val prefix = "https://api.crossref.org"
     val email = Config.config["email"].toString()
-    val maxRecordsNumber = 5
+
+    //the number of records that each request returns
+    var maxRecordsNumber = 5
+
     val reqLimiter = RequestLimiter(49, 2100)
 
-    fun findRecord(ref : String) : List<CRData> {
+
+    /**
+     * Makes response to CrossRef API to find the given record
+     * and returns `maxRecordsNumber` most suitable results
+     */
+    fun findRecord(ref: String): List<CRData> {
+
+        //if there was made too many request, will wait until can make another one
         reqLimiter.waitForRequest()
+
         val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"
         val (_, response, result) = try {
             url.httpGet().timeoutRead(10000).responseString()
         } catch (e : Exception) {
-            logger.error("Failed to validate: ${e.message}")
             throw ApiRequestFailedException(e.message)
         }
         val (newLimit, newInterval) = getNewInterval(response)
         reqLimiter.set(newLimit, newInterval)
+
         when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
-                logger.error(ex)
-                logger.info("Failed: $ex")
                 throw ApiRequestFailedException(ex.message)
             }
             is Result.Success -> {
@@ -41,7 +54,7 @@ object CrossRefApi {
         }
     }
 
-    fun getNewInterval(response: Response) : Pair<Int, Long> {
+    private fun getNewInterval(response: Response): Pair<Int, Long> {
         val newLimit =  response.headers.get("X-Rate-Limit-Limit").toList()
         val newInterval = response.headers.get("X-Rate-Limit-Interval").toList()
         if (newLimit.isEmpty() || newInterval.isEmpty()) {
@@ -52,5 +65,5 @@ object CrossRefApi {
         }
     }
 
-    class ApiRequestFailedException(override val message : String?) : Exception(message)
+    class ApiRequestFailedException(override val message: String?) : Exception(message)
 }

@@ -2,7 +2,10 @@ package com.preprint.server.crossref
 
 import com.beust.klaxon.Json
 
-
+/**
+ * This class and all subclasses are auto-generated
+ * and used to parse data from CrossRef API response
+ */
 data class CrossRefJsonData(
     val message: Message? = null,
     @Json(name="message-type")
