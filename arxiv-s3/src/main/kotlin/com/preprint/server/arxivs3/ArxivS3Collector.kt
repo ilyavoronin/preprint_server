@@ -7,6 +7,7 @@ import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.ref.ReferenceExtractor
 import com.preprint.server.validation.Validator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.codec.digest.DigestUtils
