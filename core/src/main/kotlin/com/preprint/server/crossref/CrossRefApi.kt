@@ -4,7 +4,6 @@ import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import com.preprint.server.Config
-import com.preprint.server.arxiv.ArxivAPI
 import com.preprint.server.utils.RequestLimiter
 import org.apache.logging.log4j.kotlin.logger
 import java.net.URLEncoder

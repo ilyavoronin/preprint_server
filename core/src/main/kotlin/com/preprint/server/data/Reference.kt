@@ -4,28 +4,38 @@ import com.preprint.server.ref.GrobidEngine
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
 
+
+/**
+ * Contains information about bibliographic reference
+ */
 class Reference() {
-    var rawReference : String = ""
-    var arxivId : String? = null
-    var doi : String? = null
-    var authors : List<Author>? = null
-    var title : String? = null
-    var journal : String? = null
-    var issue : String? = null
-    var pages : String? = null
-    var volume : String? = null
-    var year : String? = null
-    var issn : String? = null
+    var rawReference: String = ""
+    var arxivId: String? = null
+    var doi: String? = null
+    var authors: List<Author>? = null
+    var title: String? = null
+    var journal: String? = null
+    var issue: String? = null
+    var pages: String? = null
+    var volume: String? = null
+    var year: String? = null
+    var issn: String? = null
     var isReference = false
     var validated = false
-    constructor(ref : String, shouldParse : Boolean = false) : this() {
+
+    /**
+     * If `shouldParse` == true then Grobid will be used
+     * to parse full information from reference.
+     * Other constructors use classes from Grobid library to construct reference
+     */
+    constructor(ref: String, shouldParse: Boolean = false) : this() {
         rawReference = ref
         if (shouldParse) {
             val p = GrobidEngine.processRawReference(rawReference, 1)
             setBib(p)
         }
     }
-    constructor(bibData : BibDataSet) : this() {
+    constructor(bibData: BibDataSet) : this() {
         val p = bibData.resBib
         rawReference = bibData.rawBib.replace("\n", "")
         setBib(p)
@@ -34,7 +44,7 @@ class Reference() {
         rawReference = rawRef
         setBib(bib)
     }
-    private fun setBib(p : BiblioItem) {
+    private fun setBib(p: BiblioItem) {
         arxivId = p.arXivId
         doi = p.doi
         authors = p.fullAuthors?.map {author -> Author(author.toString())}
