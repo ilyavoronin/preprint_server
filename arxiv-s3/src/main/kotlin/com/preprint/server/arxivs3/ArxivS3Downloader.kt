@@ -57,10 +57,11 @@ object ArxivS3Downloader {
     /**
      * Download archive into the given directory
      */
-    fun download(pdfKey : String, path : String) {
+    fun download(pdfKey: String, path: String) {
         logger.info("Begin $pdfKey download")
         amazonS3.getObject(
-            GetObjectRequest(bucketName, pdfKey, true), File(path)
+                GetObjectRequest(bucketName, pdfKey, true),
+                File(path)
         ) ?: throw DownloadFailedException("Failed to download")
         logger.info("Donwload finished")
     }

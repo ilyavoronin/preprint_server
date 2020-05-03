@@ -5,13 +5,21 @@ import org.xml.sax.helpers.DefaultHandler
 import java.io.File
 import javax.xml.parsers.SAXParserFactory
 
+
+/**
+ * Parses arxiv's manifest.xml file, that contains information
+ * about files stored in arxiv's Amazon S3 bucket
+ */
 object ManifestParser {
-    fun parseFilenames(path : String) : List<Pair<String, String> > {
-        val file = File(path)
+
+    /**
+     * Returns a list of filename and md5 hash of each file stored in Amazon S3 bucket
+     */
+    fun parseFilenames(path: String) : List<Pair<String, String> > {
         val factory = SAXParserFactory.newInstance()
         val parser = factory.newSAXParser()
 
-        val handler = object: DefaultHandler() {
+        val handler = object : DefaultHandler() {
             val filenames = mutableListOf<String>()
             val checksums = mutableListOf<String>()
             var bFilename = false
