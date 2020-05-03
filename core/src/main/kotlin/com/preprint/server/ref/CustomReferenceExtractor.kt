@@ -57,7 +57,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
             logger.debug("done by CUSTOM")
         }
         logger.debug(refList.mapIndexed { i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
-        return refList
+        return refList.also {
+            logger.info("Parsed ${it.size} references")
+        }
     }
 
     //get indent from each line
@@ -197,9 +199,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
             type,
             isTwoColumn,
             pageWidth
-        ).also {
-            logger.info("Parsed ${it.size} references")
-        }
+        )
     }
 
     private fun removeEmptyLines(lines : List<Line>) = lines.filter {!it.str.matches("""\s*""".toRegex())}
