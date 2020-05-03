@@ -10,23 +10,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
-import org.neo4j.driver.Session
 import org.neo4j.driver.Transaction
 import java.io.Closeable
 import java.lang.Exception
-import java.sql.Ref
-import kotlin.math.log
 
+
+/**
+ * Used to work with neo4j database
+ */
 class DatabaseHandler(
-    url : String,
-    port : String,
-    user : String,
-    password : String
+    url: String,
+    port: String,
+    user: String,
+    password: String
 ) : Closeable {
 
     private val driver = GraphDatabase.driver("bolt://$url:$port", AuthTokens.basic(user, password))
     private val logger = logger()
 
+    /**
+     * Create initial setup(create indexes, declares some node's properties unique),
+     * if the database is accessed for the first time
+     */
     init {
         val existingIndexes = driver.session().use { session ->
             session.run("CALL db.indexes() YIELD name").list().map {
@@ -37,10 +42,33 @@ class DatabaseHandler(
         initIndexes(existingIndexes)
     }
 
-    fun storeArxivData(arxivRecords : List<ArxivData>) {
+
+    /**
+     * Stores given records to the database.
+     * Creates Publication node(whith Arxiv label) for each given record.
+     *
+     * Creates(if they are not existed) Author nodes, Journal nodes, Affiliation nodes
+     * for each author, journal or affiliation presented in the given data.
+     *
+     * Also creates(if they are not existed) Publication nodes for validated references
+     * For non validated references, that are not found in the database, Missing publication
+     * nodes is created
+     *
+     * And finally creates connections between nodes(connections are created with multiple threads)
+     *
+     * For now there is no full description of the database(I hope it will appear later),
+     * so the only way to understand how it works is to read the code below
+     */
+    fun storeArxivData(arxivRecords: List<ArxivData>) {
         logger.info("Begin storing ${arxivRecords.size} records to the database")
 
-        var pubIds : List<Long> = listOf()
+
+        /*
+        Create 'Publication' nodes with 'Arxiv' label for records from `arxivRecords`
+        And store ids(that neo4j gives them) of the created records in `pubIds
+        `pubIds` will be later used to create connections between nodes
+         */
+        var pubIds: List<Long> = listOf()
         driver.session().use {
             //create new or update publication node
             pubIds = mutableListOf()
@@ -59,8 +87,17 @@ class DatabaseHandler(
         }
         logger.info("Publication nodes created")
 
+        /*
+        Gets all nodes from the arxivRecords(authors, journals, etc.) and create nodes for them
+        This is done in order to use concurrency later for connection creation
+         */
         createAllNodes(arxivRecords)
 
+        /*
+        Create all connections using multiple threads,
+        But some transaction fail(because of concurrency) and
+        we will store them in `failedTransactions` and retry them later sequentially
+         */
         val failedTransactions = mutableListOf<Pair<Long, ArxivData>>()
         runBlocking(Dispatchers.IO) {
             pubIds.zip(arxivRecords).forEach { (id, record) ->
@@ -85,10 +122,15 @@ class DatabaseHandler(
                 }
             }
         }
+
         logger.info("All connections created")
     }
 
-    private fun initIndexes(existingIndexes : List<String>) {
+    /**
+     * Creates indexes for some properties, if they weren't created before.
+     * `existingIndexes` contains the name of all indexes presented in the database
+     */
+    private fun initIndexes(existingIndexes: List<String>) {
         driver.session().use {
             it.writeTransaction { tr ->
                 if (!existingIndexes.contains("publication_arxivId")) {
@@ -150,6 +192,11 @@ class DatabaseHandler(
         }
     }
 
+    /**
+     * Create all nodes that needed for the given records(Author, Journal, MissingPublication, etc.)
+     * Methods getAll... get all data of the type ...(Author e.g) from given list of records
+     * Methods createAll... creates a new nodes in the database for given data of type ...(Author e.g.)
+     */
     private fun createAllNodes(arxivRecords: List<ArxivData>) {
         val authors = getAllAuthors(arxivRecords)
         val journals = getAllJouranls(arxivRecords)
@@ -184,7 +231,7 @@ class DatabaseHandler(
         }
     }
 
-    private fun createAllJournals(journals : List<String>) {
+    private fun createAllJournals(journals: List<String>) {
         val params = mapOf(
             "journals" to journals
         )
@@ -199,7 +246,7 @@ class DatabaseHandler(
         }
     }
 
-    private fun createAllAffiliations(affs : List<String>) {
+    private fun createAllAffiliations(affs: List<String>) {
         val params = mapOf(
             "affs" to affs
         )
@@ -214,7 +261,7 @@ class DatabaseHandler(
         }
     }
 
-    private fun createAllMissingPublicationsWithTitle(mpubs : List<Reference>) {
+    private fun createAllMissingPublicationsWithTitle(mpubs: List<Reference>) {
         driver.session().use {
             it.writeTransaction { tr ->
                 mpubs.forEach { ref ->
@@ -240,7 +287,7 @@ class DatabaseHandler(
         }
     }
 
-    private fun createAllPublications(pubs : List<Reference>) {
+    private fun createAllPublications(pubs: List<Reference>) {
         driver.session().use {
             it.writeTransaction { tr ->
                 pubs.forEach { ref ->
@@ -270,7 +317,7 @@ class DatabaseHandler(
         }
     }
 
-    private fun getAllAuthors(records : List<ArxivData>) : List<Author> {
+    private fun getAllAuthors(records: List<ArxivData>): List<Author> {
         val authors = mutableSetOf<Author>()
         records.forEach { record ->
             record.authors.forEach { authors.add(it) }
@@ -298,7 +345,7 @@ class DatabaseHandler(
         return journals.toList()
     }
 
-    private fun getAllAffiliations(records : List<ArxivData>) : List <String> {
+    private fun getAllAffiliations(records: List<ArxivData>): List <String> {
         val affiliations = mutableSetOf<String>()
         records.forEach {record ->
             record.authors.forEach {
@@ -320,7 +367,7 @@ class DatabaseHandler(
         return affiliations.toList()
     }
 
-    private fun getAllMissingPublicationsWithTitle(records : List<ArxivData>) : List <Reference> {
+    private fun getAllMissingPublicationsWithTitle(records: List<ArxivData>): List <Reference> {
         val mpubs = mutableSetOf<Reference>()
         records.forEach { record ->
             record.refList.forEach {ref ->
@@ -332,7 +379,7 @@ class DatabaseHandler(
         return mpubs.toList()
     }
 
-    private fun getAllPublications(records: List<ArxivData>) : List<Reference> {
+    private fun getAllPublications(records: List<ArxivData>): List<Reference> {
         val pubs = mutableSetOf<Reference>()
         records.forEach { record ->
             record.refList.forEach {ref ->
@@ -344,7 +391,7 @@ class DatabaseHandler(
         return pubs.toList()
     }
 
-    private fun arxivDataToMap(record : ArxivData) : Map<String, String> {
+    private fun arxivDataToMap(record: ArxivData): Map<String, String> {
         val res = mutableMapOf<String, String>()
         res += "title" to record.title
         res += "arxivId" to record.id
@@ -360,7 +407,7 @@ class DatabaseHandler(
         return res
     }
 
-    private fun refDataToMap(ref : Reference) : Map<String, String> {
+    private fun refDataToMap(ref: Reference): Map<String, String> {
         val res = mutableMapOf<String, String>()
         if (!ref.title.isNullOrEmpty()) {
             res += "title" to ref.title!!
@@ -377,7 +424,7 @@ class DatabaseHandler(
         return res
     }
 
-    private fun journalDataToMap(ref : Reference) : Map<String, String> {
+    private fun journalDataToMap(ref: Reference): Map<String, String> {
         val res = mutableMapOf<String, String>()
         if (!ref.journal.isNullOrEmpty()) {
             res += "jornal" to ref.journal!!
@@ -394,11 +441,23 @@ class DatabaseHandler(
         return res
     }
 
-    private fun parm(paramName : String) : String {
+    /**
+     * This function returns a string that can be used as parameter name
+     * in cypher queries in mulitiline strings("""...""")
+     */
+    private fun parm(paramName: String): String {
         return "\$$paramName"
     }
 
-    private fun createConnections(tr : Transaction, id : Long, record: ArxivData) {
+
+    /**
+     * Creates all connections that needed for given record
+     */
+    private fun createConnections(
+            tr : Transaction,
+            id : Long,
+            record: ArxivData
+    ) {
         createAuthorConnections(tr, record.authors, id)
 
         createCitationsConnections(tr, record)
@@ -408,8 +467,15 @@ class DatabaseHandler(
         }
     }
 
-    //create publication -> author connection and author -> affiliation connection
-    private fun createAuthorConnections(tr : Transaction, authors : List<Author>, id : Long) {
+    /**
+     * Creates Publication -> Author connection and Author -> Affiliation connections
+     */
+    private fun createAuthorConnections(
+            tr: Transaction,
+            authors: List<Author>,
+            id: Long
+    ) {
+
         authors.forEach {author ->
             val params = mapOf(
                 "name" to author.name,
@@ -435,8 +501,19 @@ class DatabaseHandler(
         }
     }
 
-    //create publication -> publication connections and create MissingPublication nodes
-    private fun createCitationsConnections(tr : Transaction, record : ArxivData) {
+    /**
+     * Creates Publication -> Publication connections and MissingPublication nodes
+     *
+     * More detailed:
+     * Let it have a Reference `ref`.
+     * It searches Publication node for `ref`(by title, doi or arxivId)
+     * in the database and then there is several cases:
+     * 1)If finds, then just creates new connection from the node that corresponds `record` to the found node.
+     * 2)If doesn't find, but `ref` has a title, than it trying to find a MissingPublication node with this title
+     * and creates connection if found, or creates new MissingPublication node
+     * 3)Otherwise just creates MissingPublication node
+     */
+    private fun createCitationsConnections(tr: Transaction, record: ArxivData) {
         record.refList.forEach {ref ->
             val params = mapOf(
                 "rid" to record.id,
@@ -513,8 +590,15 @@ class DatabaseHandler(
         }
     }
 
-    //create publication -> journal connections
-    private fun createJournalPublicationConnections(tr: Transaction, journal : JournalRef?, id : Long) {
+    /**
+     * Create Publication->Journal connection
+     */
+    private fun createJournalPublicationConnections(
+            tr: Transaction,
+            journal: JournalRef?,
+            id: Long
+    ) {
+
         if (journal?.rawTitle != null) {
             val params = mapOf(
                 "pubId" to id,
