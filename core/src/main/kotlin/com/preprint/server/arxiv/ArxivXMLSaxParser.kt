@@ -159,7 +159,7 @@ object ArxivXMLSaxParser {
         }
 
         /**
-         * Convers multiline string into one line string
+         * Converts multiline string into one line string
          */
         private fun makeOneLine(rawLines: List<String>): String {
             val lines = rawLines.map {it.trim()}.filter { it.isNotEmpty() }

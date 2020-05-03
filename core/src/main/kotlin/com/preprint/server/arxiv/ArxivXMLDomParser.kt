@@ -124,7 +124,7 @@ object ArxivXMLDomParser {
         return pdfList
     }
 
-    fun Element.getValue(tagName : String) : String? {
+    private fun Element.getValue(tagName : String) : String? {
         val elems =  this.getElementsByTagName(tagName)
         if (elems.length == 0) {
             return null
@@ -139,7 +139,7 @@ object ArxivXMLDomParser {
      * Examines cases when line ends with '-', which can mean that
      * this word continues in the next string
      */
-    fun makeOneLine(str: String): String {
+    private fun makeOneLine(str: String): String {
         val lines = str.split("\n").map {it.trim()}.filter { it.isNotEmpty() }
         var res = ""
         for ((i, line) in lines.withIndex()) {
@@ -149,9 +149,7 @@ object ArxivXMLDomParser {
             }
             if (res.length > 1 && line.length > 0 && res.last() == '-') {
                 val lastC = res[res.lastIndex - 1]
-                if (lastC.isLowerCase() && line.first().isLowerCase()) {
-                    res = res.dropLast(1) + line
-                }
+                if (lastC.isLowerCase() && line.first().isLowerCase()) res = res.dropLast(1) + line
                 else {
                     res += line
                 }

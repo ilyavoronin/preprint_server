@@ -20,7 +20,7 @@ object ArxivAPI {
     var sleepTime: Long = 600000
 
     //a time to wait for a response
-    val timeout = 60000
+    var timeout = 60000
 
     /**
      * Makes request to get metadata for all metadata from `startDate`
@@ -28,7 +28,7 @@ object ArxivAPI {
      * If it is the first request to API, then resumption token should be null or empty,
      * otherwise resumption token received from the previous request should be given.
      * If `resumptionToken is not null and not empty, than `startDate` parameter is not used.
-     * `limit` parameter is used to limit the number of records that returned from each request
+     * `limit` parameter is used to limit the number of records that are returned from each request
      *
      * Returns list of 1000 received records,
      * resumption token to use in the next request,
@@ -130,10 +130,10 @@ object ArxivAPI {
 
     /**
      * This function is used in `getRecordsUrl` and `getArxivRecords`
-     * to make requests to arxiv API
+     * to make requests to arxiv API.
      * Returns the xml file received from API
      */
-    fun getArxivMetadata(idList: List <String>): String {
+    private fun getArxivMetadata(idList: List <String>): String {
         logger.info("Begin api request to get arxiv metadata for ${idList.size} records")
 
         //form the string from ids
