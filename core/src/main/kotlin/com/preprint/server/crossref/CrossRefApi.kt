@@ -30,8 +30,8 @@ object CrossRefApi {
         when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
-                ArxivAPI.logger.error(ex)
-                ArxivAPI.logger.info("Failed: $ex")
+                logger.error(ex)
+                logger.info("Failed: $ex")
                 throw ApiRequestFailedException(ex.message)
             }
             is Result.Success -> {

@@ -46,7 +46,7 @@ class ArxivAPITests {
         every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
-        every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
+        every { spyArxiApi.getRecordsUrl(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
 
 
         val (arxivRecords, newResToken, recTotal) =
@@ -77,7 +77,7 @@ class ArxivAPITests {
         every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
-        every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
+        every { spyArxiApi.getRecordsUrl(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
 
 
         val (arxivRecords, newResToken, recTotal) =
@@ -114,7 +114,7 @@ class ArxivAPITests {
         every {ArxivXMLDomParser.parseArxivRecords("xml text")} returns
                 Triple(listOf(ArxivData("ident", id = "id1")), "new token", 1000)
         val slot = slot<List<String>>()
-        every { spyArxiApi.getRecordsLinks(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
+        every { spyArxiApi.getRecordsUrl(capture(slot))} answers {listOf("pdf url ${slot.captured[0]}")}
 
 
         val (arxivRecords, newResToken, recTotal) =

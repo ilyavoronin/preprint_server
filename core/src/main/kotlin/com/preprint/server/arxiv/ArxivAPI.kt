@@ -6,20 +6,45 @@ import com.github.kittinunf.result.Result
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
 
+
+/**
+ * Used for accessing Arxiv bulk API and Arxiv API
+ */
 object ArxivAPI {
 
-    val logger = logger()
-    const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
-    const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
-    var sleepTime : Long = 600000
+    private val logger = logger()
+    private const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
+    private const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
+
+    //a time to sleep when receiving 503 code
+    var sleepTime: Long = 600000
+
+    //a time to wait for a response
     val timeout = 60000
 
-    //only 1000 records
-    fun getBulkArxivRecords(startDate : String, resumptionToken : String, limit : Int = 100000) : Triple<List<ArxivData>, String, Int> {
+    /**
+     * Makes request to get metadata for all metadata from `startDate`
+     * Each request returns only 1000 records and resumption token to use in the next request
+     * If it is the first request to API, then resumption token should be null or empty,
+     * otherwise resumption token received from the previous request should be given.
+     * If `resumptionToken is not null and not empty, than `startDate` parameter is not used.
+     * `limit` parameter is used to limit the number of records that returned from each request
+     *
+     * Returns list of 1000 received records,
+     * resumption token to use in the next request,
+     * and the total number of records to be received
+     */
+    fun getBulkArxivRecords(
+            startDate: String,
+            resumptionToken: String? = null,
+            limit: Int = 1000
+    ): Triple<List<ArxivData>, String, Int> {
+
         logger.info("Begin api request from $startDate")
         logger.info("Using resumption token: $resumptionToken")
-        val requestURL = when(resumptionToken) {
-                ""   -> requestBulkUrlPrefix +
+
+        val requestURL = when {
+                resumptionToken.isNullOrEmpty() -> requestBulkUrlPrefix +
                             "verb=ListRecords&from=$startDate&metadataPrefix=arXiv"
                 else -> requestBulkUrlPrefix +
                             "verb=ListRecords&resumptionToken=$resumptionToken"
@@ -34,7 +59,7 @@ object ArxivAPI {
                 val ex = result.getException()
                 if (response.statusCode == 503) {
                     logger.info("ArXiv OAI service is temporarily unavailable")
-                    logger.info("Waiting 600 seconds")
+                    logger.info("Waiting ${sleepTime / 1000} seconds")
                     sleep(sleepTime)
                     getBulkArxivRecords(startDate, resumptionToken, limit)
                 }
@@ -44,20 +69,25 @@ object ArxivAPI {
                     throw ApiRequestFailedException(ex.message)
                 }
             }
+
             is Result.Success -> {
                 logger.info("Success")
                 val data = result.get()
+
                 val (arxivRecords, newResumptionToken, recordsTotal) = ArxivXMLDomParser.parseArxivRecords(data)
                 if (resumptionToken == "") {
                     logger.info("Total records: ${recordsTotal}")
                 }
-                logger.info("Receive ${arxivRecords.size} records")
+
+                logger.info("Received ${arxivRecords.size} records")
+
                 val pdfLinks = try {
-                    getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })
+                    getRecordsUrl(arxivRecords.map { arxivData -> arxivData.id })
                 } catch (e : ApiRequestFailedException) {
                     //try one more time
-                    getRecordsLinks(arxivRecords.map { arxivData -> arxivData.id })
+                    getRecordsUrl(arxivRecords.map { arxivData -> arxivData.id })
                 }
+
                 for ((arxivData, pdfLink) in arxivRecords.zip(pdfLinks)) {
                     arxivData.pdfUrl = pdfLink
                 }
@@ -66,7 +96,11 @@ object ArxivAPI {
         }
     }
 
-    fun getRecordsLinks(idList : List <String>) : List<String> {
+
+    /**
+     * Returns the list of pdf urls for each arxiv id from `idList`
+     */
+    fun getRecordsUrl(idList: List <String>): List<String> {
         val metadata = getArxivMetadata(idList)
         val records = ArxivXMLDomParser.getPdfLinks(metadata)
         if (records.size != idList.size) {
@@ -78,7 +112,10 @@ object ArxivAPI {
         return records
     }
 
-    fun getArxivRecords(idList : List <String>) : List<ArxivData> {
+    /**
+     * Returns the list of full metadata about records with given ids
+     */
+    fun getArxivRecords(idList: List <String>): List<ArxivData> {
         val metadata = getArxivMetadata(idList)
         val records = ArxivXMLSaxParser.parse(metadata)
         if (records.size != idList.size) {
@@ -91,8 +128,15 @@ object ArxivAPI {
         return records
     }
 
-    fun getArxivMetadata(idList : List <String>) : String {
+    /**
+     * This function is used in `getRecordsUrl` and `getArxivRecords`
+     * to make requests to arxiv API
+     * Returns the xml file received from API
+     */
+    fun getArxivMetadata(idList: List <String>): String {
         logger.info("Begin api request to get arxiv metadata for ${idList.size} records")
+
+        //form the string from ids
         val idString = idList.foldIndexed("") {i, acc, s ->
             if (i < idList.lastIndex)"$acc$s," else "$acc$s"
         }
@@ -100,6 +144,7 @@ object ArxivAPI {
             .httpPost(listOf("id_list" to idString, "max_results" to idList.size.toString()))
             .timeoutRead(timeout)
             .responseString()
+
         return when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
@@ -113,5 +158,5 @@ object ArxivAPI {
         }
     }
 
-    class ApiRequestFailedException(message : String? = null) : Throwable(message)
+    class ApiRequestFailedException(message: String? = null) : Throwable(message)
 }
