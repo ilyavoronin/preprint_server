@@ -21,11 +21,10 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.lang.Exception
 import java.nio.file.Paths
-import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 /**
- * Download all arxives(in .tar format) from Amazon S3 requester pays bucket sequentially,
+ * Download all archives(in .tar format) from Amazon S3 "requester pays" bucket sequentially,
  * extract references and store all data into the database.
  */
 object ArxivS3Collector {
@@ -124,12 +123,15 @@ object ArxivS3Collector {
      * stores all extracted files in the `outputDir`
      * Returns list of paths to files
      */
-    private fun unzip(inputFilePath: String, outputDir : File) : List<String> {
+    private fun unzip(inputFilePath: String, outputDir: File) : List<String> {
         val untaredFiles = mutableListOf<String>()
         val inputStream: InputStream = FileInputStream(File(inputFilePath))
+
         val debInputStream =
-            ArchiveStreamFactory().createArchiveInputStream("tar", inputStream) as TarArchiveInputStream
-        var entry: TarArchiveEntry? = null
+            ArchiveStreamFactory().createArchiveInputStream("tar", inputStream)
+                    as TarArchiveInputStream
+
+        var entry: TarArchiveEntry?
         while (debInputStream.nextTarEntry.also { entry = it } != null) {
             if (!entry!!.isDirectory) {
                 val file = File(outputDir, Paths.get(entry!!.name).fileName.toString())
@@ -145,7 +147,7 @@ object ArxivS3Collector {
     /**
      * Deleted directory and all stored files(not recursievly)
      */
-    private fun deleteDir(dir : File) {
+    private fun deleteDir(dir: File) {
         val files = dir.listFiles()
         for (file in files) {
             file.delete()
