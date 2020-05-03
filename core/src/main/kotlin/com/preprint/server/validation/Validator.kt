@@ -10,14 +10,13 @@ import java.lang.Exception
 
 interface Validator {
     suspend fun validate(refList : List<Reference>) = withContext(Dispatchers.IO) {
-        logger().info("Begin validation of ${refList.size} references")
         val jobs = mutableListOf<Job>()
         for (ref in refList) {
             jobs.add(launch {
                 try {
                     validate(ref)
                 } catch (e : Exception) {
-                    println("Failed to validate ${ref.rawReference}:\n ${e.message}")
+                    throw ValidatorException(e.message.toString())
                 }
             })
         }
@@ -25,4 +24,6 @@ interface Validator {
     }
 
     fun validate(ref : Reference)
+
+    class ValidatorException(override val message: String = "") : Exception(message)
 }
