@@ -1,6 +1,6 @@
 package com.preprint.server.ref.custom
 
-import com.preprint.server.algo.LCS
+import com.preprint.server.algo.Algorithms
 
 
 object GarbageDeleter {
@@ -148,7 +148,7 @@ object GarbageDeleter {
                 val cur = listIndices[i]
                 val prev = listIndices[i - 1]
                 if (state == 0) {
-                    curMaxString = LCS.find(lines[prev].str, lines[cur].str)
+                    curMaxString = Algorithms.findLCS(lines[prev].str, lines[cur].str)
                     if (curMaxString.length > lines[cur].str.length * 0.75 &&
                         curMaxString.length > lines[prev].str.length * 0.75
                     ) {
@@ -161,7 +161,7 @@ object GarbageDeleter {
                     continue
                 }
                 if (state == 1) {
-                    val newString = LCS.find(curMaxString, lines[cur].str)
+                    val newString = Algorithms.findLCS(curMaxString, lines[cur].str)
                     if (newString.length == curMaxString.length
                         || curMaxString.length > 15 && curMaxString.length - newString.length < 4) {
                         runLength += 1

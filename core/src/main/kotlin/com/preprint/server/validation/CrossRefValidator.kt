@@ -1,7 +1,6 @@
 package com.preprint.server.validation
 
-import com.preprint.server.algo.LCS
-import com.preprint.server.algo.LvnstDist
+import com.preprint.server.algo.Algorithms
 import com.preprint.server.crossref.CRData
 import com.preprint.server.crossref.CrossRefApi
 import com.preprint.server.data.Reference
@@ -33,12 +32,12 @@ object CrossRefValidator : Validator {
 
     private fun checkSim(ref : Reference, record : CRData) : Boolean {
         if (ref.title != null && ref.title != "") {
-            val dist = LvnstDist.findDist(ref.title!!, record.title)
+            val dist = Algorithms.findLvnstnDist(ref.title!!, record.title)
             val d = dist.toDouble() / ref.title!!.length.toDouble()
             return d < distThreshold
         }
         else {
-            val lcs = LCS.find(ref.rawReference, record.title).length
+            val lcs = Algorithms.findLCS(ref.rawReference, record.title).length
             if (lcs.toDouble() / record.title.length > 1 - distThreshold) {
                 return true
             }
