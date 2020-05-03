@@ -7,19 +7,40 @@ import org.xml.sax.helpers.DefaultHandler
 import java.io.ByteArrayInputStream
 import javax.xml.parsers.SAXParserFactory
 
+
+/**
+ * SAX parser that is used to parse data from arxiv API xml responses
+ * Currently DOM and SAX parsers is used to parse different kinds of responses
+ */
 object ArxivXMLSaxParser {
-    val factory = SAXParserFactory.newInstance()
-    val parser = factory.newSAXParser()
-    fun parse(xmlText : String) : List<ArxivData> {
+    private val factory = SAXParserFactory.newInstance()
+    private val parser = factory.newSAXParser()
+
+    /**
+     * Parses full metadata from the arxiv api response about multiple records
+     * and saves it in the ArxivData class for each record
+     */
+    fun parse(xmlText: String): List<ArxivData> {
         val handler = ArxivHandler()
         parser.parse(ByteArrayInputStream(xmlText.toByteArray()), handler)
         return handler.records
     }
 
+    /**
+     * This handler is used in SAX-parser
+     */
     private class ArxivHandler : DefaultHandler() {
         val records = mutableListOf<ArxivData>()
+
+        //stores information about tags, `tagStatus["tag"]` == 1 means that the tag is open
         private val tagStatus = mutableMapOf<String, Boolean>().withDefault { false }
+
         private var curRecord = ArxivData()
+
+        /*
+        SAX parser parses only one line at a time(and maybe sometimes can split one line in two)
+        and arxiv api response contains multiline text, so we save lines for each tag in this map:
+         */
         private val lines = mutableMapOf<String, MutableList<String>>()
 
         override fun startDocument() {
@@ -119,20 +140,28 @@ object ArxivXMLSaxParser {
             }
         }
 
-        private fun getValue(ch: CharArray, start : Int, length: Int) : String {
+        private fun getValue(ch: CharArray, start: Int, length: Int): String {
             return String(ch, start, length)
         }
 
-        private fun getFullText(tagName : String) : String? {
+        /**
+         * Merge all string for `tag` into one line string(for text fields)
+         */
+        private fun getFullText(tagName: String): String? {
             return makeOneLine(lines[tagName]?.toList() ?: return null)
         }
 
-        private fun getFullString(tagName : String) : String? {
+        /**
+         * Merge all string for `tag` into one line string(for non text fields)
+         */
+        private fun getFullString(tagName: String): String? {
             return makeOneLineNotText(lines[tagName]?.toList() ?: return null)
         }
 
-        //convert multiline string to oneline string
-        private fun makeOneLine(rawLines : List<String>) : String {
+        /**
+         * Convers multiline string into one line string
+         */
+        private fun makeOneLine(rawLines: List<String>): String {
             val lines = rawLines.map {it.trim()}.filter { it.isNotEmpty() }
             var res = ""
             for ((i, line) in lines.withIndex()) {
@@ -156,7 +185,7 @@ object ArxivXMLSaxParser {
             return res
         }
 
-        private fun makeOneLineNotText(rawLines : List<String>) : String {
+        private fun makeOneLineNotText(rawLines: List<String>): String {
             return rawLines.joinToString()
         }
     }

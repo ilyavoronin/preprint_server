@@ -10,6 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * DOM parser that is used to parse data from arxiv API xml responses
+ * Currently DOM and SAX parsers is used to parse different kinds of responses
  */
 object ArxivXMLDomParser {
     /**
