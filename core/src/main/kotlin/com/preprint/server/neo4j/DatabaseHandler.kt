@@ -494,19 +494,14 @@ class DatabaseHandler(
                     """.trimIndent()
                 } else ""
 
-            try {
-                tr.run("""
-                        MATCH (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
-                        $createAffiliationQuery
-                        WITH auth
-                        MATCH (pub:${DBLabels.PUBLICATION.str})
-                        WHERE id(pub) = ${parm("pubId")}
-                        MERGE (pub)-[:${DBLabels.AUTHORED.str}]->(auth)
-                    """.trimIndent(), params)
-            } catch (e: Exception) {
-                logger.error("Failed to create connection between author ${author.name}" +
-                        " and publication with neo4j id $id")
-            }
+            tr.run("""
+                    MATCH (auth:${DBLabels.AUTHOR.str} {name: ${parm("name")}})
+                    $createAffiliationQuery
+                    WITH auth
+                    MATCH (pub:${DBLabels.PUBLICATION.str})
+                    WHERE id(pub) = ${parm("pubId")}
+                    MERGE (pub)-[:${DBLabels.AUTHORED.str}]->(auth)
+                """.trimIndent(), params)
         }
     }
 
@@ -533,71 +528,74 @@ class DatabaseHandler(
                 "cdata" to refDataToMap(ref),
                 "jdata" to journalDataToMap(ref)
             )
-            try {
-                val res = tr.run("""
-                        MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                        MATCH (pubTo:${DBLabels.PUBLICATION.str})
-                        WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
-                            pubTo.doi = ${parm("rdoi")} OR pubTo.title = ${parm("rtit")})
-                        SET pubTo += ${parm("cdata")}
-                        MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
-                        RETURN pubTo
-                    """.trimIndent(), params)
+            val res = tr.run("""
+                    MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
+                    MATCH (pubTo:${DBLabels.PUBLICATION.str})
+                    WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
+                        pubTo.doi = ${parm("rdoi")} OR pubTo.title = ${parm("rtit")})
+                    SET pubTo += ${parm("cdata")}
+                    MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
+                    RETURN pubTo
+                """.trimIndent(), params)
 
-                if (res.list().isEmpty()) {
-                    if (!ref.validated) {
-                        if (!ref.title.isNullOrEmpty()) {
-                            //then the cited publication doesn't exist in database
-                            //crete missing publication -> publication connection
-                            tr.run(
-                                    """
-                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                            MATCH (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
-                            MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
-                            SET c.rawRef = ${parm("rRef")}, 
-                                mpub += ${parm("cdata")},
-                                mpub += ${parm("jdata")}
-                        """.trimIndent(), params
-                            )
-                        } else {
-                            tr.run(
-                                    """	
-                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})	
-                            CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})	
-                            MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)	
-                            SET c.rawRef = ${parm("rRef")}, 	
-                                mpub += ${parm("cdata")},	
-                                mpub += ${parm("jdata")}	
-                        """.trimIndent(), params
-                            )
-                        }
-                    } else {
-                        val params = mapOf("cdata" to refDataToMap(ref),
-                                "arxivId" to record.id,
-                                "rawRef" to ref.rawReference)
-                        val matchString =
-                                if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
-                                else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
-                                else "title: ${parm("cdata.title")}"
-                        val id = tr.run(
+            if (res.list().isEmpty()) {
+                if (!ref.validated) {
+                    if (!ref.title.isNullOrEmpty()) {
+                        //then the cited publication doesn't exist in database
+                        //crete missing publication -> publication connection
+                        tr.run(
                                 """
+                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
+                        MATCH (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
+                        MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
+                        SET c.rawRef = ${parm("rRef")}, 
+                            mpub += ${parm("cdata")},
+                            mpub += ${parm("jdata")}
+                    """.trimIndent(), params
+                        )
+                    } else {
+                        tr.run(
+                                """	
+                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})	
+                        CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})	
+                        MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)	
+                        SET c.rawRef = ${parm("rRef")}, 	
+                            mpub += ${parm("cdata")},	
+                            mpub += ${parm("jdata")}	
+                    """.trimIndent(), params
+                        )
+                    }
+                } else {
+                    val params = mapOf("cdata" to refDataToMap(ref),
+                            "arxivId" to record.id,
+                            "rawRef" to ref.rawReference)
+                    val matchString =
+                            if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
+                            else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
+                            else "title: ${parm("cdata.title")}"
+                    try {
+                        val id = tr.run("""
                             MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
                             MATCH (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
                             SET cpub += ${parm("cdata")}
                             MERGE (pub)-[cites:${DBLabels.CITES.str}]->(cpub)
                             SET cites.rawRef = ${parm("rawRef")}
                             RETURN id(cpub)
-                        """.trimIndent(), params
+                            """.trimIndent(),
+                                params
                         ).list().map { it.get("id(cpub)").asLong() }.get(0)
+
                         ref.authors?.let { createAuthorConnections(tr, it, id) }
+
                         val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, pages = ref.pages,
                                 number = ref.issue, issn = ref.issn, rawRef = "")
                         createJournalPublicationConnections(tr, journal, id)
+
+                    } catch (e: Exception) {
+                        logger.error("Failed to create connection between Publication with arxivId ${record.id} " +
+                                "and publication with $matchString")
                     }
                 }
-            } catch (e: Exception) {
-                logger.error("Failed to create connection between Publication with arxivId ${record.id}" +
-                        "and Reference ${ref.rawReference}")
             }
         }
     }
@@ -620,19 +618,14 @@ class DatabaseHandler(
                 "no" to journal.number,
                 "rr" to journal.rawRef
             )
-            try {
-                tr.run("""
-                       MATCH (pub:${DBLabels.PUBLICATION.str})
-                       WHERE id(pub) = ${parm("pubId")}
-                       MATCH (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
-                       MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
-                       ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
-                           jref.number = ${parm("no")}, jref.rawRef = ${parm("rr")}
-                    """.trimIndent(), params)
-            } catch (e: Exception) {
-                logger.error("Failed to create connection between Publication with neo4j id $id and " +
-                        "journal ${journal.rawTitle}")
-            }
+            tr.run("""
+                   MATCH (pub:${DBLabels.PUBLICATION.str})
+                   WHERE id(pub) = ${parm("pubId")}
+                   MATCH (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
+                   MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
+                   ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
+                       jref.number = ${parm("no")}, jref.rawRef = ${parm("rr")}
+                """.trimIndent(), params)
         }
     }
 
