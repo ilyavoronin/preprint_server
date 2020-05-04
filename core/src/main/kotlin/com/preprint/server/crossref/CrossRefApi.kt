@@ -24,7 +24,7 @@ object CrossRefApi {
 
 
     /**
-     * Makes response to CrossRef API to find the given record
+     * Makes request to CrossRef API to find the given record
      * and returns `maxRecordsNumber` most suitable results
      */
     fun findRecord(ref: String): List<CRData> {
@@ -44,7 +44,14 @@ object CrossRefApi {
         when (result) {
             is Result.Failure -> {
                 val ex = result.getException()
-                throw ApiRequestFailedException(ex.message)
+                if (response.statusCode == 414) {
+                    //this means that url is too long, and most likely
+                    //reference was parsed wrong
+                    return listOf()
+                }
+                else {
+                    throw ApiRequestFailedException(ex.message)
+                }
             }
             is Result.Success -> {
                 val records = CrossrefJsonParser.parse(result.value)
