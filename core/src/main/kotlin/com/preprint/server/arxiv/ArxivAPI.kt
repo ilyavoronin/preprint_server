@@ -13,8 +13,8 @@ import java.lang.Thread.sleep
 object ArxivAPI {
 
     private val logger = logger()
-    private const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
-    private const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
+    const val requestBulkUrlPrefix = "http://export.arxiv.org/oai2?"
+    const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
 
     //a time to sleep when receiving 503 code
     var sleepTime: Long = 600000

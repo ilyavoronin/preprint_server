@@ -65,15 +65,18 @@ class Reference() {
                 res += "$field: $value\n"
             }
         }
+        res += "\n"
         addField("raw:", rawReference)
-        addField("  title", title)
-        addField("  authors", authors?.joinToString { it.toString() })
-        addField("  arxiv id", arxivId)
-        addField("  doi", doi)
-        addField("  journal", journal)
-        addField("  volume", volume)
-        addField("  year", year)
-        addField("  pages", pages)
+        addField("    title", title)
+        addField("    authors", authors?.joinToString { it.toString() })
+        addField("    arxiv id", arxivId)
+        addField("    doi", doi)
+        addField("    journal", journal)
+        addField("    volume", volume)
+        addField("    issue", issue)
+        addField("    year", year)
+        addField("    pages", pages)
+        addField("    validated", validated.toString())
         res += "\n\n"
         return res
     }

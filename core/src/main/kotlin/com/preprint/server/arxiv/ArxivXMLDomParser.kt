@@ -86,11 +86,11 @@ object ArxivXMLDomParser {
 
         val resumptionTokenElems = xmlDoc.getElementsByTagName("resumptionToken")
         var recordsTotal = 0
-        val resumptionToken = ""
+        var resumptionToken = ""
         if (resumptionTokenElems.length != 0) {
             val resumptionTokenElem = resumptionTokenElems.item(0) as Element
             recordsTotal = resumptionTokenElem.getAttribute("completeListSize").toInt()
-            resumptionTokenElem.textContent
+            resumptionToken = resumptionTokenElem.textContent
         }
 
         return Triple(arxivRecords, resumptionToken, recordsTotal)
@@ -139,7 +139,7 @@ object ArxivXMLDomParser {
      * Examines cases when line ends with '-', which can mean that
      * this word continues in the next string
      */
-    private fun makeOneLine(str: String): String {
+    fun makeOneLine(str: String): String {
         val lines = str.split("\n").map {it.trim()}.filter { it.isNotEmpty() }
         var res = ""
         for ((i, line) in lines.withIndex()) {

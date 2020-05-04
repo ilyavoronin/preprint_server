@@ -5,7 +5,7 @@ import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.neo4j.DatabaseHandler
 
 fun main() {
-    val START_DATE = "2018-05-10"
+    val START_DATE = "2010-05-10"
     val dataBaseHandler = DatabaseHandler(
         Config.config["neo4j_url"].toString(),
         Config.config["neo4j_port"].toString(),
