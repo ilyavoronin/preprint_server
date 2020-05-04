@@ -123,6 +123,7 @@ class DBHandler : AutoCloseable {
 
         if (record.authors.size >= 3) {
             val authorString = getFirstAuthorLetters(record)
+            println(authorString)
             if (!record.journalVolume.isNullOrBlank()) {
                 val bytes = encode(Pair(authorString, record.journalVolume))
                 val recordList = getByAuthorVolume(authorString, record.journalVolume).toMutableList()
@@ -156,8 +157,8 @@ class DBHandler : AutoCloseable {
 
     private fun getFirstAuthorLetters(record: SemanticScholarData) : String {
         return record.authors.joinToString(separator = ",") { author ->
-            val words = author.name.split("""\s+""".toRegex()).filter {!it.isBlank()}
-            words.joinToString { it[0].toString() }
+            val words = author.name.split("""\s""".toRegex()).filter {!it.isBlank()}
+            words.joinToString(separator = "") { it[0].toString() }
         }
     }
 
