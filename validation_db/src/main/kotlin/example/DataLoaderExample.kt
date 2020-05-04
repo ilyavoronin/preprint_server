@@ -1,7 +1,10 @@
 package example
 
+import com.prepring.server.validation.database.DBHandler
 import com.prepring.server.validation.database.DataLoader
 
 fun main() {
-    DataLoader.loadData()
+    val dbHandler = DBHandler()
+    DataLoader.loadData(dbHandler)
+    dbHandler.close()
 }

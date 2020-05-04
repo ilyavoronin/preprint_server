@@ -21,7 +21,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     compile("org.apache.commons:commons-compress:1.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
-    compile(project(":core"))
+    implementation("org.rocksdb:rocksdbjni:6.8.1")
     testCompile("junit", "junit", "4.12")
 }
 

@@ -7,13 +7,14 @@ import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
 
 object DataLoader {
-    fun loadData() {
+    fun loadData(dbHandler: DBHandler) {
         val path = Config.config["semsch_path_to_files"].toString()
         for (file in File(path).listFiles()) {
             if (!file.name.endsWith(".gz")) {
                 continue
             }
             val records = processFile(file)
+            dbHandler.storeRecords(records)
         }
     }
 
