@@ -1,18 +1,19 @@
-package com.prepring.server.validation.database
+package com.preprint.server.validation.database
 
 import com.beust.klaxon.Klaxon
+import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.Options
 import org.rocksdb.RocksDB
-import java.io.Closeable
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 class DBHandler : AutoCloseable {
-    var currentId = AtomicLong(0)
-    val dbPath = Config.config["semsch_path_to_db"].toString()
-    lateinit var db: RocksDB
-    lateinit var options: Options
+    private var currentId = AtomicLong(0)
+    private val dbPath = Config.config["semsch_path_to_db"].toString()
+    private val db: RocksDB
+    private val options: Options
+    private val logger = logger()
+
     init {
         RocksDB.loadLibrary()
         if (File(dbPath).mkdir()) {
@@ -39,9 +40,10 @@ class DBHandler : AutoCloseable {
             val rbytes = Klaxon().toJsonString(record).toByteArray()
             val kbytes = Klaxon().toJsonString(currentId.getAndIncrement()).toByteArray()
             db.put(kbytes, rbytes)
+
             progress += 1
-            if (progress % 10000 == 0) {
-                println("Done $progress out of ${records.size}")
+            if (progress % 100000 == 0) {
+                logger.info("Done $progress out of ${records.size}")
             }
         }
     }

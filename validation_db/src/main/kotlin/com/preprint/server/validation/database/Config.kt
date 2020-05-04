@@ -1,4 +1,4 @@
-package com.prepring.server.validation.database
+package com.preprint.server.validation.database
 
 import java.io.BufferedReader
 import java.io.FileReader
