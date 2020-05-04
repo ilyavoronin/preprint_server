@@ -47,7 +47,7 @@ object DataLoader {
         }
         if (pages.size == 2) {
             record.firstPage = pages[0].toIntOrNull()
-            record.lastPage = pages[0].toIntOrNull()
+            record.lastPage = pages[1].toIntOrNull()
         }
         record.title = record.title?.replace("\n", "")
     }

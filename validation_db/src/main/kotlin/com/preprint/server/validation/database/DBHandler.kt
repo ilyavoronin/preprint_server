@@ -88,7 +88,7 @@ class DBHandler : AutoCloseable {
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.year != null) {
-            val bytes = encode(Triple(record.journalName, record.firstPage, record.year))
+            val bytes = encode(Triple(record.journalVolume, record.firstPage, record.year))
             val recordList = getByVolPageYear(record.journalVolume, record.firstPage!!, record.year).toMutableList()
             recordList.add(id)
             volPageYearDb.put(bytes, encode(recordList.toList()))
@@ -105,6 +105,9 @@ class DBHandler : AutoCloseable {
 
     override fun close() {
         mainDb.close()
+        titleDb.close()
+        volPageYearDb.close()
+        jpageDb.close()
         options.close()
     }
 }
