@@ -573,25 +573,25 @@ class DatabaseHandler(
                             if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
                             else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
                             else "title: ${parm("cdata.title")}"
-                    try {
-                        val id = tr.run("""
-                            MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
-                            MATCH (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
-                            SET cpub += ${parm("cdata")}
-                            MERGE (pub)-[cites:${DBLabels.CITES.str}]->(cpub)
-                            SET cites.rawRef = ${parm("rawRef")}
-                            RETURN id(cpub)
-                            """.trimIndent(),
-                                params
-                        ).list().map { it.get("id(cpub)").asLong() }.get(0)
 
+                    val idObj = tr.run("""
+                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
+                        MATCH (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
+                        SET cpub += ${parm("cdata")}
+                        MERGE (pub)-[cites:${DBLabels.CITES.str}]->(cpub)
+                        SET cites.rawRef = ${parm("rawRef")}
+                        RETURN id(cpub)
+                        """.trimIndent(),
+                            params
+                    ).list().map { it.get("id(cpub)").asLong() }
+                    if (idObj.size > 0) {
+                        val id = idObj[0]
                         ref.authors?.let { createAuthorConnections(tr, it, id) }
 
                         val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, pages = ref.pages,
                                 number = ref.issue, issn = ref.issn, rawRef = "")
                         createJournalPublicationConnections(tr, journal, id)
-
-                    } catch (e: Exception) {
+                    } else {
                         logger.error("Failed to create connection between Publication with arxivId ${record.id} " +
                                 "and publication with $matchString")
                     }
