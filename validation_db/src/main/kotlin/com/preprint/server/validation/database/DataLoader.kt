@@ -17,6 +17,7 @@ object DataLoader {
             logger.info("Begin extract records from $i archive out of ${files.size}")
             val records = processFile(file)
             logger.info("Begin storing ${records.size} records to the database")
+            records.forEach { format(it) }
             dbHandler.storeRecords(records)
         }
     }
@@ -36,5 +37,18 @@ object DataLoader {
             SemanticScholarJsonParser.parse(newLine)?.let {records.add(it)}
         }
         return records
+    }
+
+    private fun format(record: SemanticScholarData) {
+        record.journalPages = record.journalPages?.replace("""\s+""".toRegex(), "")
+        val pages = record.journalPages?.split("-") ?: listOf()
+        if (pages.size == 1) {
+            record.firstPage = pages[0].toIntOrNull()
+        }
+        if (pages.size == 2) {
+            record.firstPage = pages[0].toIntOrNull()
+            record.lastPage = pages[0].toIntOrNull()
+        }
+        record.title = record.title?.replace("\n", "")
     }
 }

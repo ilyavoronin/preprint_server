@@ -5,10 +5,12 @@ data class SemanticScholarData(
     val doi: String? = null,
     val id: String? = null,
     val journalName: String? = null,
-    val journalPages: String? = null,
+    var journalPages: String? = null,
     val journalVolume: String? = null,
-    val title: String? = null,
-    val year: Int? = null
+    var title: String? = null,
+    val year: Int? = null,
+    var firstPage: Int? = null,
+    var lastPage: Int? = null
 ) {
     data class Author(
             val name: String
