@@ -57,40 +57,40 @@ class DBHandler : AutoCloseable {
         return Klaxon().parse<SemanticScholarData>(String(mainDb.get(kbytes)))
     }
 
-    fun getByTitle(title: String) : List<Long> {
+    fun getByTitle(title: String) : MutableSet<Long> {
         val titleBytes = title.toByteArray()
-        val recordsBytes = titleDb.get(titleBytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: return listOf()
+        val recordsBytes = titleDb.get(titleBytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: return mutableSetOf()
     }
 
-    fun getByJNamePage(jname: String, firstPage: Int): List<Long> {
+    fun getByJNamePage(jname: String, firstPage: Int): MutableSet<Long> {
         val bytes = encode(Pair(jname, firstPage))
-        val recordsBytes = jpageDb.get(bytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: listOf()
+        val recordsBytes = jpageDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByVolPageYear(volume: String, firstPage: Int, year: Int) : List<Long> {
+    fun getByVolPageYear(volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
         val bytes = encode(Triple(volume, firstPage, year))
-        val recordsBytes = volPageYearDb.get(bytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: listOf()
+        val recordsBytes = volPageYearDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthorVolume(authors: String, volume: String) : List<Long> {
+    fun getByAuthorVolume(authors: String, volume: String) : MutableSet<Long> {
         val bytes = encode(Pair(authors, volume))
-        val recordsBytes = authorVolumeDb.get(bytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: listOf()
+        val recordsBytes = authorVolumeDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthorPage(authors: String, firstPage: Int) : List<Long> {
+    fun getByAuthorPage(authors: String, firstPage: Int) : MutableSet<Long> {
         val bytes = encode(Pair(authors, firstPage))
-        val recordsBytes = authorPageDb.get(bytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: listOf()
+        val recordsBytes = authorPageDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthorYear(authors: String, year: Int) : List<Long> {
+    fun getByAuthorYear(authors: String, year: Int) : MutableSet<Long> {
         val bytes = encode(Pair(authors, year))
-        val recordsBytes = authorYearDb.get(bytes) ?: return listOf()
-        return decodeIds(recordsBytes) ?: listOf()
+        val recordsBytes = authorYearDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
     private fun storeRecord(record: SemanticScholarData) {
@@ -101,48 +101,47 @@ class DBHandler : AutoCloseable {
 
         if (!record.title.isNullOrBlank()) {
             val titleBytes = record.title!!.toByteArray()
-            val recordList = getByTitle(record.title!!).toMutableList()
+            val recordList = getByTitle(record.title!!)
             recordList.add(id)
-            titleDb.put(titleBytes, encode(recordList.toList()))
+            titleDb.put(titleBytes, encode(recordList))
         }
 
         if (!record.journalName.isNullOrBlank() && record.firstPage != null) {
             val bytes = encode(Pair(record.journalName, record.firstPage))
-            val recordList = getByJNamePage(record.journalName, record.firstPage!!).toMutableList()
+            val recordList = getByJNamePage(record.journalName, record.firstPage!!)
             recordList.add(id)
-            jpageDb.put(bytes, encode(recordList.toList()))
+            jpageDb.put(bytes, encode(recordList))
         }
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.year != null) {
             val bytes = encode(Triple(record.journalVolume, record.firstPage, record.year))
-            val recordList = getByVolPageYear(record.journalVolume, record.firstPage!!, record.year).toMutableList()
+            val recordList = getByVolPageYear(record.journalVolume, record.firstPage!!, record.year)
             recordList.add(id)
-            volPageYearDb.put(bytes, encode(recordList.toList()))
+            volPageYearDb.put(bytes, encode(recordList))
         }
 
         if (record.authors.size >= 3) {
             val authorString = getFirstAuthorLetters(record)
-            println(authorString)
             if (!record.journalVolume.isNullOrBlank()) {
                 val bytes = encode(Pair(authorString, record.journalVolume))
-                val recordList = getByAuthorVolume(authorString, record.journalVolume).toMutableList()
+                val recordList = getByAuthorVolume(authorString, record.journalVolume)
                 recordList.add(id)
-                authorVolumeDb.put(bytes, encode(recordList.toList()))
+                authorVolumeDb.put(bytes, encode(recordList))
             }
 
             if (record.firstPage != null) {
                 val bytes = encode(Pair(authorString, record.firstPage))
-                val recordList = getByAuthorPage(authorString, record.firstPage!!).toMutableList()
+                val recordList = getByAuthorPage(authorString, record.firstPage!!)
                 recordList.add(id)
-                authorPageDb.put(bytes, encode(recordList.toList()))
+                authorPageDb.put(bytes, encode(recordList))
             }
 
             if (record.year != null) {
                 val bytes = encode(Pair(authorString, record.year))
-                val recordList = getByAuthorYear(authorString, record.year).toMutableList()
+                val recordList = getByAuthorYear(authorString, record.year)
                 recordList.add(id)
-                authorYearDb.put(bytes, encode(recordList.toList()))
+                authorYearDb.put(bytes, encode(recordList))
             }
         }
     }
@@ -151,8 +150,8 @@ class DBHandler : AutoCloseable {
         return Klaxon().toJsonString(a).toByteArray()
     }
 
-    private fun decodeIds(bytes: ByteArray) : List<Long>? {
-        return Klaxon().parseArray(String(bytes))
+    private fun decodeIds(bytes: ByteArray) : MutableSet<Long>? {
+        return Klaxon().parseArray<Long>(String(bytes))?.toMutableSet()
     }
 
     private fun getFirstAuthorLetters(record: SemanticScholarData) : String {
