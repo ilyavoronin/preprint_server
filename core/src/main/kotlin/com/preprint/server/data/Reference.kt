@@ -8,20 +8,21 @@ import org.grobid.core.data.BiblioItem
 /**
  * Contains information about bibliographic reference
  */
-class Reference() {
-    var rawReference: String = ""
-    var arxivId: String? = null
-    var doi: String? = null
-    var authors: List<Author>? = null
-    var title: String? = null
-    var journal: String? = null
-    var issue: String? = null
-    var pages: String? = null
-    var volume: String? = null
-    var year: String? = null
-    var issn: String? = null
-    var isReference = false
-    var validated = false
+data class Reference(
+    var rawReference: String = "",
+    var arxivId: String? = null,
+    var doi: String? = null,
+    var authors: List<Author>? = null,
+    var title: String? = null,
+    var journal: String? = null,
+    var issue: String? = null,
+    var pages: String? = null,
+    var volume: String? = null,
+    var year: String? = null,
+    var issn: String? = null,
+    var isReference : Boolean = false,
+    var validated : Boolean = false
+) {
 
     /**
      * If `shouldParse` == true then Grobid will be used
