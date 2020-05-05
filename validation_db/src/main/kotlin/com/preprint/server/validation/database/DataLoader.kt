@@ -9,17 +9,36 @@ import java.util.zip.GZIPInputStream
 
 object DataLoader {
     private val logger = logger()
+    val path = Config.config["semsch_path_to_files"].toString()
+    private val cntPath = File(path, "START.txt")
+    private var startFrom: Int
 
-    fun loadData(dbHandler: DBHandler) {
-        val path = Config.config["semsch_path_to_files"].toString()
+    init {
+        if (cntPath.exists()) {
+            startFrom = cntPath.readText().toInt()
+        }
+        else {
+            startFrom = 1
+        }
+    }
+
+    fun loadData(dbHandler: DBHandler, start: Int? = null) {
+        if (start != null) {
+            startFrom = start
+        }
         val files = File(path).listFiles().filter {it.isFile && it.name.endsWith(".gz")}
         for ((i, file) in files.withIndex()) {
+            if (i + 1 < startFrom) {
+                continue
+            }
             logger.info("Begin extract records from ${i + 1} archive out of ${files.size}")
             val records = processFile(file).filter { validate(it)}
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }
             dbHandler.storeRecords(records)
             logger.info(dbHandler.stats)
+
+            cntPath.writeText((i + 2).toString())
         }
     }
 

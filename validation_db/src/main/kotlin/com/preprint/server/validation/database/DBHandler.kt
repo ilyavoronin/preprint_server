@@ -32,6 +32,7 @@ class DBHandler : AutoCloseable {
     private val authorDb: RocksDB
     private val options: Options
     private val logger = logger()
+    private val maxIdPath = File(dbFolderPath, "ID.txt")
 
     data class Stats(
             var maxTitleLength: Int = 0,
@@ -46,7 +47,13 @@ class DBHandler : AutoCloseable {
 
     init {
         RocksDB.loadLibrary()
-        currentId.set(0)
+        if (maxIdPath.exists()) {
+            currentId.set(maxIdPath.readText().toLong() + 10_000_000)
+        }
+        else {
+            currentId.set(0)
+            maxIdPath.writeText("0")
+        }
         File("$dbFolderPath/main").mkdir()
 
         options = Options().setCreateIfMissing(true)
@@ -68,6 +75,7 @@ class DBHandler : AutoCloseable {
                 }
             }
         }
+        maxIdPath.writeText(currentId.getAcquire().toString())
     }
 
     fun getById(id : Long) : SemanticScholarData? {
