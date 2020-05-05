@@ -31,7 +31,7 @@ class DBHandler : AutoCloseable {
     private val logger = logger()
 
     data class Stats(
-            var maxTitleDbLength: Int = 0,
+            var maxTitleLength: Int = 0,
             var maxJPageLength: Int = 0,
             var maxVolPageYearLength: Int = 0,
             var maxAuthorYearLength: Int = 0,
@@ -125,7 +125,7 @@ class DBHandler : AutoCloseable {
             val titleBytes = record.title!!.toByteArray()
             val recordList = getByTitle(record.title!!)
             recordList.add(id)
-            stats.maxTitleDbLength = max(stats.maxTitleDbLength, recordList.size)
+            stats.maxTitleLength = max(stats.maxTitleLength, recordList.size)
             titleDb.put(titleBytes, encode(recordList))
         }
 
@@ -191,7 +191,7 @@ class DBHandler : AutoCloseable {
         return Klaxon().parseArray<Long>(String(bytes))?.toMutableSet()
     }
 
-    private fun getFirstAuthorLetters(record: SemanticScholarData) : String {
+    fun getFirstAuthorLetters(record: SemanticScholarData) : String {
         return record.authors.joinToString(separator = ",") { author ->
             val words = author.name.split("""\s""".toRegex()).filter {!it.isBlank()}
             words.joinToString(separator = "") { it[0].toString() }
