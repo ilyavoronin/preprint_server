@@ -109,6 +109,12 @@ class DBHandler : AutoCloseable {
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
+    fun getByAuthors(authors: String) : MutableSet<Long> {
+        val bytes = encode(authors)
+        val recordsBytes = authorDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
+    }
+
     private fun storeRecord(record: SemanticScholarData) {
         val id = currentId.getAndIncrement()
         val recordBytes = Klaxon().toJsonString(record).toByteArray()
@@ -140,7 +146,7 @@ class DBHandler : AutoCloseable {
             volPageYearDb.put(bytes, encode(recordList))
         }
 
-        if (record.authors.size >= 3) {
+        if (record.authors.size >= 2) {
             val authorString = getFirstAuthorLetters(record)
             if (!record.journalVolume.isNullOrBlank()) {
                 val bytes = encode(Pair(authorString, record.journalVolume))
@@ -165,6 +171,15 @@ class DBHandler : AutoCloseable {
                 stats.maxAuthorYearLength = max(stats.maxAuthorYearLength, recordList.size)
                 authorYearDb.put(bytes, encode(recordList))
             }
+        }
+
+        if (record.authors.size >= 3) {
+            val authorString = getFirstAuthorLetters(record)
+            val bytes = encode(authorString)
+            val recordList = getByAuthors(authorString)
+            recordList.add(id)
+            stats.maxAuthorLength = max(stats.maxAuthorLength, recordList.size)
+            authorDb.put(bytes, encode(recordList))
         }
     }
 
