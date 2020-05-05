@@ -10,11 +10,14 @@ import java.util.zip.GZIPInputStream
 object DataLoader {
     private val logger = logger()
 
-    fun loadData(dbHandler: DBHandler) {
+    fun loadData(dbHandler: DBHandler, beginFrom: Int = 0) {
         val path = Config.config["semsch_path_to_files"].toString()
         val files = File(path).listFiles().filter {it.isFile && it.name.endsWith(".gz")}
         for ((i, file) in files.withIndex()) {
-            logger.info("Begin extract records from $i archive out of ${files.size}")
+            if (i < beginFrom) {
+                continue
+            }
+            logger.info("Begin extract records from ${i + 1} archive out of ${files.size}")
             val records = processFile(file)
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }

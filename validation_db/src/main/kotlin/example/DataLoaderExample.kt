@@ -5,6 +5,6 @@ import com.preprint.server.validation.database.DataLoader
 
 fun main() {
     val dbHandler = DBHandler()
-    DataLoader.loadData(dbHandler)
+    DataLoader.loadData(dbHandler, 6)
     dbHandler.close()
 }
