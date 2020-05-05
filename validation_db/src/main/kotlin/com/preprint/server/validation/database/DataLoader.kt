@@ -32,9 +32,15 @@ object DataLoader {
     private fun processFile(file : File) : List<SemanticScholarData> {
         val reader = getTextStream(file)
         val records = mutableListOf<SemanticScholarData>()
+        var progress = 0
         while (true) {
             val newLine = reader.readLine() ?: break
             SemanticScholarJsonParser.parse(newLine)?.let {records.add(it)}
+
+            progress += 1
+            if (progress % 100000 == 0) {
+                logger.info("Done $progress lines")
+            }
         }
         return records
     }
@@ -49,6 +55,6 @@ object DataLoader {
             record.firstPage = pages[0].toIntOrNull()
             record.lastPage = pages[1].toIntOrNull()
         }
-        record.title = record.title?.replace("\n", "")
+        record.title = record.title?.replace("\n", " ")
     }
 }

@@ -33,6 +33,7 @@ class DBHandler : AutoCloseable {
         File("$dbFolderPath/main").mkdir()
 
         options = Options().setCreateIfMissing(true)
+        options.setMaxSuccessiveMerges(1000)
         mainDb = RocksDB.open(options, mainDbPath.absolutePath)
         titleDb = RocksDB.open(options, titleDbPath.absolutePath)
         jpageDb = RocksDB.open(options, jpageDbPath.absolutePath)
