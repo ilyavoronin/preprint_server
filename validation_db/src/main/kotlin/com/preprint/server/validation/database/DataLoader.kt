@@ -18,7 +18,7 @@ object DataLoader {
                 continue
             }
             logger.info("Begin extract records from ${i + 1} archive out of ${files.size}")
-            val records = processFile(file)
+            val records = processFile(file).filter { validate(it)}
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }
             dbHandler.storeRecords(records)
@@ -60,5 +60,12 @@ object DataLoader {
             record.lastPage = pages[1].toIntOrNull()
         }
         record.title = record.title?.replace("\n", " ")
+    }
+
+    private fun validate(record: SemanticScholarData): Boolean {
+        if (record.title.isNullOrBlank() || record.title!!.contains("[Not Available].")) {
+            return false
+        }
+        return true
     }
 }
