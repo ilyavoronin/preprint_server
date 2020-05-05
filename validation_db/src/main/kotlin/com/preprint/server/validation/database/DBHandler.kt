@@ -1,6 +1,9 @@
 package com.preprint.server.validation.database
 
 import com.beust.klaxon.Klaxon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.Options
 import org.rocksdb.RocksDB
@@ -58,12 +61,11 @@ class DBHandler : AutoCloseable {
         authorDb = RocksDB.open(options, authorDbPath.absolutePath)
     }
     fun storeRecords(records: List<SemanticScholarData>) {
-        var progress = 0
-        records.forEach { record ->
-            storeRecord(record)
-            progress += 1
-            if (progress % 100000 == 0) {
-                logger.info("Done $progress out of ${records.size}")
+        runBlocking(Dispatchers.IO) {
+            records.forEach { record ->
+                launch {
+                    storeRecord(record)
+                }
             }
         }
     }
