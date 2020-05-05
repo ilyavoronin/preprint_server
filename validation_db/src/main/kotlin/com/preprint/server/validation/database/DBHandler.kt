@@ -5,6 +5,7 @@ import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.Options
 import org.rocksdb.RocksDB
 import java.io.File
+import java.lang.Integer.max
 import java.util.concurrent.atomic.AtomicLong
 
 class DBHandler : AutoCloseable {
@@ -17,6 +18,7 @@ class DBHandler : AutoCloseable {
     private val authorYDbPath = File(dbFolderPath, "authory")
     private val authorVDbPath = File(dbFolderPath, "authorv")
     private val authorPDbPath = File(dbFolderPath, "authorp")
+    private val authorDbPath = File(dbFolderPath, "author")
     private val mainDb: RocksDB
     private val titleDb: RocksDB
     private val jpageDb: RocksDB
@@ -24,8 +26,20 @@ class DBHandler : AutoCloseable {
     private val authorYearDb: RocksDB
     private val authorVolumeDb: RocksDB
     private val authorPageDb: RocksDB
+    private val authorDb: RocksDB
     private val options: Options
     private val logger = logger()
+
+    data class Stats(
+            var maxTitleDbLength: Int = 0,
+            var maxJPageLength: Int = 0,
+            var maxVolPageYearLength: Int = 0,
+            var maxAuthorYearLength: Int = 0,
+            var maxAuthorPageLength: Int = 0,
+            var maxAuthorVolumeLength: Int = 0,
+            var maxAuthorLength: Int = 0
+    )
+    val stats = Stats()
 
     init {
         RocksDB.loadLibrary()
@@ -41,6 +55,7 @@ class DBHandler : AutoCloseable {
         authorYearDb = RocksDB.open(options, authorYDbPath.absolutePath)
         authorVolumeDb = RocksDB.open(options, authorVDbPath.absolutePath)
         authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
+        authorDb = RocksDB.open(options, authorDbPath.absolutePath)
     }
     fun storeRecords(records: List<SemanticScholarData>) {
         var progress = 0
@@ -104,6 +119,7 @@ class DBHandler : AutoCloseable {
             val titleBytes = record.title!!.toByteArray()
             val recordList = getByTitle(record.title!!)
             recordList.add(id)
+            stats.maxTitleDbLength = max(stats.maxTitleDbLength, recordList.size)
             titleDb.put(titleBytes, encode(recordList))
         }
 
@@ -111,6 +127,7 @@ class DBHandler : AutoCloseable {
             val bytes = encode(Pair(record.journalName, record.firstPage))
             val recordList = getByJNamePage(record.journalName, record.firstPage!!)
             recordList.add(id)
+            stats.maxJPageLength = max(stats.maxJPageLength, recordList.size)
             jpageDb.put(bytes, encode(recordList))
         }
 
@@ -119,6 +136,7 @@ class DBHandler : AutoCloseable {
             val bytes = encode(Triple(record.journalVolume, record.firstPage, record.year))
             val recordList = getByVolPageYear(record.journalVolume, record.firstPage!!, record.year)
             recordList.add(id)
+            stats.maxVolPageYearLength = max(stats.maxVolPageYearLength, recordList.size)
             volPageYearDb.put(bytes, encode(recordList))
         }
 
@@ -128,6 +146,7 @@ class DBHandler : AutoCloseable {
                 val bytes = encode(Pair(authorString, record.journalVolume))
                 val recordList = getByAuthorVolume(authorString, record.journalVolume)
                 recordList.add(id)
+                stats.maxAuthorVolumeLength = max(stats.maxAuthorVolumeLength, recordList.size)
                 authorVolumeDb.put(bytes, encode(recordList))
             }
 
@@ -135,6 +154,7 @@ class DBHandler : AutoCloseable {
                 val bytes = encode(Pair(authorString, record.firstPage))
                 val recordList = getByAuthorPage(authorString, record.firstPage!!)
                 recordList.add(id)
+                stats.maxAuthorPageLength = max(stats.maxAuthorPageLength, recordList.size)
                 authorPageDb.put(bytes, encode(recordList))
             }
 
@@ -142,6 +162,7 @@ class DBHandler : AutoCloseable {
                 val bytes = encode(Pair(authorString, record.year))
                 val recordList = getByAuthorYear(authorString, record.year)
                 recordList.add(id)
+                stats.maxAuthorYearLength = max(stats.maxAuthorYearLength, recordList.size)
                 authorYearDb.put(bytes, encode(recordList))
             }
         }
@@ -163,13 +184,14 @@ class DBHandler : AutoCloseable {
     }
 
     override fun close() {
-        mainDb.close()
-        titleDb.close()
-        volPageYearDb.close()
-        jpageDb.close()
-        authorVolumeDb.close()
-        authorYearDb.close()
-        authorPageDb.close()
+        mainDb.closeE()
+        titleDb.closeE()
+        volPageYearDb.closeE()
+        jpageDb.closeE()
+        authorVolumeDb.closeE()
+        authorYearDb.closeE()
+        authorPageDb.closeE()
+        authorDb.closeE()
         options.close()
     }
 }
