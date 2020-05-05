@@ -12,22 +12,23 @@ interface ReferenceExtractor {
         logger().info("Begin validation of ${refs.size} references")
         var attemptsDone = 0
         while (true) {
-            var validationSussess = true
+            var stopValidation = true
             runBlocking {
                 try {
                     validators.forEach { validator ->
                         validator.validate(refs)
                     }
                 } catch (e: Validator.ValidatorException) {
-                    validationSussess = false
+                    stopValidation = false
                     attemptsDone += 1
                     logger().error(e.message)
-                    logger().info("Attempts done: $attemptsDone. Waiting for 2 seconds")
                     sleep(2000)
-                    logger().info("Trying to validate references one more time")
+                    if (attemptsDone >= 3) {
+                        stopValidation = true
+                    }
                 }
             }
-            if (validationSussess) {
+            if (stopValidation) {
                 break
             }
         }

@@ -5,22 +5,42 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.logging.log4j.kotlin.logger
 import java.lang.Exception
+import java.lang.Thread.sleep
 
 interface Validator {
     suspend fun validate(refList : List<Reference>) = withContext(Dispatchers.IO) {
         val jobs = mutableListOf<Job>()
+        var failedRefs = mutableListOf<Reference>()
         for (ref in refList) {
             jobs.add(launch {
                 try {
                     validate(ref)
                 } catch (e : Exception) {
-                    throw ValidatorException(e.message.toString())
+                    failedRefs.add(ref)
                 }
             })
         }
-        jobs.forEach {it.join()}
+        jobs.forEach { it.join() }
+
+        //try failed requests again
+        if (failedRefs.size != 0) {
+            sleep(2000)
+            jobs.clear()
+            var failed = 0
+            for (ref in failedRefs) {
+                jobs.add(launch {
+                    try {
+                        validate(ref)
+                    } catch (e: Exception) {
+                        failed++
+                    }
+                })
+            }
+            if (failed != 0) {
+                throw ValidatorException("Validation failed twice for some references")
+            }
+        }
     }
 
     fun validate(ref : Reference)

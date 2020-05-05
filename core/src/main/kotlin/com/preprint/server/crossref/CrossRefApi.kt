@@ -6,6 +6,7 @@ import com.github.kittinunf.result.Result
 import com.preprint.server.Config
 import com.preprint.server.utils.RequestLimiter
 import org.apache.logging.log4j.kotlin.logger
+import java.lang.Thread.sleep
 import java.net.URLEncoder
 
 
@@ -18,9 +19,11 @@ object CrossRefApi {
     val email = Config.config["email"].toString()
 
     //the number of records that each request returns
-    var maxRecordsNumber = 5
+    var maxRecordsNumber = 3
 
     val reqLimiter = RequestLimiter(49, 2100)
+
+    val checkConnectioRequest = "https://api.crossref.org/works?query=renear+ontologies&rows=5"
 
 
     /**
@@ -34,8 +37,9 @@ object CrossRefApi {
 
         val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"
         val (_, response, result) = try {
-            url.httpGet().timeoutRead(10000).responseString()
+            url.httpGet().timeoutRead(30000).responseString()
         } catch (e : Exception) {
+            waitConnection()
             throw ApiRequestFailedException(e.message)
         }
         val (newLimit, newInterval) = getNewInterval(response)
@@ -50,6 +54,7 @@ object CrossRefApi {
                     return listOf()
                 }
                 else {
+                    waitConnection()
                     throw ApiRequestFailedException(ex.message)
                 }
             }
@@ -68,6 +73,24 @@ object CrossRefApi {
         }
         else {
             return Pair(newLimit[0].toInt() - 1, newInterval[0].dropLast(1).toLong() * 1000 * 2 + 100)
+        }
+    }
+
+    private fun waitConnection() {
+        while (true) {
+            val (_, _, result) = try {
+                checkConnectioRequest.httpGet().timeoutRead(5000).responseString()
+            } catch (e: Exception) {
+                sleep(10000)
+                continue
+            }
+            if (result is Result.Failure) {
+                logger.error(result.getException())
+                logger.error("Waiting for CrossRef to be available")
+                sleep(10000)
+                continue
+            }
+            break
         }
     }
 

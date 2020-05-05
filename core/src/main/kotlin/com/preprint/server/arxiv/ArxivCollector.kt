@@ -18,7 +18,7 @@ object ArxivCollector {
     var resumptionToken = ""
 
     //the number of records to get from each request
-    var limit = 1000
+    var limit = 100
 
     //the time to sleep when arxiv API request fails
     var sleepTime: Long = 600000
