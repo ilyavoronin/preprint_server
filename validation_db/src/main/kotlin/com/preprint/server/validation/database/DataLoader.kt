@@ -1,10 +1,11 @@
 package com.preprint.server.validation.database
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStreamReader
+import java.io.*
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.zip.GZIPInputStream
 
 object DataLoader {
@@ -44,22 +45,29 @@ object DataLoader {
 
     private fun getTextStream(file : File) : BufferedReader {
         val inputStream = FileInputStream(file)
-        val gzipStream = GZIPInputStream(inputStream)
+        val gzipStream = GZIPInputStream(inputStream, 262144)
         val decoder = InputStreamReader(gzipStream, "utf-8")
-        return BufferedReader(decoder)
+        return BufferedReader(decoder, 262144)
     }
 
     private fun processFile(file : File) : List<SemanticScholarData> {
         val reader = getTextStream(file)
         val records = mutableListOf<SemanticScholarData>()
-        var progress = 0
-        while (true) {
-            val newLine = reader.readLine() ?: break
-            SemanticScholarJsonParser.parse(newLine)?.let {records.add(it)}
+        val progress = AtomicInteger(0)
+        runBlocking {
+            while (true) {
+                val newLine = reader.readLine() ?: break
 
-            progress += 1
-            if (progress % 100000 == 0) {
-                logger.info("Done $progress lines")
+                launch(Dispatchers.IO) {
+                    SemanticScholarJsonParser.parse(newLine)?.let {
+                        synchronized(records) {
+                            records.add(it)
+                            if (progress.incrementAndGet() % 100000 == 0) {
+                                logger.info("Done $progress lines")
+                            }
+                        }
+                    }
+                }
             }
         }
         return records
