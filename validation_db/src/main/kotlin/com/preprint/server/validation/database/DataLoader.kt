@@ -74,6 +74,15 @@ object DataLoader {
         if (pages.size == 2) {
             record.firstPage = pages[0].toIntOrNull()
             record.lastPage = pages[1].toIntOrNull()
+            if (record.lastPage != null
+                    && record.firstPage != null
+                    && record.lastPage.toString().length < record.firstPage.toString().length) {
+
+                val dif = record.firstPage.toString().length - record.lastPage.toString().length
+                val n1 = record.firstPage.toString().length
+                record.lastPage = (record.firstPage.toString().take(n1 - dif) +
+                        record.lastPage.toString().take(dif)).toIntOrNull()
+            }
         }
         record.title = record.title?.replace("\n", " ")
     }

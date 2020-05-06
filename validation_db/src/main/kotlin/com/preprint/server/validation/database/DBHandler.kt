@@ -21,6 +21,8 @@ class DBHandler : AutoCloseable {
     private val authorVDbPath = File(dbFolderPath, "authorv")
     private val authorPDbPath = File(dbFolderPath, "authorp")
     private val authorDbPath = File(dbFolderPath, "author")
+    private val flVolDbPath = File(dbFolderPath, "flvol")
+    private val flYearDbPath = File(dbFolderPath, "flyear")
     private val mainDb: RocksDB
     private val titleDb: RocksDB
     private val jpageDb: RocksDB
@@ -29,6 +31,8 @@ class DBHandler : AutoCloseable {
     private val authorVolumeDb: RocksDB
     private val authorPageDb: RocksDB
     private val authorDb: RocksDB
+    private val flVolDb: RocksDB
+    private val flYearDb: RocksDB
     private val options: Options
     private val logger = logger()
     private val maxIdPath = File(dbFolderPath, "ID.txt")
@@ -40,7 +44,9 @@ class DBHandler : AutoCloseable {
             var maxAuthorYearLength: Int = 0,
             var maxAuthorPageLength: Int = 0,
             var maxAuthorVolumeLength: Int = 0,
-            var maxAuthorLength: Int = 0
+            var maxAuthorLength: Int = 0,
+            var maxFLVolLength: Int = 0,
+            var maxFLYearLength: Int = 0
     )
     val stats = Stats()
 
@@ -56,7 +62,7 @@ class DBHandler : AutoCloseable {
         File("$dbFolderPath/main").mkdir()
 
         val blockOptions = BlockBasedTableConfig()
-                .setBlockSize(64000)
+                .setBlockSize(128000)
                 .setCacheIndexAndFilterBlocks(true)
         options = Options().setCreateIfMissing(true)
                 .setMaxSuccessiveMerges(1000)
@@ -71,6 +77,8 @@ class DBHandler : AutoCloseable {
         authorVolumeDb = RocksDB.open(options, authorVDbPath.absolutePath)
         authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
         authorDb = RocksDB.open(options, authorDbPath.absolutePath)
+        flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
+        flYearDb = RocksDB.open(options, flYearDbPath.absolutePath)
     }
     fun storeRecords(records: List<SemanticScholarData>) {
         runBlocking(Dispatchers.IO) {
@@ -127,6 +135,18 @@ class DBHandler : AutoCloseable {
     fun getByAuthors(authors: String) : MutableSet<Long> {
         val bytes = encode(authors)
         val recordsBytes = authorDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
+    }
+
+    fun getByFirsLastPageVolume(fpage: Int, lpage: Int, vol: String): MutableSet<Long> {
+        val bytes = encode(Triple(fpage, lpage, vol))
+        val recordsBytes = flVolDb.get(bytes) ?: return mutableSetOf()
+        return decodeIds(recordsBytes) ?: mutableSetOf()
+    }
+
+    fun getByFirsLastPageYear(fpage: Int, lpage: Int, year: Int): MutableSet<Long> {
+        val bytes = encode(Triple(fpage, lpage, year))
+        val recordsBytes = flYearDb.get(bytes) ?: return mutableSetOf()
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
@@ -196,6 +216,32 @@ class DBHandler : AutoCloseable {
             stats.maxAuthorLength = max(stats.maxAuthorLength, recordList.size)
             authorDb.put(bytes, encode(recordList))
         }
+
+        if (!record.journalVolume.isNullOrBlank() &&
+                record.firstPage != null && record.lastPage != null) {
+            val bytes = encode(Triple(record.firstPage, record.lastPage, record.journalVolume))
+            val recordList = getByFirsLastPageVolume(
+                    record.firstPage!!,
+                    record.lastPage!!,
+                    record.journalVolume
+            )
+            recordList.add(id)
+            stats.maxFLVolLength = max(stats.maxFLVolLength, recordList.size)
+            flVolDb.put(bytes, encode(recordList))
+        }
+
+        if (record.year != null &&
+                record.firstPage != null && record.lastPage != null) {
+            val bytes = encode(Triple(record.firstPage, record.lastPage, record.year))
+            val recordList = getByFirsLastPageYear(
+                    record.firstPage!!,
+                    record.lastPage!!,
+                    record.year
+            )
+            recordList.add(id)
+            stats.maxFLYearLength = max(stats.maxFLYearLength, recordList.size)
+            flYearDb.put(bytes, encode(recordList))
+        }
     }
 
     private fun encode(a: Any): ByteArray {
@@ -222,6 +268,8 @@ class DBHandler : AutoCloseable {
         authorYearDb.closeE()
         authorPageDb.closeE()
         authorDb.closeE()
+        flYearDb.closeE()
+        flVolDb.closeE()
         options.close()
     }
 }
