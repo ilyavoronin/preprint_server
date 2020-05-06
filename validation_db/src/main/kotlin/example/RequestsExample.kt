@@ -4,8 +4,16 @@ import com.preprint.server.validation.database.DBHandler
 
 fun main() {
     val dbHandler = DBHandler()
-    val pub = dbHandler.getById(543920)
-    println(pub)
+    var ids = dbHandler.getByTitle("Analysis of Ethernet AVB for automotive networks using Network Calculus")
+    ids.forEach {
+        println(dbHandler.getById(it))
+    }
+
+    println()
+    ids = dbHandler.getByJNamePage("British heart journal", 239)
+    ids.forEach {
+        println(dbHandler.getById(it))
+    }
 
     val list = dbHandler.getByVolPageYear("179", 466, 1966)
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")

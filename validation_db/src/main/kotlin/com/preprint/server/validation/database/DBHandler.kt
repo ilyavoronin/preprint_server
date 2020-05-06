@@ -5,8 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
-import org.rocksdb.Options
-import org.rocksdb.RocksDB
+import org.rocksdb.*
 import java.io.File
 import java.lang.Integer.max
 import java.util.concurrent.atomic.AtomicLong
@@ -56,8 +55,14 @@ class DBHandler : AutoCloseable {
         }
         File("$dbFolderPath/main").mkdir()
 
+        val blockOptions = BlockBasedTableConfig()
+                .setBlockSize(64000)
+                .setCacheIndexAndFilterBlocks(true)
         options = Options().setCreateIfMissing(true)
-        options.setMaxSuccessiveMerges(1000)
+                .setMaxSuccessiveMerges(1000)
+                .setOptimizeFiltersForHits(true)
+                .setNewTableReaderForCompactionInputs(true)
+                .setTableFormatConfig(blockOptions)
         mainDb = RocksDB.open(options, mainDbPath.absolutePath)
         titleDb = RocksDB.open(options, titleDbPath.absolutePath)
         jpageDb = RocksDB.open(options, jpageDbPath.absolutePath)
