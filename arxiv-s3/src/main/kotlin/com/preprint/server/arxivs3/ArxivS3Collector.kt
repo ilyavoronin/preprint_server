@@ -41,11 +41,14 @@ object ArxivS3Collector {
      * library if `maxThreads` = -1
      */
     fun beginBulkDownload(
-        dbHandler: DatabaseHandler,
+        dbHandler: DatabaseHandler?,
         referenceExtractor: ReferenceExtractor?,
         validators: List<Validator>,
         maxThreads: Int = -1
     ) {
+        if (dbHandler == null) {
+            logger.info("Download only mode")
+        }
         File("$path/pdf/").mkdir()
         val manifestPath = "$path/$manifestFileName"
         if (!File(manifestPath).exists()) {
@@ -68,7 +71,9 @@ object ArxivS3Collector {
                 logger.info("$filename is already downloaded")
             }
 
-            processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+            if (dbHandler != null) {
+                processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+            }
         }
     }
 
