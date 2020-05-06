@@ -27,7 +27,6 @@ class DBHandler : AutoCloseable {
     private val authorPDbPath = File(dbFolderPath, "authorp")
     private val authorDbPath = File(dbFolderPath, "author")
     private val flVolDbPath = File(dbFolderPath, "flvol")
-    private val flYearDbPath = File(dbFolderPath, "flyear")
 
     private lateinit var mainDb: RocksDB
     private lateinit var titleDb: RocksDB
@@ -38,7 +37,6 @@ class DBHandler : AutoCloseable {
     private lateinit var authorPageDb: RocksDB
     private lateinit var authorDb: RocksDB
     private lateinit var flVolDb: RocksDB
-    private lateinit var flYearDb: RocksDB
     private val options: Options
 
     private val logger = logger()
@@ -55,8 +53,7 @@ class DBHandler : AutoCloseable {
             var maxAuthorPageLength: Int = 0,
             var maxAuthorVolumeLength: Int = 0,
             var maxAuthorLength: Int = 0,
-            var maxFLVolLength: Int = 0,
-            var maxFLYearLength: Int = 0
+            var maxFLVolLength: Int = 0
     )
     val stats = Stats()
 
@@ -163,12 +160,6 @@ class DBHandler : AutoCloseable {
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByFirsLastPageYear(fpage: Int, lpage: Int, year: Int): MutableSet<Long> {
-        val bytes = encode(Triple(fpage, lpage, year))
-        val recordsBytes = flYearDb.get(bytes) ?: return mutableSetOf()
-        return decodeIds(recordsBytes) ?: mutableSetOf()
-    }
-
     private fun storeRecord(record: SemanticScholarData) {
         val id = currentId.getAndIncrement()
         val recordBytes = Klaxon().toJsonString(record).toByteArray()
@@ -248,19 +239,6 @@ class DBHandler : AutoCloseable {
             stats.maxFLVolLength = max(stats.maxFLVolLength, recordList.size)
             flVolDb.put(bytes, encode(recordList))
         }
-
-        if (record.year != null &&
-                record.firstPage != null && record.lastPage != null) {
-            val bytes = encode(Triple(record.firstPage, record.lastPage, record.year))
-            val recordList = getByFirsLastPageYear(
-                    record.firstPage!!,
-                    record.lastPage!!,
-                    record.year
-            )
-            recordList.add(id)
-            stats.maxFLYearLength = max(stats.maxFLYearLength, recordList.size)
-            flYearDb.put(bytes, encode(recordList))
-        }
     }
 
     private fun encode(a: Any): ByteArray {
@@ -294,7 +272,6 @@ class DBHandler : AutoCloseable {
         authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
         authorDb = RocksDB.open(options, authorDbPath.absolutePath)
         flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
-        flYearDb = RocksDB.open(options, flYearDbPath.absolutePath)
     }
 
     private fun closeDb() {
@@ -306,7 +283,6 @@ class DBHandler : AutoCloseable {
         authorYearDb.closeE()
         authorPageDb.closeE()
         authorDb.closeE()
-        flYearDb.closeE()
         flVolDb.closeE()
     }
 
