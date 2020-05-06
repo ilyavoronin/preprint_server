@@ -8,11 +8,15 @@ import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.*
 import java.io.File
 import java.lang.Integer.max
+import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.system.measureTimeMillis
 
 class DBHandler : AutoCloseable {
     private var currentId = AtomicLong(0)
+
     private val dbFolderPath = File(Config.config["semsch_path_to_db"].toString())
+
     private val mainDbPath = File(dbFolderPath, "main")
     private val titleDbPath = File(dbFolderPath, "title")
     private val jpageDbPath = File(dbFolderPath, "jpage")
@@ -23,19 +27,24 @@ class DBHandler : AutoCloseable {
     private val authorDbPath = File(dbFolderPath, "author")
     private val flVolDbPath = File(dbFolderPath, "flvol")
     private val flYearDbPath = File(dbFolderPath, "flyear")
-    private val mainDb: RocksDB
-    private val titleDb: RocksDB
-    private val jpageDb: RocksDB
-    private val volPageYearDb: RocksDB
-    private val authorYearDb: RocksDB
-    private val authorVolumeDb: RocksDB
-    private val authorPageDb: RocksDB
-    private val authorDb: RocksDB
-    private val flVolDb: RocksDB
-    private val flYearDb: RocksDB
-    private val options: Options
+
+    private lateinit var mainDb: RocksDB
+    private lateinit var titleDb: RocksDB
+    private lateinit var jpageDb: RocksDB
+    private lateinit var volPageYearDb: RocksDB
+    private lateinit var authorYearDb: RocksDB
+    private lateinit var authorVolumeDb: RocksDB
+    private lateinit var authorPageDb: RocksDB
+    private lateinit var authorDb: RocksDB
+    private lateinit var flVolDb: RocksDB
+    private lateinit var flYearDb: RocksDB
+    private lateinit var options: Options
+
     private val logger = logger()
+
     private val maxIdPath = File(dbFolderPath, "ID.txt")
+
+    private var lastTime: Long? = null
 
     data class Stats(
             var maxTitleLength: Int = 0,
@@ -51,6 +60,7 @@ class DBHandler : AutoCloseable {
     val stats = Stats()
 
     init {
+        dbFolderPath.mkdir()
         RocksDB.loadLibrary()
         if (maxIdPath.exists()) {
             currentId.set(maxIdPath.readText().toLong() + 10_000_000)
@@ -61,34 +71,37 @@ class DBHandler : AutoCloseable {
         }
         File("$dbFolderPath/main").mkdir()
 
-        val blockOptions = BlockBasedTableConfig()
-                .setBlockSize(128000)
-                .setCacheIndexAndFilterBlocks(true)
         options = Options().setCreateIfMissing(true)
                 .setMaxSuccessiveMerges(1000)
                 .setOptimizeFiltersForHits(true)
                 .setNewTableReaderForCompactionInputs(true)
-                .setTableFormatConfig(blockOptions)
-        mainDb = RocksDB.open(options, mainDbPath.absolutePath)
-        titleDb = RocksDB.open(options, titleDbPath.absolutePath)
-        jpageDb = RocksDB.open(options, jpageDbPath.absolutePath)
-        volPageYearDb = RocksDB.open(options, volPageYearDbPath.absolutePath)
-        authorYearDb = RocksDB.open(options, authorYDbPath.absolutePath)
-        authorVolumeDb = RocksDB.open(options, authorVDbPath.absolutePath)
-        authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
-        authorDb = RocksDB.open(options, authorDbPath.absolutePath)
-        flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
-        flYearDb = RocksDB.open(options, flYearDbPath.absolutePath)
+        openDb()
     }
     fun storeRecords(records: List<SemanticScholarData>) {
-        runBlocking(Dispatchers.IO) {
-            records.forEach { record ->
-                launch {
-                    storeRecord(record)
+        val currentTime = measureTimeMillis {
+            runBlocking(Dispatchers.IO) {
+                records.forEach { record ->
+                    launch {
+                        storeRecord(record)
+                    }
                 }
             }
         }
+
         maxIdPath.writeText(currentId.getAcquire().toString())
+
+        logger.info("Done in ${currentTime / 60_000} minutes," +
+                " ${(currentTime % 60_000) / 1000} seconds")
+
+        if (lastTime != null && currentTime > lastTime!! * 2
+                || currentTime > 1000 * 60 * 10
+        ) {
+            logger.info("Reloading databases")
+            reloadDb()
+            lastTime = -1
+        } else {
+            lastTime = currentTime
+        }
     }
 
     fun getById(id : Long) : SemanticScholarData? {
@@ -259,7 +272,26 @@ class DBHandler : AutoCloseable {
         }
     }
 
-    override fun close() {
+    fun reloadDb() {
+        closeDb()
+        sleep(10000)
+        openDb()
+    }
+
+    private fun openDb() {
+        mainDb = RocksDB.open(options, mainDbPath.absolutePath)
+        titleDb = RocksDB.open(options, titleDbPath.absolutePath)
+        jpageDb = RocksDB.open(options, jpageDbPath.absolutePath)
+        volPageYearDb = RocksDB.open(options, volPageYearDbPath.absolutePath)
+        authorYearDb = RocksDB.open(options, authorYDbPath.absolutePath)
+        authorVolumeDb = RocksDB.open(options, authorVDbPath.absolutePath)
+        authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
+        authorDb = RocksDB.open(options, authorDbPath.absolutePath)
+        flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
+        flYearDb = RocksDB.open(options, flYearDbPath.absolutePath)
+    }
+
+    private fun closeDb() {
         mainDb.closeE()
         titleDb.closeE()
         volPageYearDb.closeE()
@@ -270,6 +302,10 @@ class DBHandler : AutoCloseable {
         authorDb.closeE()
         flYearDb.closeE()
         flVolDb.closeE()
+    }
+
+    override fun close() {
+        closeDb()
         options.close()
     }
 }
