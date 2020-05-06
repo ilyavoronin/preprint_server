@@ -185,7 +185,7 @@ class DBHandler : AutoCloseable {
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.year != null) {
             val bytes = encode(Triple(record.journalVolume, record.firstPage, record.year))
-            val recordList = getByVolPageYear(record.journalVolume, record.firstPage!!, record.year)
+            val recordList = getByVolPageYear(record.journalVolume!!, record.firstPage!!, record.year)
             recordList.add(id)
             stats.maxVolPageYearLength = max(stats.maxVolPageYearLength, recordList.size)
             volPageYearDb.put(bytes, encode(recordList))
@@ -195,7 +195,7 @@ class DBHandler : AutoCloseable {
             val authorString = getFirstAuthorLetters(record)
             if (!record.journalVolume.isNullOrBlank()) {
                 val bytes = encode(Pair(authorString, record.journalVolume))
-                val recordList = getByAuthorVolume(authorString, record.journalVolume)
+                val recordList = getByAuthorVolume(authorString, record.journalVolume!!)
                 recordList.add(id)
                 stats.maxAuthorVolumeLength = max(stats.maxAuthorVolumeLength, recordList.size)
                 authorVolumeDb.put(bytes, encode(recordList))
@@ -233,7 +233,7 @@ class DBHandler : AutoCloseable {
             val recordList = getByFirsLastPageVolume(
                     record.firstPage!!,
                     record.lastPage!!,
-                    record.journalVolume
+                    record.journalVolume!!
             )
             recordList.add(id)
             stats.maxFLVolLength = max(stats.maxFLVolLength, recordList.size)

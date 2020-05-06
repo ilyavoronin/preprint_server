@@ -92,6 +92,15 @@ object DataLoader {
             }
         }
         record.title = record.title?.replace("\n", " ")
+        if (!record.journalVolume.isNullOrBlank()) {
+            val words = record.journalVolume!!.split("""\s""".toRegex()).filter { it.isNotBlank() }
+            if (words.size > 0) {
+                record.journalVolume = words[0]
+            }
+            if (words.size > 1) {
+                record.issue = words[1]
+            }
+        }
     }
 
     private fun validate(record: SemanticScholarData): Boolean {
