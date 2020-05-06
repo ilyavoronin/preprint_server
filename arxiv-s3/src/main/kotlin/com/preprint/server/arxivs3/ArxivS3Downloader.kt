@@ -1,13 +1,20 @@
 package com.preprint.server.arxivs3
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.AmazonClientException
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.event.ProgressEvent
+import com.amazonaws.event.ProgressListener
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.GetObjectRequest
+import com.amazonaws.services.s3.transfer.PersistableTransfer
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import com.amazonaws.services.s3.transfer.TransferProgress
+import com.amazonaws.services.s3.transfer.internal.S3ProgressListener
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
-import java.lang.Exception
+import java.lang.Thread.sleep
+import kotlin.math.roundToInt
 
 
 /**
@@ -43,10 +50,13 @@ object ArxivS3Downloader {
     fun downloadManifest(path: String) {
 
         logger.info("Begin manifest download")
-        amazonS3.getObject(
-                GetObjectRequest(bucketName, manifestKey, true),
-                File(path)
-        ) ?: throw DownloadFailedException("Failed to dowload")
+        val request = GetObjectRequest(bucketName, manifestKey, true)
+        val transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build()
+        val p = transferManager.download(request, File(path))
+        while (!p.isDone) {
+            println(p.progress.bytesTransferred / p.progress.totalBytesToTransfer)
+            sleep(1000)
+        }
 
         logger.info("Download finished")
     }
@@ -57,11 +67,22 @@ object ArxivS3Downloader {
      */
     fun download(pdfKey: String, path: String) {
         logger.info("Begin $pdfKey download")
-        amazonS3.getObject(
-                GetObjectRequest(bucketName, pdfKey, true),
-                File(path)
-        ) ?: throw DownloadFailedException("Failed to download")
+        val request = GetObjectRequest(bucketName, pdfKey, true)
+        val transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build()
+        val p = transferManager.download(request, File(path))
+        while (!p.isDone) {
+            progress(pdfKey, p.progress)
+            sleep(10000)
+        }
         logger.info("Donwload finished")
+    }
+
+    private fun progress(pdfKey: String, progress: TransferProgress) {
+        logger.info(pdfKey + " downloaded: "
+               + (progress.bytesTransferred.toDouble() * 100 / progress.totalBytesToTransfer.toDouble())
+                        .roundToInt().toString()
+               + "%"
+        )
     }
 
     class DownloadFailedException(override val message : String) : Exception(message)

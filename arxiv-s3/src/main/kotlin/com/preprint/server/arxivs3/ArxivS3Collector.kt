@@ -60,19 +60,22 @@ object ArxivS3Collector {
 
         //get filenames and md5 hash of each file from manifest
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        fileNames.forEach {(filename, md5sum) ->
-            val pdfPath = "$path/$filename"
+        runBlocking(Dispatchers.Default) {
+            fileNames.forEach { (filename, md5sum) ->
+                val pdfPath = "$path/$filename"
 
-            //download archive only if it wasn't downloaded before
-            if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
-                ArxivS3Downloader.download(filename, path + "/" + pdfPath)
-            }
-            else {
-                logger.info("$filename is already downloaded")
-            }
+                launch {
+                    //download archive only if it wasn't downloaded before
+                    if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
+                        ArxivS3Downloader.download(filename, pdfPath)
+                    } else {
+                        logger.info("$filename is already downloaded")
+                    }
 
-            if (dbHandler != null) {
-                processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                    if (dbHandler != null) {
+                        processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                    }
+                }
             }
         }
     }
