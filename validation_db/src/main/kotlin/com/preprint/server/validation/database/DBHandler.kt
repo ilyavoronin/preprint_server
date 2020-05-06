@@ -9,6 +9,7 @@ import org.rocksdb.*
 import java.io.File
 import java.lang.Integer.max
 import java.lang.Thread.sleep
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.system.measureTimeMillis
 
@@ -38,7 +39,7 @@ class DBHandler : AutoCloseable {
     private lateinit var authorDb: RocksDB
     private lateinit var flVolDb: RocksDB
     private lateinit var flYearDb: RocksDB
-    private lateinit var options: Options
+    private val options: Options
 
     private val logger = logger()
 
@@ -78,11 +79,16 @@ class DBHandler : AutoCloseable {
         openDb()
     }
     fun storeRecords(records: List<SemanticScholarData>) {
+        val progress = AtomicInteger(0)
         val currentTime = measureTimeMillis {
             runBlocking(Dispatchers.IO) {
                 records.forEach { record ->
                     launch {
                         storeRecord(record)
+                        val rs = progress.incrementAndGet()
+                        if (rs % 100_000 == 0) {
+                            logger.info("Stored $rs records out of ${records.size}")
+                        }
                     }
                 }
             }
