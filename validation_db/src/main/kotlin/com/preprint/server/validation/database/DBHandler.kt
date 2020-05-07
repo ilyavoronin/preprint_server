@@ -1,6 +1,9 @@
 package com.preprint.server.validation.database
 
 import com.beust.klaxon.Klaxon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.*
@@ -81,10 +84,13 @@ class DBHandler : AutoCloseable {
         }
         File("$dbFolderPath/main").mkdir()
 
+        val bopt = BlockBasedTableConfig()
+                .setCacheIndexAndFilterBlocks(true).setBlockSize(64000)
         options = Options().setCreateIfMissing(true)
                 .setMaxSuccessiveMerges(1000)
                 .setOptimizeFiltersForHits(true)
                 .setNewTableReaderForCompactionInputs(true)
+                .setTableFormatConfig(bopt)
         openDb()
     }
     fun storeRecords(records: List<SemanticScholarData>) {
@@ -294,39 +300,61 @@ class DBHandler : AutoCloseable {
 
     private fun getFullLists() {
         fun updateLists(db: RocksDB, dbkeys: Map<String, MutableList<Long>>) {
-            val keys = dbkeys.keys.toList()
-            keys.chunked(5000).flatMap {db.multiGetAsList(it.map {it.toByteArray()})}
+            val keys = dbkeys.keys.toList().sorted()
+            keys.chunked(1000).flatMap {db.multiGetAsList(it.map {it.toByteArray()})}
                     .map {if (it == null) mutableListOf<Long>() else (decodeIds(it) ?: mutableListOf<Long>())}
                     .zip(keys).forEach { (list, key) -> dbkeys[key]!!.addAll(list)}
         }
+        runBlocking(Dispatchers.Default) {
 
-        updateLists(titleDb, titleKeys)
-        titleKeys.forEach{(_, list) -> stats.maxTitleLength = max(stats.maxTitleLength, list.size)}
+            launch {
+                updateLists(titleDb, titleKeys)
+                titleKeys.forEach { (_, list) -> stats.maxTitleLength = max(stats.maxTitleLength, list.size) }
+            }
 
-        updateLists(jpageDb, jpageKeys)
-        jpageKeys.forEach{(_, list) -> stats.maxJPageLength = max(stats.maxJPageLength, list.size)}
+            launch {
+                updateLists(jpageDb, jpageKeys)
+                jpageKeys.forEach { (_, list) -> stats.maxJPageLength = max(stats.maxJPageLength, list.size) }
+            }
 
-        updateLists(volPageYearDb, volPageYearKeys)
-        volPageYearKeys.forEach{(_, list) ->
-            stats.maxVolPageYearLength = max(stats.maxVolPageYearLength, list.size)}
+            launch {
+                updateLists(volPageYearDb, volPageYearKeys)
+                volPageYearKeys.forEach { (_, list) ->
+                    stats.maxVolPageYearLength = max(stats.maxVolPageYearLength, list.size)
+                }
+            }
 
-        updateLists(authorYearDb, authorYearKeys)
-        authorYearKeys.forEach{(_, list) ->
-            stats.maxAuthorYearLength = max(stats.maxAuthorYearLength, list.size)}
+            launch {
+                updateLists(authorYearDb, authorYearKeys)
+                authorYearKeys.forEach { (_, list) ->
+                    stats.maxAuthorYearLength = max(stats.maxAuthorYearLength, list.size)
+                }
+            }
 
-        updateLists(authorVolumeDb, authorVolumeKeys)
-        authorVolumeKeys.forEach{(_, list) ->
-            stats.maxAuthorVolumeLength = max(stats.maxAuthorVolumeLength, list.size)}
+            launch {
+                updateLists(authorVolumeDb, authorVolumeKeys)
+                authorVolumeKeys.forEach { (_, list) ->
+                    stats.maxAuthorVolumeLength = max(stats.maxAuthorVolumeLength, list.size)
+                }
+            }
 
-        updateLists(authorPageDb, authorPageKeys)
-        authorPageKeys.forEach{(_, list) ->
-            stats.maxAuthorPageLength = max(stats.maxAuthorPageLength, list.size)}
+            launch {
+                updateLists(authorPageDb, authorPageKeys)
+                authorPageKeys.forEach { (_, list) ->
+                    stats.maxAuthorPageLength = max(stats.maxAuthorPageLength, list.size)
+                }
+            }
 
-        updateLists(authorDb, authorKeys)
-        authorKeys.forEach{(_, list) -> stats.maxAuthorLength = max(stats.maxAuthorLength, list.size)}
+            launch {
+                updateLists(authorDb, authorKeys)
+                authorKeys.forEach { (_, list) -> stats.maxAuthorLength = max(stats.maxAuthorLength, list.size) }
+            }
 
-        updateLists(flVolDb, flVolKeys)
-        flVolKeys.forEach{(_, list) -> stats.maxFLVolLength = max(stats.maxFLVolLength, list.size)}
+            launch {
+                updateLists(flVolDb, flVolKeys)
+                flVolKeys.forEach { (_, list) -> stats.maxFLVolLength = max(stats.maxFLVolLength, list.size) }
+            }
+        }
     }
 
     private fun storeAllKeys() {
@@ -416,15 +444,35 @@ class DBHandler : AutoCloseable {
         logger.info("Begin adding sst file to the databases")
 
         val ifo = IngestExternalFileOptions()
-        mainDb.ingestExternalFile(listOf(sMainPath), ifo)
-        titleDb.ingestExternalFile(listOf(sTitlePath), ifo)
-        jpageDb.ingestExternalFile(listOf(sJpagePath), ifo)
-        volPageYearDb.ingestExternalFile(listOf(sVolPageYearPath), ifo)
-        authorYearDb.ingestExternalFile(listOf(sAuthorYearPath), ifo)
-        authorVolumeDb.ingestExternalFile(listOf(sAuthorVolumePath), ifo)
-        authorPageDb.ingestExternalFile(listOf(sAuthorPagePath), ifo)
-        authorDb.ingestExternalFile(listOf(sAuthorPath), ifo)
-        flVolDb.ingestExternalFile(listOf(sFlVolPath), ifo)
+        runBlocking(Dispatchers.Default) {
+            launch {
+                mainDb.ingestExternalFile(listOf(sMainPath), ifo)
+            }
+            launch {
+                titleDb.ingestExternalFile(listOf(sTitlePath), ifo)
+            }
+            launch {
+                jpageDb.ingestExternalFile(listOf(sJpagePath), ifo)
+            }
+            launch {
+                volPageYearDb.ingestExternalFile(listOf(sVolPageYearPath), ifo)
+            }
+            launch {
+                authorYearDb.ingestExternalFile(listOf(sAuthorYearPath), ifo)
+            }
+            launch {
+                authorVolumeDb.ingestExternalFile(listOf(sAuthorVolumePath), ifo)
+            }
+            launch {
+                authorPageDb.ingestExternalFile(listOf(sAuthorPagePath), ifo)
+            }
+            launch {
+                authorDb.ingestExternalFile(listOf(sAuthorPath), ifo)
+            }
+            launch {
+                flVolDb.ingestExternalFile(listOf(sFlVolPath), ifo)
+            }
+        }
     }
 
     private fun generateRandomSstName(path: File): String {
@@ -442,6 +490,7 @@ class DBHandler : AutoCloseable {
         closeDb()
         sleep(10000)
         openDb()
+        compactDb()
     }
 
     private fun openDb() {
@@ -454,6 +503,18 @@ class DBHandler : AutoCloseable {
         authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
         authorDb = RocksDB.open(options, authorDbPath.absolutePath)
         flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
+    }
+
+    private fun compactDb() {
+        mainDb.compactRange()
+        titleDb.compactRange()
+        volPageYearDb.compactRange()
+        jpageDb.compactRange()
+        authorVolumeDb.compactRange()
+        authorYearDb.compactRange()
+        authorPageDb.compactRange()
+        authorDb.compactRange()
+        flVolDb.compactRange()
     }
 
     private fun closeDb() {
