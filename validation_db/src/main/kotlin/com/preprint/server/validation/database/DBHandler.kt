@@ -138,6 +138,12 @@ class DBHandler : AutoCloseable {
         return bgetById(kbytes)
     }
 
+    fun mgetById(ids: List<Long>): List<SemanticScholarData?> {
+        return mainDb
+                .multiGetAsList(ids.map {encode(it)})
+                .map {if (it == null) null else bgetById(it)}
+    }
+
     private fun bgetByTitle(bytes: ByteArray) : MutableSet<Long> {
         val recordsBytes = titleDb.get(bytes) ?: return mutableSetOf()
         return decodeIds(recordsBytes) ?: return mutableSetOf()
