@@ -6,7 +6,6 @@ fun main() {
     val dbHandler = DBHandler()
 
     val list = dbHandler.getByVolPageYear("179", 466, 1966)
-    list.forEach { println(dbHandler.getById(it)) }
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")
     val list3 = dbHandler.getByJNamePage("British heart journal", 239)
     val list4 = dbHandler.getByAuthorYear("CV,TSM,VSC,SM", 2015)

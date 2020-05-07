@@ -2,6 +2,7 @@ package com.preprint.server.validation.database
 
 data class SemanticScholarData(
     val authors: List<Author> = mutableListOf(),
+    val pmid: String? = null,
     val doi: String? = null,
     val id: String? = null,
     val journalName: String? = null,
@@ -11,7 +12,8 @@ data class SemanticScholarData(
     val year: Int? = null,
     var firstPage: Int? = null,
     var lastPage: Int? = null,
-    var issue: String? = null
+    var issue: String? = null,
+    val pdfUrls: MutableList<String> = mutableListOf()
 ) {
     data class Author(
             val name: String
