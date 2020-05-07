@@ -522,15 +522,35 @@ class DBHandler : AutoCloseable {
                 return
             }
         }
-        mainDb.compactRange()
-        titleDb.compactRange()
-        volPageYearDb.compactRange()
-        jpageDb.compactRange()
-        authorVolumeDb.compactRange()
-        authorYearDb.compactRange()
-        authorPageDb.compactRange()
-        authorDb.compactRange()
-        flVolDb.compactRange()
+        runBlocking {
+            launch {
+                mainDb.compactRange()
+            }
+            launch {
+                titleDb.compactRange()
+            }
+            launch {
+                volPageYearDb.compactRange()
+            }
+            launch {
+                jpageDb.compactRange()
+            }
+            launch {
+                authorVolumeDb.compactRange()
+            }
+            launch {
+                authorYearDb.compactRange()
+            }
+            launch {
+                authorPageDb.compactRange()
+            }
+            launch {
+                authorDb.compactRange()
+            }
+            launch {
+                flVolDb.compactRange()
+            }
+        }
         lastReloadTime = System.currentTimeMillis()
     }
 
