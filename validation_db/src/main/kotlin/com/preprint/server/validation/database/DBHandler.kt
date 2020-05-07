@@ -121,7 +121,7 @@ class DBHandler : AutoCloseable {
                 " ${(currentTime % 60_000) / 1000} seconds")
 
         if (lastTime != null && currentTime > lastTime!! * 1.5
-                || currentTime > 1000 * 60 * 10
+                || currentTime > 1000 * 60 * 5
         ) {
             logger.info("Reloading databases")
             reloadDb()
