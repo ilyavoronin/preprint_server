@@ -152,7 +152,7 @@ class DBHandler : AutoCloseable {
     }
 
     fun getByTitle(title: String) : MutableSet<Long> {
-        val bytes = title.toByteArray()
+        val bytes = title.toLowerCase().toByteArray()
         return bgetByTitle(bytes)
     }
 
@@ -252,7 +252,7 @@ class DBHandler : AutoCloseable {
         mainKeys[idString] = recordBytes
 
         if (!record.title.isNullOrBlank()) {
-            val str = record.title!!
+            val str = record.title!!.toLowerCase()
             titleKeys.getOrPut(str, {mutableListOf()})
             titleKeys[str]!!.add(id)
         }

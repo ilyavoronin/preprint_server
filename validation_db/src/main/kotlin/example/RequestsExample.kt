@@ -5,6 +5,10 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler()
 
+    val list0 = dbHandler.getByFirsLastPageVolume(190, 197, "23")
+    println(list0)
+    list0.forEach { println(dbHandler.getById(it)) }
+
     val list = dbHandler.getByVolPageYear("179", 466, 1966)
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")
     val list3 = dbHandler.getByJNamePage("British heart journal", 239)
