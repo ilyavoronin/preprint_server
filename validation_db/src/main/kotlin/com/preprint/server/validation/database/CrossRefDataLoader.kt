@@ -25,14 +25,33 @@ object CrossRefDataLoader {
             recordProcessed += 1
             if (recordProcessed % 1_000_000 == 0) {
                 logger.info("Processed $recordProcessed records")
-                println(line)
+                val recordToCheck = CrossRefJsonParser.parse(line)
+                logger.info("Record to check: $recordToCheck")
+                if (!recordToCheck?.title.isNullOrBlank()
+                        && dbHandler.getByTitle(recordToCheck!!.title!!).isEmpty()
+                ) {
+                    logger.error("Warning: this record wasn't found in the title database")
+                }
             }
         }
         while (true) {
             logger.info("Begin parsing next ${bulkRecodsNumber} records")
             val (records, isEOF) = getNextRecords()
             logger.info("Begin storing ${records.size} records to the database")
-            dbHandler.storeRecords(records)
+            var tries = 0
+            while (true) {
+                tries += 1
+                try {
+                    dbHandler.storeRecords(records)
+                    break
+                } catch (e: Exception) {
+                    logger.info("${e.message}")
+                    if (tries >= 3) {
+                        logger.error("Failed to store records")
+                        break
+                    }
+                }
+            }
             logger.info(dbHandler.stats)
             recordProcessed += records.size
             logger.info("Records processed $recordProcessed")
@@ -59,58 +78,11 @@ object CrossRefDataLoader {
                     isEOF = true
                     break
                 }
-                JsonIterator.deserialize(line.toByteArray(), CrossRefData::class.java)?.let {
-                    records.add(toUniversalData(it))
+                CrossRefJsonParser.parse(line)?.let {
+                    records.add(it)
                 }
             }
         }
         return Pair(records, isEOF)
-    }
-
-    private fun toUniversalData(record: CrossRefData): UniversalData {
-        val authors = record.author.map {
-            UniversalData.Author(it.given + " " + it.family)
-        }
-        val journal = record.short_container_title.getOrElse(
-            0,
-            {record.container_title.getOrNull(0)}
-        )
-        val spages = record.page?.split("-")
-        var firstPage: Int? = null
-        var lastPage: Int? = null
-        if (spages != null) {
-            if (spages.size >= 1) {
-                firstPage = spages[0].toIntOrNull()
-            }
-            if (spages.size >= 2) {
-                lastPage = spages[1].toIntOrNull()
-            }
-        }
-        val dateParts = record.issued?.date_parts?.getOrNull(0)
-        var year: Int? = null
-        if (!dateParts.isNullOrEmpty()) {
-            try {
-                dateParts.forEach {
-                    if (it.toString().length == 4) {
-                        year = it
-                    }
-                }
-            } catch (e: Exception) {
-                year = null
-            }
-        }
-        return UniversalData(
-            authors = authors,
-            doi = record.DOI,
-            journalName = journal,
-            journalPages = record.page,
-            firstPage = firstPage,
-            lastPage = lastPage,
-            journalVolume = record.volume,
-            title = record.title.getOrNull(0),
-            year = year,
-            issue = record.issue,
-            pdfUrls = record.link.map {link -> link.URL ?: ""}.filter {it.isNotBlank()}.toMutableList()
-        )
     }
 }

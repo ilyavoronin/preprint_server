@@ -59,7 +59,7 @@ object SSDataLoader {
                 val newLine = reader.readLine() ?: break
 
                 launch(Dispatchers.IO) {
-                    SemanticScholarJsonParser.parse(newLine)?.let {
+                    SSJsonParser.parse(newLine)?.let {
                         synchronized(records) {
                             records.add(it)
                             if (progress.incrementAndGet() % 100000 == 0) {
