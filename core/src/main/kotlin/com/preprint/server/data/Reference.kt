@@ -1,6 +1,7 @@
 package com.preprint.server.data
 
 import com.preprint.server.ref.GrobidEngine
+import com.preprint.server.utils.Common
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
 
@@ -12,14 +13,18 @@ data class Reference(
     var rawReference: String = "",
     var arxivId: String? = null,
     var doi: String? = null,
-    var authors: List<Author>? = null,
+    var authors: List<Author> = listOf(),
     var title: String? = null,
     var journal: String? = null,
     var issue: String? = null,
-    var pages: String? = null,
+    var firstPage: Int? = null,
+    var lastPage: Int? = null,
     var volume: String? = null,
-    var year: String? = null,
+    var year: Int? = null,
     var issn: String? = null,
+    var pmid: String? = null,
+    var ssid: String? = null,
+    var urls: MutableList<String> = mutableListOf(),
     var isReference : Boolean = false,
     var validated : Boolean = false
 ) {
@@ -48,13 +53,17 @@ data class Reference(
     private fun setBib(p: BiblioItem) {
         arxivId = p.arXivId
         doi = p.doi
-        authors = p.fullAuthors?.map {author -> Author(author.toString())}
+        authors = p.fullAuthors?.map {author -> Author(author.toString())} ?: listOf()
         title = p.title
         journal = p.journal
         issue = p.issue
-        pages = p.pageRange
+        if (!p.pageRange.isNullOrBlank()) {
+            val (firstPage_, lastPage_) = Common.splitPages(p.pageRange)
+            firstPage = firstPage_
+            lastPage = lastPage_
+        }
         volume = p.volumeBlock
-        year = p.publicationDate
+        year = Common.parseYear(p.publicationDate)
         issn = p.issn
         isReference = !p.rejectAsReference()
     }
@@ -69,14 +78,14 @@ data class Reference(
         res += "\n"
         addField("raw:", rawReference)
         addField("    title", title)
-        addField("    authors", authors?.joinToString { it.toString() })
+        addField("    authors", authors.joinToString { it.toString() })
         addField("    arxiv id", arxivId)
         addField("    doi", doi)
         addField("    journal", journal)
         addField("    volume", volume)
         addField("    issue", issue)
-        addField("    year", year)
-        addField("    pages", pages)
+        addField("    year", "$year")
+        addField("    pages", "$firstPage-$lastPage")
         addField("    validated", validated.toString())
         res += "\n\n"
         return res

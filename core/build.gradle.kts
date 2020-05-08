@@ -28,6 +28,8 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("io.mockk:mockk:1.9.3")
+
+    compile(project(":validation_db"))
 }
 
 configurations.all {

@@ -18,7 +18,8 @@ object CrossRefValidator : Validator {
                 ref.validated = true
                 ref.title = record.title
                 ref.doi = record.doi
-                ref.pages = record.journal?.pages
+                ref.firstPage = record.journal?.firstPage
+                ref.lastPage = record.journal?.lastPage
                 ref.issue = record.journal?.number
                 ref.volume = record.journal?.volume
                 ref.year = record.journal?.year
@@ -47,11 +48,9 @@ object CrossRefValidator : Validator {
             if (ref.issue != null && j.number != null && ref.issue == j.number) {
                 score += 1
             }
-            val pages1 = ref.pages?.split("--")
-            val pages2 = j.pages?.split("-")
-            if (pages1 != null && pages2 != null && pages1[0] == pages2[0]) {
-                if (pages1.size > 1 && pages2.size > 1) {
-                    if (pages1[1] == pages2[1]) {
+            if (ref.firstPage != null && j.firstPage != null && ref.firstPage == ref.lastPage) {
+                if (ref.lastPage != null && j.lastPage != null) {
+                    if (ref.lastPage != j.lastPage) {
                         score += 1
                     }
                 }

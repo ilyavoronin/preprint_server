@@ -411,8 +411,8 @@ class DatabaseHandler(
         return res
     }
 
-    private fun refDataToMap(ref: Reference): Map<String, String> {
-        val res = mutableMapOf<String, String>()
+    private fun refDataToMap(ref: Reference): Map<String, Any> {
+        val res = mutableMapOf<String, Any>()
         if (!ref.title.isNullOrEmpty()) {
             res += "title" to ref.title!!
         }
@@ -422,14 +422,14 @@ class DatabaseHandler(
         if (!ref.doi.isNullOrEmpty()) {
             res += "doi" to ref.doi!!
         }
-        if (!ref.year.isNullOrEmpty()) {
+        if (ref.year != null) {
             res += "pubYear" to ref.year!!
         }
         return res
     }
 
-    private fun journalDataToMap(ref: Reference): Map<String, String> {
-        val res = mutableMapOf<String, String>()
+    private fun journalDataToMap(ref: Reference): Map<String, Any> {
+        val res = mutableMapOf<String, Any>()
         if (!ref.journal.isNullOrEmpty()) {
             res += "jornal" to ref.journal!!
         }
@@ -439,7 +439,7 @@ class DatabaseHandler(
         if (!ref.issue.isNullOrEmpty()) {
             res += "issue" to ref.issue!!
         }
-        if (!ref.year.isNullOrEmpty()) {
+        if (ref.year != null) {
             res += "pubYear" to ref.year!!
         }
         return res
@@ -588,8 +588,8 @@ class DatabaseHandler(
                         val id = idObj[0]
                         ref.authors?.let { createAuthorConnections(tr, it, id) }
 
-                        val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, pages = ref.pages,
-                                number = ref.issue, issn = ref.issn, rawRef = "")
+                        val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
+                                lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = "")
                         createJournalPublicationConnections(tr, journal, id)
                     } else {
                         logger.error("Failed to create connection between Publication with arxivId ${record.id} " +
@@ -614,7 +614,8 @@ class DatabaseHandler(
                 "pubId" to id,
                 "rjrl" to journal.rawTitle,
                 "vol" to journal.volume,
-                "pages" to journal.pages,
+                "firstPage" to journal.firstPage,
+                "lastPage" to journal.lastPage,
                 "no" to journal.number,
                 "rr" to journal.rawRef
             )

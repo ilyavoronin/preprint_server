@@ -1,6 +1,7 @@
 package com.preprint.server.data
 
 import com.preprint.server.ref.GrobidEngine
+import com.preprint.server.utils.Common
 import org.grobid.core.data.BiblioItem
 
 /**
@@ -11,8 +12,9 @@ data class JournalRef(
     var rawRef: String,
     var rawTitle: String? = null,
     var volume: String? = null,
-    var pages: String? = null,
-    var year: String? = null,
+    var firstPage: Int? = null,
+    var lastPage: Int? = null,
+    var year: Int? = null,
     var number: String? = null,
     var issn: String? = null,
     var shortTitle: String? = null,
@@ -31,9 +33,11 @@ data class JournalRef(
 
     constructor(bib: BiblioItem, rawRef: String) : this(rawRef) {
         rawTitle = bib.journal
-        pages = bib.pageRange
+        val (fp, lp) = Common.splitPages(bib.pageRange)
+        firstPage = fp
+        lastPage = lp
         volume = bib.volumeBlock
-        year = bib.publicationDate
+        year = Common.parseYear(bib.publicationDate)
         number = bib.issue
         issn = bib.issn
     }
@@ -42,9 +46,11 @@ data class JournalRef(
         fun getFullJournalInfo(journal: JournalRef) {
             val bibitem = GrobidEngine.processRawReference(journal.rawRef, 0)
             journal.rawTitle = bibitem.journal
-            journal.pages = bibitem.pageRange
+            val (fp, lp) = Common.splitPages(bibitem.pageRange)
+            journal.firstPage = fp
+            journal.lastPage = lp
             journal.volume = bibitem.volumeBlock
-            journal.year = bibitem.publicationDate
+            journal.year = Common.parseYear(bibitem.publicationDate)
             journal.number = bibitem.issue
             journal.issn = bibitem.issn
         }

@@ -336,7 +336,7 @@ object ReferenceParser {
         if (!reference.journal.isNullOrEmpty()) {
             containsJournal = true
         }
-        if (!reference.year.isNullOrEmpty()) {
+        if (reference.year != null) {
             containsYear = true
         }
         if (ArxivValidator.containsId(ref)) {
