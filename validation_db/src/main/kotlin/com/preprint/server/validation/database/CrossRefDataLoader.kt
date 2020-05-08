@@ -18,8 +18,16 @@ object CrossRefDataLoader {
     val textStream = getTextStream(File(filePath))
     val bulkRecodsNumber = 1_000_000
 
-    fun loadData(dbHandler: DBHandler) {
+    fun loadData(dbHandler: DBHandler, startFrom: Long = 0) {
         var recordProcessed = 0
+        for (i in 0 until startFrom) {
+            val line = textStream.readLine()
+            recordProcessed += 1
+            if (recordProcessed % 1_000_000 == 0) {
+                logger.info("Processed $recordProcessed records")
+                println(line)
+            }
+        }
         while (true) {
             logger.info("Begin parsing next ${bulkRecodsNumber} records")
             val (records, isEOF) = getNextRecords()

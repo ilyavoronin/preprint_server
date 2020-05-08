@@ -5,7 +5,7 @@ import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.SSDataLoader
 
 fun main() {
-    val dbHandler = DBHandler()
-    CrossRefDataLoader.loadData(dbHandler)
-    dbHandler.close()
+    DBHandler().use {
+        CrossRefDataLoader.loadData(it, 76000000)
+    }
 }

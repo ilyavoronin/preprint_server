@@ -5,7 +5,7 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler()
 
-    val list0 = dbHandler.getByVolPageYear("2", 1, 2013)
+    val list0 = dbHandler.getByTitle("Jean Jacques Rousseau to Pierre Clappier, Thursday, 31 August 1769 [rousjeVF0370134a1c]")
     println(list0)
     list0.forEach { println(dbHandler.getById(it)) }
 

@@ -60,7 +60,7 @@ class DBHandler : AutoCloseable {
 
     private var lastReloadTime: Long? = null
 
-    private val maxValueLength = 30_000
+    private val maxValueLength = 20_000
 
     data class Stats(
             var maxTitleLength: Int = 0,
@@ -94,6 +94,7 @@ class DBHandler : AutoCloseable {
                 .setNewTableReaderForCompactionInputs(true)
                 .setTableFormatConfig(bopt)
         openDb()
+        compactDb(true)
     }
     fun storeRecords(records: List<UniversalData>) {
         mainKeys.clear()
@@ -123,6 +124,9 @@ class DBHandler : AutoCloseable {
         if (lastTime != null && currentTime > lastTime!! * 1.5
                 || currentTime > 1000 * 60 * 5
         ) {
+            if (currentTime > lastTime!! * 1.5) {
+                compactDb(true)
+            }
             logger.info("Reloading databases")
             reloadDb()
             lastTime = -1
@@ -502,9 +506,8 @@ class DBHandler : AutoCloseable {
 
     fun reloadDb() {
         closeDb()
-        sleep(10000)
+        sleep(5000)
         openDb()
-        logger.info("Begin databases compaction")
         compactDb()
     }
 
@@ -520,14 +523,15 @@ class DBHandler : AutoCloseable {
         flVolDb = RocksDB.open(options, flVolDbPath.absolutePath)
     }
 
-    fun compactDb() {
-        if (lastReloadTime != null) {
+    fun compactDb(ignoreTime: Boolean = false) {
+        if (lastReloadTime != null && !ignoreTime) {
             val diff = System.currentTimeMillis() - lastReloadTime!!
-            if (diff < 1000 * 60 * 180) {
-                logger("Compaction can only be done once every three hours")
+            if (diff < 1000 * 60 * 90) {
+                logger.info("Compaction can only be done once every three hours")
                 return
             }
         }
+        logger.info("Begin compaction")
         runBlocking {
             launch {
                 mainDb.compactRange()
