@@ -5,7 +5,7 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler()
 
-    val list0 = dbHandler.getByFirsLastPageVolume(190, 197, "23")
+    val list0 = dbHandler.getByVolPageYear("2", 1, 2013)
     println(list0)
     list0.forEach { println(dbHandler.getById(it)) }
 

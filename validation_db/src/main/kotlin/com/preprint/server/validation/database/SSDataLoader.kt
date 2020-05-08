@@ -8,7 +8,7 @@ import java.io.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.zip.GZIPInputStream
 
-object DataLoader {
+object SSDataLoader {
     private val logger = logger()
     val path = Config.config["semsch_path_to_files"].toString()
     private val cntPath = File(path, "START.txt")
@@ -50,9 +50,9 @@ object DataLoader {
         return BufferedReader(decoder, 262144)
     }
 
-    private fun processFile(file : File) : List<SemanticScholarData> {
+    private fun processFile(file : File) : List<UniversalData> {
         val reader = getTextStream(file)
-        val records = mutableListOf<SemanticScholarData>()
+        val records = mutableListOf<UniversalData>()
         val progress = AtomicInteger(0)
         runBlocking {
             while (true) {
@@ -73,7 +73,7 @@ object DataLoader {
         return records
     }
 
-    private fun format(record: SemanticScholarData) {
+    private fun format(record: UniversalData) {
         record.journalPages = record.journalPages?.replace("""\s+""".toRegex(), "")
         val pages = record.journalPages?.split("-") ?: listOf()
         if (pages.size == 1) {
@@ -103,7 +103,7 @@ object DataLoader {
         }
     }
 
-    private fun validate(record: SemanticScholarData): Boolean {
+    private fun validate(record: UniversalData): Boolean {
         if (record.title.isNullOrBlank() || record.title!!.contains("[Not Available].")) {
             return false
         }

@@ -7,11 +7,9 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.logging.log4j.kotlin.logger
 import org.rocksdb.*
-import org.rocksdb.util.BytewiseComparator
 import java.io.File
 import java.lang.Integer.max
 import java.lang.Thread.sleep
-import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.Comparator
 import kotlin.collections.HashMap
@@ -62,6 +60,8 @@ class DBHandler : AutoCloseable {
 
     private var lastReloadTime: Long? = null
 
+    private val maxValueLength = 30_000
+
     data class Stats(
             var maxTitleLength: Int = 0,
             var maxJPageLength: Int = 0,
@@ -95,7 +95,7 @@ class DBHandler : AutoCloseable {
                 .setTableFormatConfig(bopt)
         openDb()
     }
-    fun storeRecords(records: List<SemanticScholarData>) {
+    fun storeRecords(records: List<UniversalData>) {
         mainKeys.clear()
         titleKeys.clear()
         jpageKeys.clear()
@@ -131,16 +131,16 @@ class DBHandler : AutoCloseable {
         }
     }
 
-    private fun bgetById(bytes: ByteArray) : SemanticScholarData? {
-        return Klaxon().parse<SemanticScholarData>(String(mainDb.get(bytes)))
+    private fun bgetById(bytes: ByteArray) : UniversalData? {
+        return Klaxon().parse<UniversalData>(String(mainDb.get(bytes)))
     }
 
-    fun getById(id : Long) : SemanticScholarData? {
+    fun getById(id : Long) : UniversalData? {
         val kbytes = Klaxon().toJsonString(id).toByteArray()
         return bgetById(kbytes)
     }
 
-    fun mgetById(ids: List<Long>): List<SemanticScholarData?> {
+    fun mgetById(ids: List<Long>): List<UniversalData?> {
         return mainDb
                 .multiGetAsList(ids.map {encode(it)})
                 .map {if (it == null) null else bgetById(it)}
@@ -235,17 +235,23 @@ class DBHandler : AutoCloseable {
     }
 
     private fun decodeIds(bytes: ByteArray) : MutableSet<Long>? {
-        return Klaxon().parseArray<Long>(String(bytes))?.toMutableSet()
+        val ids = Klaxon().parseArray<Long>(String(bytes))?.toMutableSet()
+        if (ids != null && ids.size > maxValueLength) {
+            return null
+        }
+        else {
+            return ids
+        }
     }
 
-    fun getFirstAuthorLetters(record: SemanticScholarData) : String {
-        return record.authors.joinToString(separator = ",") { author ->
-            val words = author.name.split("""\s""".toRegex()).filter {!it.isBlank()}
+    fun getFirstAuthorLetters(authors: List<String>) : String {
+        return authors.joinToString(separator = ",") { name ->
+            val words = name.split("""\s""".toRegex()).filter {!it.isBlank()}.sorted()
             words.joinToString(separator = "") { it[0].toString() }
         }
     }
 
-    private fun storeRecordLocal(record: SemanticScholarData) {
+    private fun storeRecordLocal(record: UniversalData) {
         val id = currentId.getAndIncrement()
         val recordBytes = Klaxon().toJsonString(record).toByteArray()
         val idString = Klaxon().toJsonString(id)
@@ -271,7 +277,7 @@ class DBHandler : AutoCloseable {
         }
 
         if (record.authors.size >= 2) {
-            val authorString = getFirstAuthorLetters(record)
+            val authorString = getFirstAuthorLetters(record.authors.map {it.name})
             if (!record.journalVolume.isNullOrBlank()) {
                 val str = sencode(Pair(authorString, record.journalVolume))
                 authorVolumeKeys.getOrPut(str, {mutableListOf()})
@@ -292,7 +298,7 @@ class DBHandler : AutoCloseable {
         }
 
         if (record.authors.size >= 3) {
-            val authorString = getFirstAuthorLetters(record)
+            val authorString = getFirstAuthorLetters(record.authors.map {it.name})
             val str = sencode(authorString)
             authorKeys.getOrPut(str, {mutableListOf()})
             authorKeys[str]!!.add(id)

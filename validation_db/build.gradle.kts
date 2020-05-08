@@ -16,9 +16,11 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.beust:klaxon:5.0.1")
+    implementation("com.jsoniter:jsoniter:0.9.19")
     implementation("org.apache.logging.log4j:log4j-api:2.13.1")
     implementation("org.apache.logging.log4j:log4j-core:2.13.1")
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
+    implementation("org.tukaani:xz:1.5")
     compile("org.apache.commons:commons-compress:1.20")
     compile("org.apache.commons:commons-lang3:3.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
