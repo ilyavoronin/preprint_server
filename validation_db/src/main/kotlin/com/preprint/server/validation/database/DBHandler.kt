@@ -129,7 +129,7 @@ class DBHandler : AutoCloseable {
             }
             logger.info("Reloading databases")
             reloadDb()
-            lastTime = -1
+            lastTime = null
         } else {
             lastTime = currentTime
         }
