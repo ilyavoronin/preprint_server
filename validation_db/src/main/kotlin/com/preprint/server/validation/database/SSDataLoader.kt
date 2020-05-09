@@ -37,7 +37,6 @@ object SSDataLoader {
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }
             dbHandler.storeRecords(records)
-            logger.info(dbHandler.stats)
 
             cntPath.writeText((i + 2).toString())
         }

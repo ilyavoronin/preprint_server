@@ -3,54 +3,53 @@ package com.preprint.server.validation
 import com.preprint.server.algo.Algorithms
 import com.preprint.server.data.Author
 import com.preprint.server.data.Reference
+import com.preprint.server.validation.database.Config
 import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.UniversalData
 
 object FastValidator : Validator, AutoCloseable {
-    val dbHandler = DBHandler()
+    val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
     override fun validate(ref: Reference) {
-        val ids = mutableSetOf<Long>()
+        val records = mutableSetOf<UniversalData>()
         if (!ref.title.isNullOrBlank()) {
-            ids.addAll(dbHandler.getByTitle(ref.title!!.toLowerCase()))
+            records.addAll(dbHandler.getByTitle(ref.title!!.toLowerCase()))
         }
 
         if (!ref.journal.isNullOrBlank() && ref.firstPage != null) {
-            ids.addAll(dbHandler.getByJNamePage(ref.journal!!, ref.firstPage!!))
+            records.addAll(dbHandler.getByJNamePage(ref.journal!!, ref.firstPage!!))
         }
 
         if (!ref.volume.isNullOrBlank() && ref.firstPage != null) {
             if (ref.year != null) {
-                ids.addAll(dbHandler.getByVolPageYear(ref.volume!!, ref.firstPage!!, ref.year!!))
+                records.addAll(dbHandler.getByVolPageYear(ref.volume!!, ref.firstPage!!, ref.year!!))
             }
             if (ref.lastPage != null) {
-                ids.addAll(dbHandler.getByFirsLastPageVolume(ref.firstPage!!, ref.lastPage!!, ref.volume!!))
+                records.addAll(dbHandler.getByFirsLastPageVolume(ref.firstPage!!, ref.lastPage!!, ref.volume!!))
             }
         }
 
         if (ref.authors.size >= 2) {
             val authString = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
             if (!ref.volume.isNullOrBlank()) {
-                ids.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!))
+                records.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!))
             }
 
             if (ref.year != null) {
-                ids.addAll(dbHandler.getByAuthorYear(authString, ref.year!!))
+                records.addAll(dbHandler.getByAuthorYear(authString, ref.year!!))
             }
 
             if (ref.firstPage != null) {
-                ids.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))
+                records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))
             }
 
             if (ref.authors.size >= 3) {
-                ids.addAll(dbHandler.getByAuthors(authString))
+                records.addAll(dbHandler.getByAuthors(authString))
             }
         }
 
-        val records = dbHandler.mgetById(ids.toList()).filter { it != null }
-
         records.forEach {
-            if (check(ref, it!!)) {
+            if (check(ref, it)) {
                 accept(ref, it)
                 return
             }

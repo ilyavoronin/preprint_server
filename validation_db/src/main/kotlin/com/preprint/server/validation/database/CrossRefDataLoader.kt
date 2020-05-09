@@ -1,8 +1,6 @@
 package com.preprint.server.validation.database
 
-import com.jsoniter.JsonIterator
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.logging.log4j.kotlin.logger
@@ -52,7 +50,6 @@ object CrossRefDataLoader {
                     }
                 }
             }
-            logger.info(dbHandler.stats)
             recordProcessed += records.size
             logger.info("Records processed $recordProcessed")
             if (isEOF) {

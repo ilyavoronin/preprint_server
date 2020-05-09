@@ -1,13 +1,13 @@
 package example
 
+import com.preprint.server.validation.database.Config
 import com.preprint.server.validation.database.DBHandler
 
 fun main() {
-    val dbHandler = DBHandler()
+    val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
-    val list0 = dbHandler.getByFirsLastPageVolume(282, 308, "3")
+    val list0 = dbHandler.getByTitle("The Lady Anatomist: The Life and Work of Anna Morandi Manzolini (review)")
     println(list0)
-    list0.forEach { println(dbHandler.getById(it)) }
 
     val list = dbHandler.getByVolPageYear("179", 466, 1966)
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")
