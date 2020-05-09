@@ -105,11 +105,10 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
     }
 
     override fun close() {
-        println(6666)
         databases.forEach {
             it.close()
         }
     }
 
-    private data class DBInfo(val dbPaths: List<String>, val dbRecordsCnt: List<Long>)
+    data class DBInfo(val dbPaths: List<String>, val dbRecordsCnt: List<Long>)
 }

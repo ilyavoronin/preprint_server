@@ -16,6 +16,6 @@ data class UniversalData(
     val pdfUrls: MutableList<String> = mutableListOf()
 ) {
     data class Author(
-        val name: String
+        val name: String = ""
     )
 }
