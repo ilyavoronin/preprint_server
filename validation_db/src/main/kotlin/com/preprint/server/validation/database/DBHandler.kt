@@ -392,15 +392,17 @@ class DBHandler : AutoCloseable {
         fun <T> getSortedByteKeys(m: Map<String, T>): List<Pair<ByteArray, T>> {
             return m.toList().map {(first, second) -> Pair(first.toByteArray(), second)}.sortedWith(cmp)
         }
+        val limitLengthFun: (Pair<ByteArray, List<Long>>) -> Boolean =
+                {(_, list) -> list.size < maxValueLength}
         val sMainKeys = getSortedByteKeys(mainKeys)
-        val sTitleKeys = getSortedByteKeys(titleKeys)
-        val sJpageKeys = getSortedByteKeys(jpageKeys)
-        val sVolPageYearKeys = getSortedByteKeys(volPageYearKeys)
-        val sAuthorYearKeys = getSortedByteKeys(authorYearKeys)
-        val sAuthorVolumeKeys = getSortedByteKeys(authorVolumeKeys)
-        val sAuthorPageKeys = getSortedByteKeys(authorPageKeys)
-        val sAuthorKeys = getSortedByteKeys(authorKeys)
-        val sFlVolKeys = getSortedByteKeys(flVolKeys)
+        val sTitleKeys = getSortedByteKeys(titleKeys).filter {limitLengthFun(it)}
+        val sJpageKeys = getSortedByteKeys(jpageKeys).filter {limitLengthFun(it)}
+        val sVolPageYearKeys = getSortedByteKeys(volPageYearKeys).filter {limitLengthFun(it)}
+        val sAuthorYearKeys = getSortedByteKeys(authorYearKeys).filter {limitLengthFun(it)}
+        val sAuthorVolumeKeys = getSortedByteKeys(authorVolumeKeys).filter {limitLengthFun(it)}
+        val sAuthorPageKeys = getSortedByteKeys(authorPageKeys).filter {limitLengthFun(it)}
+        val sAuthorKeys = getSortedByteKeys(authorKeys).filter {limitLengthFun(it)}
+        val sFlVolKeys = getSortedByteKeys(flVolKeys).filter {limitLengthFun(it)}
 
         logger.info("Begin creating sst files")
 
