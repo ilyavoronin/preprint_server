@@ -60,7 +60,8 @@ object ArxivS3Collector {
 
         //get filenames and md5 hash of each file from manifest
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        runBlocking(Dispatchers.Default) {
+        val threadPool = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
+        runBlocking(threadPool) {
             fileNames.forEach { (filename, md5sum) ->
                 val pdfPath = "$path/$filename"
 
@@ -68,7 +69,8 @@ object ArxivS3Collector {
                     //download archive only if it wasn't downloaded before
                     if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
                         ArxivS3Downloader.download(filename, pdfPath)
-                    } else {
+                    }
+                    else {
                         logger.info("$filename is already downloaded")
                     }
 
