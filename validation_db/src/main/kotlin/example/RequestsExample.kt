@@ -6,13 +6,13 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
-    val list0 = dbHandler.getByTitle("The Lady Anatomist: The Life and Work of Anna Morandi Manzolini (review)")
+    val list0 = dbHandler.getByTitle("Measurement of serum C-reactive protein concentration in myocardial ischaemia and infarction.")
     println(list0)
 
     val list = dbHandler.getByVolPageYear("179", 466, 1966)
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")
     val list3 = dbHandler.getByJNamePage("British heart journal", 239)
-    val list4 = dbHandler.getByAuthorYear("CV,TSM,VSC,SM", 2015)
+    val list4 = dbHandler.getByAuthorYear("CV,MST,CSV,MS", 2015)
     val list5 = dbHandler.getByAuthorVolume("CV,TSM,VSC,SM", "820")
     val list6 = dbHandler.getByAuthorPage("CV,TSM,VSC,SM", 419)
     println(list)

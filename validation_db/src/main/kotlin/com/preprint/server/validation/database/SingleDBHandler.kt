@@ -134,7 +134,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     private fun bgetById(bytes: ByteArray) : UniversalData? {
-        return Klaxon().parse<UniversalData>(String(mainDb.get(bytes)))
+        return Klaxon().parse<UniversalData>(String(mainDb.get(bytes) ?: return null))
     }
 
     fun getById(id : Long) : UniversalData? {
@@ -143,9 +143,13 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     fun mgetById(ids: List<Long>): List<UniversalData?> {
-        return mainDb
-                .multiGetAsList(ids.map {encode(it)})
-                .map {if (it == null) null else bgetById(it)}
+        return mainDb.multiGetAsList(ids.map {encode(it)}).map {bytes ->
+                    if (bytes != null) {
+                        Klaxon().parse<UniversalData>(String(bytes))
+                    } else {
+                        null
+                    }
+                }
     }
 
     private fun bgetByTitle(bytes: ByteArray) : MutableSet<Long> {
