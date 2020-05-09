@@ -13,6 +13,7 @@ fun main() {
             dbHandler.close()
         }
     })
-
-    CrossRefDataLoader.loadData(dbHandler)
+    dbHandler.use {
+        CrossRefDataLoader.loadData(it)
+    }
 }

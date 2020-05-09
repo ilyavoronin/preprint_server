@@ -12,5 +12,8 @@ fun main() {
             dbHandler.close()
         }
     })
-    SSDataLoader.loadData(dbHandler)
+
+    dbHandler.use {
+        SSDataLoader.loadData(it)
+    }
 }
