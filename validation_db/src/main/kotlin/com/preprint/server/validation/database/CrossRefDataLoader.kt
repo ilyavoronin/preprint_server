@@ -14,7 +14,7 @@ object CrossRefDataLoader {
     private val logger = logger()
     val filePath = Config.config["crossref_path_to_file"].toString()
     val textStream = getTextStream(File(filePath))
-    val bulkRecodsNumber = 1_000_000
+    val bulkRecodsNumber = 100_000
 
     fun loadData(dbHandler: DBHandler, startFrom: Long = 0) {
         var recordProcessed = 0

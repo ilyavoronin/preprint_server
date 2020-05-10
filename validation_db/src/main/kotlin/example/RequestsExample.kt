@@ -6,7 +6,7 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
-    val list0 = dbHandler.getByTitle("Measurement of serum C-reactive protein concentration in myocardial ischaemia and infarction.")
+    val list0 = dbHandler.getByTitle("Cooling of White Dwarfs")
     println(list0)
 
     val list = dbHandler.getByVolPageYear("179", 466, 1966)

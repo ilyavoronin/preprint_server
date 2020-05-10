@@ -131,6 +131,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         } else {
             lastTime = currentTime
         }
+        println(stats)
     }
 
     private fun bgetById(bytes: ByteArray) : UniversalData? {
@@ -319,11 +320,18 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     private fun getFullLists() {
-        fun updateLists(db: RocksDB, dbkeys: Map<String, MutableList<Long>>) {
+        fun updateLists(db: RocksDB, dbkeys: MutableMap<String, MutableList<Long>>) {
             val keys = dbkeys.keys.toList().sorted()
-            keys.chunked(1000).flatMap {db.multiGetAsList(it.map {it.toByteArray()})}
-                    .map {if (it == null) mutableListOf<Long>() else (decodeIds(it) ?: mutableListOf<Long>())}
-                    .zip(keys).forEach { (list, key) -> dbkeys[key]!!.addAll(list)}
+            keys.forEach{key ->
+                db.get(key.toByteArray())?.let {bytes ->
+                    decodeIds(bytes)?.let {idList ->
+                        dbkeys[key]!!.addAll(idList)
+                        if (dbkeys[key]!!.size > maxValueLength) {
+                            dbkeys[key] = mutableListOf()
+                        }
+                    }
+                }
+            }
         }
         runBlocking(Dispatchers.Default) {
 
@@ -406,93 +414,64 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         val sAuthorKeys = getSortedByteKeys(authorKeys).filter {limitLengthFun(it)}
         val sFlVolKeys = getSortedByteKeys(flVolKeys).filter {limitLengthFun(it)}
 
-        logger.info("Begin creating sst files")
+        logger.info("Begin creating WriteBatch objects")
 
-        val sMainPath = generateRandomSstName(mainDbPath)
-        val sMain = SstFileWriter(EnvOptions(), options)
-        sMain.open(sMainPath)
+        val sMain = WriteBatch()
         sMainKeys.forEach { sMain.put(it.first, it.second)}
 
-        val sTitlePath = generateRandomSstName(titleDbPath)
-        val sTitle = SstFileWriter(EnvOptions(), options)
-        sTitle.open(sTitlePath)
+        val sTitle = WriteBatch()
         sTitleKeys.forEach {sTitle.put(it.first, encode(it.second))}
 
-        val sJpagePath = generateRandomSstName(jpageDbPath)
-        val sJpage = SstFileWriter(EnvOptions(), options)
-        sJpage.open(sJpagePath)
+        val sJpage = WriteBatch()
         sJpageKeys.forEach { sJpage.put(it.first, encode(it.second))}
 
-        val sVolPageYearPath = generateRandomSstName(volPageYearDbPath)
-        val sVolPageYear = SstFileWriter(EnvOptions(), options)
-        sVolPageYear.open(sVolPageYearPath)
+        val sVolPageYear = WriteBatch()
         sVolPageYearKeys.forEach { sVolPageYear.put(it.first, encode(it.second))}
 
-        val sAuthorYearPath = generateRandomSstName(authorYDbPath)
-        val sAuthorYear = SstFileWriter(EnvOptions(), options)
-        sAuthorYear.open(sAuthorYearPath)
+        val sAuthorYear = WriteBatch()
         sAuthorYearKeys.forEach { sAuthorYear.put(it.first, encode(it.second))}
 
-        val sAuthorVolumePath = generateRandomSstName(authorVDbPath)
-        val sAuthorVolume = SstFileWriter(EnvOptions(), options)
-        sAuthorVolume.open(sAuthorVolumePath)
+        val sAuthorVolume =  WriteBatch()
         sAuthorVolumeKeys.forEach { sAuthorVolume.put(it.first, encode(it.second))}
 
-        val sAuthorPagePath = generateRandomSstName(authorPDbPath)
-        val sAuthorPage = SstFileWriter(EnvOptions(), options)
-        sAuthorPage.open(sAuthorPagePath)
+        val sAuthorPage = WriteBatch()
         sAuthorPageKeys.forEach { sAuthorPage.put(it.first, encode(it.second))}
 
-        val sAuthorPath = generateRandomSstName(authorDbPath)
-        val sAuthor = SstFileWriter(EnvOptions(), options)
-        sAuthor.open(sAuthorPath)
+        val sAuthor = WriteBatch()
         sAuthorKeys.forEach { sAuthor.put(it.first, encode(it.second))}
 
-        val sFlVolPath = generateRandomSstName(flVolDbPath)
-        val sFlVol = SstFileWriter(EnvOptions(), options)
-        sFlVol.open(sFlVolPath)
+        val sFlVol = WriteBatch()
         sFlVolKeys.forEach { sFlVol.put(it.first, encode(it.second))}
 
-        sMain.finish()
-        sTitle.finish()
-        sJpage.finish()
-        sVolPageYear.finish()
-        sAuthorYear.finish()
-        sAuthorVolume.finish()
-        sAuthorPage.finish()
-        sAuthor.finish()
-        sFlVol.finish()
+        logger.info("Begin batch write to the databases")
 
-        logger.info("Begin adding sst file to the databases")
-
-        val ifo = IngestExternalFileOptions()
         runBlocking(Dispatchers.Default) {
             launch {
-                mainDb.ingestExternalFile(listOf(sMainPath), ifo)
+                mainDb.write(WriteOptions(), sMain)
             }
             launch {
-                titleDb.ingestExternalFile(listOf(sTitlePath), ifo)
+                titleDb.write(WriteOptions(), sTitle)
             }
             launch {
-                jpageDb.ingestExternalFile(listOf(sJpagePath), ifo)
+                jpageDb.write(WriteOptions(), sJpage)
             }
             launch {
-                volPageYearDb.ingestExternalFile(listOf(sVolPageYearPath), ifo)
+                volPageYearDb.write(WriteOptions(), sVolPageYear)
             }
             launch {
-                authorYearDb.ingestExternalFile(listOf(sAuthorYearPath), ifo)
+                authorYearDb.write(WriteOptions(), sAuthorYear)
             }
             launch {
-                authorVolumeDb.ingestExternalFile(listOf(sAuthorVolumePath), ifo)
+                authorVolumeDb.write(WriteOptions(), sAuthorVolume)
             }
             launch {
-                authorPageDb.ingestExternalFile(listOf(sAuthorPagePath), ifo)
+                authorPageDb.write(WriteOptions(), sAuthorPage)
             }
             launch {
-                authorDb.ingestExternalFile(listOf(sAuthorPath), ifo)
+                authorDb.write(WriteOptions(), sAuthor)
             }
             launch {
-                flVolDb.ingestExternalFile(listOf(sFlVolPath), ifo)
+                flVolDb.write(WriteOptions(), sFlVol)
             }
         }
     }
