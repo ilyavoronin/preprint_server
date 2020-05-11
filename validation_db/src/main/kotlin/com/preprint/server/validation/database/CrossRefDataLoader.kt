@@ -14,7 +14,7 @@ object CrossRefDataLoader {
     private val logger = logger()
     val filePath = Config.config["crossref_path_to_file"].toString()
     val textStream = getTextStream(File(filePath))
-    val bulkRecodsNumber = 100_000
+    val bulkRecodsNumber = 300_000
 
     fun loadData(dbHandler: DBHandler, startFrom: Long = 0) {
         var recordProcessed = 0
@@ -43,6 +43,7 @@ object CrossRefDataLoader {
                     dbHandler.storeRecords(records)
                     break
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     logger.info("${e.message}")
                     if (tries >= 3) {
                         logger.error("Failed to store records")

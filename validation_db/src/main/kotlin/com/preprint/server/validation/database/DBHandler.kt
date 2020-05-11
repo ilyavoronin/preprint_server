@@ -23,7 +23,8 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         }
     }
 
-    fun storeRecords(records: List<UniversalData>) {
+    fun storeRecords(records_: List<UniversalData>) {
+        val records = filterExisting(records_)
         if (databases.isEmpty() || recordsCnt.last() + records.size > maxRecordsPerDb) {
             logger.info("Creating new database")
             createNewDb()
@@ -33,20 +34,23 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         databases.last().storeRecords(records)
     }
 
+    private fun filterExisting(records: List<UniversalData>): List<UniversalData> {
+        val exists = BooleanArray(records.size, {false})
+        databases.forEach {db ->
+            records.chunked(1000).flatMap {
+                db.doiDb.multiGetAsList(it.map {it.doi?.toByteArray()})
+            }.forEachIndexed {i, ba -> if (ba != null) exists[i] = true}
+        }
+        return records.filterIndexed {i, _ -> !exists[i]}
+    }
+
     fun getByTitle(title: String) : List<UniversalData> =
             databases.flatMap { it.mgetById(it.getByTitle(title).toList())}.filterNotNull()
 
-    fun getByJNamePage(jname: String, firstPage: Int): List<UniversalData> =
+    fun getByVolPageYear(auth: String, volume: String, firstPage: Int, year: Int): List<UniversalData> =
             databases.flatMap {
                 it.mgetById(
-                        it.getByJNamePage(jname, firstPage).toList()
-                )
-            }.filterNotNull()
-
-    fun getByVolPageYear(volume: String, firstPage: Int, year: Int): List<UniversalData> =
-            databases.flatMap {
-                it.mgetById(
-                        it.getByVolPageYear(volume, firstPage, year).toList()
+                        it.getByVolPageYear(auth, volume, firstPage, year).toList()
                 )
             }.filterNotNull()
 
@@ -64,29 +68,15 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
                 )
             }.filterNotNull()
 
-
-    fun getByAuthorYear(authors: String, year: Int): List<UniversalData> =
+    fun getByAuthFirsLastPageVolume(auth: String, fpage: Int, lpage: Int, vol: String): List<UniversalData> =
             databases.flatMap {
                 it.mgetById(
-                        it.getByAuthorYear(authors, year).toList()
-                )
-            }.filterNotNull()
-
-    fun getByAuthors(authors: String): List<UniversalData> =
-            databases.flatMap {
-                it.mgetById(
-                        it.getByAuthors(authors).toList()
-                )
-            }.filterNotNull()
-
-    fun getByFirsLastPageVolume(fpage: Int, lpage: Int, vol: String): List<UniversalData> =
-            databases.flatMap {
-                it.mgetById(
-                        it.getByFirsLastPageVolume(fpage, lpage, vol).toList()
+                        it.getByFirsLastPageVolume(auth, fpage, lpage, vol).toList()
                 )
             }.filterNotNull()
 
     private fun createNewDb() {
+        if (databases.isNotEmpty()) databases.last().compactDb(true)
         databases.add(SingleDBHandler(File(dbFolderFile, "db${databases.size}")))
         recordsCnt.add(0)
     }

@@ -32,7 +32,7 @@ object ArxivS3Collector {
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
 
-    private const val MAX_PARALLEL_DOWNLOAD = 5
+    private const val MAX_PARALLEL_DOWNLOAD = 1
 
     /**
      * Uses previosly created dbHandler to store the data.
@@ -105,7 +105,7 @@ object ArxivS3Collector {
 
         try {
             val filenames = unzip(filename, outputDir)
-            val ids = filenames.map {getIdFromFilename(it)}
+            val ids = filenames.map {getIdFromFilename(it)}.take(10)
 
             //get metadata about each extracted pdf
             val records = ArxivAPI.getArxivRecords(ids)
@@ -161,7 +161,7 @@ object ArxivS3Collector {
      * Deleted directory and all stored files(not recursievly)
      */
     private fun deleteDir(dir: File) {
-        val files = dir.listFiles()
+        val files = dir.listFiles()?.filterNotNull() ?: return
         for (file in files) {
             file.delete()
         }

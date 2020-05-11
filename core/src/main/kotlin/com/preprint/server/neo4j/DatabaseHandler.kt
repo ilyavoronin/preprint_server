@@ -106,6 +106,7 @@ class DatabaseHandler(
                         try {
                             it.writeTransaction { tr -> createConnections(tr, id, record)}
                         } catch (e : Exception) {
+                            e.printStackTrace()
                             logger.error("Connections creation failed for ${record.id}")
                             failedTransactions.add(Pair(id, record))
                         }
@@ -624,8 +625,9 @@ class DatabaseHandler(
                    WHERE id(pub) = ${parm("pubId")}
                    MATCH (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
                    MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
-                   ON CREATE SET jref.volume = ${parm("vol")}, jref.pages = ${parm("pages")},
-                       jref.number = ${parm("no")}, jref.rawRef = ${parm("rr")}
+                   ON CREATE SET jref.volume = ${parm("vol")}, jref.firstPage = ${parm("firstPage")},
+                       jref.lastPage = ${parm("lastPage")}, jref.number = ${parm("no")},
+                       jref.rawRef = ${parm("rr")}
                 """.trimIndent(), params)
         }
     }

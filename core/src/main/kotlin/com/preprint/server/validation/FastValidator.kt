@@ -11,6 +11,7 @@ object FastValidator : Validator, AutoCloseable {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
     override fun validate(ref: Reference) {
+        /*
         val records = mutableSetOf<UniversalData>()
         if (!ref.title.isNullOrBlank()) {
             records.addAll(dbHandler.getByTitle(ref.title!!.toLowerCase()))
@@ -61,6 +62,7 @@ object FastValidator : Validator, AutoCloseable {
                 return
             }
         }
+         */
     }
 
     private fun check(ref: Reference, record: UniversalData): Boolean {
