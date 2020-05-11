@@ -15,11 +15,13 @@ object FastValidator : Validator, AutoCloseable {
         if (!ref.title.isNullOrBlank()) {
             records.addAll(dbHandler.getByTitle(ref.title!!.toLowerCase()))
         }
-
+        /*
         if (!ref.journal.isNullOrBlank() && ref.firstPage != null) {
             records.addAll(dbHandler.getByJNamePage(ref.journal!!, ref.firstPage!!))
         }
+         */
 
+        /*
         if (!ref.volume.isNullOrBlank() && ref.firstPage != null) {
             if (ref.year != null) {
                 records.addAll(dbHandler.getByVolPageYear(ref.volume!!, ref.firstPage!!, ref.year!!))
@@ -28,6 +30,7 @@ object FastValidator : Validator, AutoCloseable {
                 records.addAll(dbHandler.getByFirsLastPageVolume(ref.firstPage!!, ref.lastPage!!, ref.volume!!))
             }
         }
+         */
 
         if (ref.authors.size >= 2) {
             val authString = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
@@ -43,10 +46,14 @@ object FastValidator : Validator, AutoCloseable {
                 records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))
             }
 
+            /*
             if (ref.authors.size >= 3) {
                 records.addAll(dbHandler.getByAuthors(authString))
             }
+             */
         }
+
+        println(records.size)
 
         records.forEach {
             if (check(ref, it)) {
@@ -58,7 +65,7 @@ object FastValidator : Validator, AutoCloseable {
 
     private fun check(ref: Reference, record: UniversalData): Boolean {
         val refstr = ref.rawReference
-        var score = 3
+        var score = 4
         if (record.year != null
                 && record.year != ref.year
                 && !refstr.contains(record.year.toString())
@@ -76,6 +83,20 @@ object FastValidator : Validator, AutoCloseable {
         if (record.firstPage != null
                 && record.firstPage != ref.firstPage
                 && !refstr.contains(record.firstPage!!.toString())
+        ) {
+            score -= 1
+        }
+
+        //checking authors
+        if (record.authors.any {author ->
+                    val longestPart = author.name.split("""\s""".toRegex()).filter { it.isNotBlank() }.maxBy { it.length }
+                    if (longestPart != null) {
+                        return@any !refstr.contains(longestPart)
+                    }
+                    else {
+                        return@any false
+                    }
+                }
         ) {
             score -= 1
         }

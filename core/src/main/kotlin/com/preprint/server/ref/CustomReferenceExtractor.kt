@@ -56,7 +56,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
         else {
             logger.debug("done by CUSTOM")
         }
-        logger.debug(refList.mapIndexed { i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
         return refList.also {
             logger.info("Parsed ${it.size} references")
         }

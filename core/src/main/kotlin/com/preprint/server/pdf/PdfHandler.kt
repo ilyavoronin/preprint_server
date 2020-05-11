@@ -5,6 +5,7 @@ import com.preprint.server.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
+import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.validation.Validator
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
@@ -20,7 +21,7 @@ object PdfHandler {
     var sleepTime : Long = 0
 
     /**
-     * Donwload pdf and extract references
+     * Download pdf and extract references
      */
     fun getFullInfo(
         recordList: List <PubData>,
@@ -71,6 +72,8 @@ object PdfHandler {
                     File(outputPath + "failed.txt").appendText("${record.id}\n")
                     continue
                 }
+                ArxivCollector.logger.debug(record.refList
+                        .mapIndexed { i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
             }
 
             sleep(sleepTime)

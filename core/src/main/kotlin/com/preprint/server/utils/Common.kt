@@ -1,7 +1,10 @@
 package com.preprint.server.utils
 
 object Common {
-    fun splitPages(pages: String): Pair<Int?, Int?> {
+    fun splitPages(pages: String?): Pair<Int?, Int?> {
+        if (pages == null) {
+            return Pair(null, null)
+        }
         var i = pages.indexOfFirst { it.isDigit() }
         var firstPageString = ""
         var lastPageString = ""

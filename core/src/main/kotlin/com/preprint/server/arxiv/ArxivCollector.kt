@@ -5,6 +5,7 @@ import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.CustomReferenceExtractor
 import com.preprint.server.validation.ArxivValidator
 import com.preprint.server.validation.CrossRefValidator
+import com.preprint.server.validation.FastValidator
 
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
@@ -66,7 +67,7 @@ object ArxivCollector {
                 newArxivRecords,
                 "files/",
                 CustomReferenceExtractor,
-                listOf(CrossRefValidator, ArxivValidator),
+                listOf(FastValidator, ArxivValidator),
                 false
             )
 
