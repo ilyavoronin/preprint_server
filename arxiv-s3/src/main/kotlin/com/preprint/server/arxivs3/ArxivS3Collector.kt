@@ -32,6 +32,8 @@ object ArxivS3Collector {
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
 
+    private const val MAX_PARALLEL_DOWNLOAD = 5
+
     /**
      * Uses previosly created dbHandler to store the data.
      * Validators will be applied to references after extraction
@@ -60,22 +62,23 @@ object ArxivS3Collector {
 
         //get filenames and md5 hash of each file from manifest
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        val threadPool = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
-        runBlocking(threadPool) {
-            fileNames.forEach { (filename, md5sum) ->
-                val pdfPath = "$path/$filename"
+        val threadPool = Executors.newFixedThreadPool(MAX_PARALLEL_DOWNLOAD).asCoroutineDispatcher()
+        fileNames.chunked(MAX_PARALLEL_DOWNLOAD).forEach { fileNamesChunk ->
+            runBlocking(threadPool) {
+                fileNamesChunk.forEach { (filename, md5sum) ->
+                    val pdfPath = "$path/$filename"
 
-                launch {
-                    //download archive only if it wasn't downloaded before
-                    if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
-                        ArxivS3Downloader.download(filename, pdfPath)
-                    }
-                    else {
-                        logger.info("$filename is already downloaded")
-                    }
+                    launch {
+                        //download archive only if it wasn't downloaded before
+                        if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
+                            ArxivS3Downloader.download(filename, pdfPath)
+                        } else {
+                            logger.info("$filename is already downloaded")
+                        }
 
-                    if (dbHandler != null) {
-                        processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                        if (dbHandler != null) {
+                            processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                        }
                     }
                 }
             }

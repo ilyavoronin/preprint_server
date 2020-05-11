@@ -29,7 +29,7 @@ object ArxivS3Downloader {
     const val manifestKey = "pdf/arXiv_pdf_manifest.xml"
 
 
-    val credentials = try {
+    private var credentials = try {
         ProfileCredentialsProvider().getCredentials();
     } catch (e: Exception) {
         throw AmazonClientException(
@@ -38,7 +38,7 @@ object ArxivS3Downloader {
                         "location (~/.aws/credentials), and is in valid format.", e)
     }
 
-    val amazonS3 = AmazonS3ClientBuilder.standard()
+    private var amazonS3 = AmazonS3ClientBuilder.standard()
         .withCredentials(AWSStaticCredentialsProvider(credentials))
         .withRegion(region)
         .build()
@@ -48,7 +48,6 @@ object ArxivS3Downloader {
      * Downloads arxiv's manifest.xml file into the given directory
      */
     fun downloadManifest(path: String) {
-
         logger.info("Begin manifest download")
         val request = GetObjectRequest(bucketName, manifestKey, true)
         val transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build()
@@ -66,6 +65,7 @@ object ArxivS3Downloader {
      * Download archive into the given directory
      */
     fun download(pdfKey: String, path: String) {
+        reloadCredentials()
         logger.info("Begin $pdfKey download")
         val request = GetObjectRequest(bucketName, pdfKey, true)
         val transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build()
@@ -83,6 +83,22 @@ object ArxivS3Downloader {
                         .roundToInt().toString()
                + "%"
         )
+    }
+
+    private fun reloadCredentials() {
+        credentials = try {
+            ProfileCredentialsProvider().getCredentials();
+        } catch (e: Exception) {
+            throw AmazonClientException(
+                    "Cannot load the credentials from the credential profiles file. " +
+                            "Please make sure that your credentials file is at the correct " +
+                            "location (~/.aws/credentials), and is in valid format.", e)
+        }
+
+        amazonS3 = AmazonS3ClientBuilder.standard()
+                .withCredentials(AWSStaticCredentialsProvider(credentials))
+                .withRegion(region)
+                .build()
     }
 
     class DownloadFailedException(override val message : String) : Exception(message)
