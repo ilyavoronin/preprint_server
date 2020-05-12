@@ -6,7 +6,7 @@ import com.preprint.server.validation.database.DBHandler
 fun main() {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
-    val list0 = dbHandler.getByTitle("Cooling of White Dwarfs")
+    val list0 = dbHandler.getByTitle("Image Decomposition Using Total Variation and div(BMO)*")
     println(list0)
 
     val list2 = dbHandler.getByTitle("Ozonides of cyclic enol esters")

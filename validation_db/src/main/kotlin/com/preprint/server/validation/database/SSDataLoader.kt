@@ -23,7 +23,7 @@ object SSDataLoader {
         }
     }
 
-    fun loadData(dbHandler: DBHandler, checkDuplcates: Boolean, start: Int? = null) {
+    fun loadData(dbHandler: DBHandler, checkDuplicates: Boolean, storeOnlyWithDoi: Boolean, start: Int? = null) {
         if (start != null) {
             startFrom = start
         }
@@ -33,10 +33,12 @@ object SSDataLoader {
                 continue
             }
             logger.info("Begin extract records from ${i + 1} archive out of ${files.size}")
-            val records = processFile(file).filter { validate(it)}
+            val records = processFile(file).filter {
+                validate(it) && (!storeOnlyWithDoi || !it.doi.isNullOrBlank())
+            }
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }
-            dbHandler.storeRecords(records, checkDuplcates)
+            dbHandler.storeRecords(records, checkDuplicates)
 
             cntPath.writeText((i + 2).toString())
         }
