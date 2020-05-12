@@ -13,6 +13,7 @@ import org.apache.logging.log4j.kotlin.logger
 import org.neo4j.driver.Transaction
 import java.io.Closeable
 import java.lang.Exception
+import java.time.LocalDate
 
 
 /**
@@ -106,7 +107,6 @@ class DatabaseHandler(
                         try {
                             it.writeTransaction { tr -> createConnections(tr, id, record)}
                         } catch (e : Exception) {
-                            e.printStackTrace()
                             logger.error("Connections creation failed for ${record.id}")
                             failedTransactions.add(Pair(id, record))
                         }
@@ -328,7 +328,7 @@ class DatabaseHandler(
             record.authors.forEach { authors.add(it) }
             record.refList.forEach { ref ->
                 if (ref.validated) {
-                    ref.authors?.forEach { authors.add(it) }
+                    ref.authors.forEach { authors.add(it) }
                 }
             }
         }
@@ -361,7 +361,7 @@ class DatabaseHandler(
 
             record.refList.forEach {ref ->
                 if (ref.validated) {
-                    ref.authors?.forEach { author ->
+                    ref.authors.forEach { author ->
                         if (!author.affiliation.isNullOrBlank()) {
                             affiliations.add(author.affiliation)
                         }
@@ -396,8 +396,8 @@ class DatabaseHandler(
         return pubs.toList()
     }
 
-    private fun arxivDataToMap(record: ArxivData): Map<String, String> {
-        val res = mutableMapOf<String, String>()
+    private fun arxivDataToMap(record: ArxivData): Map<String, Any> {
+        val res = mutableMapOf<String, Any>()
         res += "title" to record.title
         res += "arxivId" to record.id
         if (record.doi != null) {
@@ -408,6 +408,21 @@ class DatabaseHandler(
         }
         if (record.acmClass != null) {
             res += "acmClass" to record.acmClass!!
+        }
+        if (record.categories.isNotEmpty()) {
+            res += "categories" to record.categories
+        }
+        if (!record.creationDate.isBlank()) {
+            res += "creationDate" to LocalDate.parse(record.creationDate)
+        }
+        if (!record.lastUpdateDate.isNullOrBlank()) {
+            res += "lastUpdateDate" to LocalDate.parse(record.lastUpdateDate!!)
+        }
+        if (!record.pdfUrl.isBlank()) {
+            res += "pdfUrl" to record.pdfUrl
+        }
+        if (record.abstract.isBlank()) {
+            res += "abstract" to record.abstract
         }
         return res
     }
@@ -426,6 +441,15 @@ class DatabaseHandler(
         if (ref.year != null) {
             res += "pubYear" to ref.year!!
         }
+        if (ref.pmid != null) {
+            res += "pmid" to ref.pmid!!
+        }
+        if (ref.ssid != null) {
+            res += "ssid" to ref.ssid!!
+        }
+        if (ref.urls.isNotEmpty()) {
+            res += "urls" to ref.urls
+        }
         return res
     }
 
@@ -442,6 +466,12 @@ class DatabaseHandler(
         }
         if (ref.year != null) {
             res += "pubYear" to ref.year!!
+        }
+        if (ref.firstPage != null) {
+            res += "firstPage" to ref.firstPage!!
+        }
+        if (ref.lastPage != null) {
+            res += "lastPage" to ref.lastPage!!
         }
         return res
     }
