@@ -162,11 +162,14 @@ object ArxivS3Collector {
     /**
      * This function relies on the fact that filename
      * is exactly the arxivId but without '/'
-     * Return valid arxiv id
+     * Returns valid arxiv id
      */
     private fun getIdFromFilename(filename: String) : String {
         val fn = Paths.get(filename).fileName.toString()
         val i = fn.indexOfFirst { it.isDigit() }
+        if (i == 0) {
+            return fn
+        }
         return fn.substring(0, i) + "/" + fn.substring(i).dropLast(4)
     }
 
