@@ -5,7 +5,8 @@ import com.preprint.server.validation.database.CrossRefDataLoader
 import com.preprint.server.validation.database.DBHandler
 
 fun main() {
-    val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
+    val dbHandler =
+        DBHandler(Config.config["validation_db_path"].toString())
 
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {

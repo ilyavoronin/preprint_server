@@ -13,7 +13,9 @@ import java.lang.Exception
 object CrossRefDataLoader {
     private val logger = logger()
     val filePath = Config.config["crossref_path_to_file"].toString()
-    val textStream = getTextStream(File(filePath))
+    val textStream = getTextStream(
+        File(filePath)
+    )
     val bulkRecodsNumber = 300_000
 
     fun loadData(dbHandler: DBHandler, checkDuplicates: Boolean, startFrom: Long = 0) {
@@ -23,7 +25,8 @@ object CrossRefDataLoader {
             recordProcessed += 1
             if (recordProcessed % 1_000_000 == 0) {
                 logger.info("Processed $recordProcessed records")
-                val recordToCheck = CrossRefJsonParser.parse(line)
+                val recordToCheck =
+                    CrossRefJsonParser.parse(line)
                 logger.info("Record to check: $recordToCheck")
                 if (!recordToCheck?.title.isNullOrBlank()
                         && dbHandler.getByTitle(recordToCheck!!.title!!).isEmpty()
@@ -33,7 +36,7 @@ object CrossRefDataLoader {
             }
         }
         while (true) {
-            logger.info("Begin parsing next ${bulkRecodsNumber} records")
+            logger.info("Begin parsing next $bulkRecodsNumber records")
             val (records, isEOF) = getNextRecords()
             logger.info("Begin storing ${records.size} records to the database")
             var tries = 0

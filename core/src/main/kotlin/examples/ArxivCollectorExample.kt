@@ -1,11 +1,10 @@
 package examples
 
 import com.preprint.server.Config
-import com.preprint.server.arxiv.ArxivCollector
-import com.preprint.server.neo4j.DatabaseHandler
-import com.preprint.server.validation.ArxivValidator
-import com.preprint.server.validation.CrossRefValidator
-import com.preprint.server.validation.LocalValidator
+import com.preprint.server.core.arxiv.ArxivCollector
+import com.preprint.server.core.neo4j.DatabaseHandler
+import com.preprint.server.core.validation.ArxivValidator
+import com.preprint.server.core.validation.CrossRefValidator
 
 fun main() {
     val START_DATE = "2010-05-11"

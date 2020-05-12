@@ -15,7 +15,11 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         if (!dbFolderFile.mkdir() && dbFolderFile.listFiles().isNotEmpty()) {
             logger.info("Database already exists")
             val dbInfo = Klaxon().parse<DBInfo>(File(dbFolderFile, "STRUCTURE"))!!
-            databases.addAll(dbInfo.dbPaths.map { SingleDBHandler(File(it)) })
+            databases.addAll(dbInfo.dbPaths.map {
+                SingleDBHandler(
+                    File(it)
+                )
+            })
             recordsCnt.addAll(dbInfo.dbRecordsCnt)
         }
         else {
@@ -79,14 +83,26 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
 
     private fun createNewDb() {
         if (databases.isNotEmpty()) databases.last().compactDb(true)
-        databases.add(SingleDBHandler(File(dbFolderFile, "db${databases.size}")))
+        databases.add(
+            SingleDBHandler(
+                File(
+                    dbFolderFile,
+                    "db${databases.size}"
+                )
+            )
+        )
         recordsCnt.add(0)
     }
 
 
     private fun writeInfo() {
         File(dbFolderFile, "STRUCTURE").writeText(
-                Klaxon().toJsonString(DBInfo(databases.map {it.dbFolderPath.absolutePath}, recordsCnt))
+                Klaxon().toJsonString(
+                    DBInfo(
+                        databases.map { it.dbFolderPath.absolutePath },
+                        recordsCnt
+                    )
+                )
         )
     }
 

@@ -1,6 +1,5 @@
 package com.preprint.server.validation.database
 
-import com.beust.klaxon.Json
 import com.jsoniter.annotation.JsonProperty
 
 data class CrossRefData(

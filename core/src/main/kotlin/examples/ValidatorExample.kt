@@ -1,7 +1,7 @@
 package examples
 
-import com.preprint.server.validation.CrossRefValidator
-import com.preprint.server.data.Reference
+import com.preprint.server.core.validation.CrossRefValidator
+import com.preprint.server.core.data.Reference
 import kotlinx.coroutines.*
 import kotlin.system.measureTimeMillis
 

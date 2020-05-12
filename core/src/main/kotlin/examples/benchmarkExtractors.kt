@@ -1,6 +1,6 @@
 package preprint.server.examples
 
-import com.preprint.server.ref.*
+import com.preprint.server.core.ref.*
 import java.lang.Exception
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis

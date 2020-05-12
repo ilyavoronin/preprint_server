@@ -2,10 +2,9 @@ package examples
 
 import com.preprint.server.Config
 import com.preprint.server.arxivs3.ArxivS3Collector
-import com.preprint.server.neo4j.DatabaseHandler
-import com.preprint.server.ref.CustomReferenceExtractor
-import com.preprint.server.validation.ArxivValidator
-import com.preprint.server.validation.CrossRefValidator
+import com.preprint.server.core.neo4j.DatabaseHandler
+import com.preprint.server.core.ref.CustomReferenceExtractor
+import com.preprint.server.core.validation.ArxivValidator
 
 fun main() {
     val downloadOnlyMode = true

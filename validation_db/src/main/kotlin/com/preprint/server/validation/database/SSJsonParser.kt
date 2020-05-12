@@ -1,6 +1,5 @@
 package com.preprint.server.validation.database
 
-import com.beust.klaxon.Klaxon
 import com.jsoniter.JsonIterator
 
 object SSJsonParser {

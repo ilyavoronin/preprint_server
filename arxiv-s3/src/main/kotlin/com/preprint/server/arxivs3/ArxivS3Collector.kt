@@ -1,11 +1,11 @@
 package com.preprint.server.arxivs3
 
 import com.preprint.server.Config
-import com.preprint.server.arxiv.ArxivAPI
-import com.preprint.server.data.Reference
-import com.preprint.server.neo4j.DatabaseHandler
-import com.preprint.server.ref.ReferenceExtractor
-import com.preprint.server.validation.Validator
+import com.preprint.server.core.arxiv.ArxivAPI
+import com.preprint.server.core.data.Reference
+import com.preprint.server.core.neo4j.DatabaseHandler
+import com.preprint.server.core.ref.ReferenceExtractor
+import com.preprint.server.core.validation.Validator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch

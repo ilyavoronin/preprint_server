@@ -1,12 +1,12 @@
 package example
 
-import com.preprint.server.validation.database.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import com.preprint.server.validation.database.Config
+import com.preprint.server.validation.database.DBHandler
+import com.preprint.server.validation.database.SSDataLoader
 
 fun main() {
-    val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
+    val dbHandler =
+        DBHandler(Config.config["validation_db_path"].toString())
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
             dbHandler.close()

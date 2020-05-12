@@ -165,7 +165,14 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
-        val bytes = encode(AuthVolPageYear(auth, volume, firstPage, year))
+        val bytes = encode(
+            AuthVolPageYear(
+                auth,
+                volume,
+                firstPage,
+                year
+            )
+        )
         return bgetByAuthVolPageYear(bytes)
     }
 
@@ -202,7 +209,14 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     )
 
     fun getByFirsLastPageVolume(auth: String, fpage: Int, lpage: Int, vol: String): MutableSet<Long> {
-        val bytes = encode(AuthFLVolume(auth, fpage, lpage, vol))
+        val bytes = encode(
+            AuthFLVolume(
+                auth,
+                fpage,
+                lpage,
+                vol
+            )
+        )
         return bgetByFirsLastPageVolume(bytes)
     }
 
@@ -244,14 +258,25 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.year != null && record.authors.size > 0) {
-            val auth = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
-            val str = sencode(AuthVolPageYear(auth, record.journalVolume!!, record.firstPage!!, record.year))
+            val auth =
+                DBHandler.getFirstAuthorLetters(
+                    record.authors.map { it.name })
+            val str = sencode(
+                AuthVolPageYear(
+                    auth,
+                    record.journalVolume!!,
+                    record.firstPage!!,
+                    record.year
+                )
+            )
             authVolPageYearKeys.getOrPut(str, {mutableListOf()})
             authVolPageYearKeys[str]!!.add(id)
         }
 
         if (record.authors.size >= 2 && record.year != null) {
-            val authorString = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
+            val authorString =
+                DBHandler.getFirstAuthorLetters(
+                    record.authors.map { it.name })
             if (!record.journalVolume.isNullOrBlank()) {
                 val str = sencode(Triple(authorString, record.journalVolume, record.year))
                 authorVolumeYearKeys.getOrPut(str, {mutableListOf()})
@@ -267,8 +292,17 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.lastPage != null && record.authors.isNotEmpty()) {
-            val auth = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
-            val str = sencode(AuthFLVolume(auth, record.firstPage!!, record.lastPage!!, record.journalVolume!!))
+            val auth =
+                DBHandler.getFirstAuthorLetters(
+                    record.authors.map { it.name })
+            val str = sencode(
+                AuthFLVolume(
+                    auth,
+                    record.firstPage!!,
+                    record.lastPage!!,
+                    record.journalVolume!!
+                )
+            )
             authFlVolKeys.getOrPut(str, {mutableListOf()})
             authFlVolKeys[str]!!.add(id)
         }

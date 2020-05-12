@@ -44,17 +44,17 @@ object CrossRefJsonParser {
             }
         }
         return UniversalData(
-                authors = authors,
-                doi = record.DOI,
-                journalName = journal,
-                journalPages = record.page,
-                firstPage = firstPage,
-                lastPage = lastPage,
-                journalVolume = record.volume,
-                title = record.title.getOrNull(0),
-                year = year,
-                issue = record.issue,
-                pdfUrls = record.link.map {link -> link.URL ?: ""}.filter {it.isNotBlank()}.toMutableList()
+            authors = authors,
+            doi = record.DOI,
+            journalName = journal,
+            journalPages = record.page,
+            firstPage = firstPage,
+            lastPage = lastPage,
+            journalVolume = record.volume,
+            title = record.title.getOrNull(0),
+            year = year,
+            issue = record.issue,
+            pdfUrls = record.link.map { link -> link.URL ?: "" }.filter { it.isNotBlank() }.toMutableList()
         )
     }
 }

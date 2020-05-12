@@ -1,4 +1,4 @@
-import com.preprint.server.arxiv.ArxivXMLDomParser
+import com.preprint.server.core.arxiv.ArxivXMLDomParser
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result;
