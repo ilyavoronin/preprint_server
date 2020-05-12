@@ -14,5 +14,6 @@ fun main() {
     })
     dbHandler.use {
         CrossRefDataLoader.loadData(it, false,54900000)
+        dbHandler.compactDb()
     }
 }

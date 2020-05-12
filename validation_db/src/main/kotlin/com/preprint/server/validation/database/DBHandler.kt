@@ -96,6 +96,12 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         )
     }
 
+    fun compactDb() {
+        databases.forEach {
+            it.compactDb(true)
+        }
+    }
+
     override fun close() {
         databases.forEach {
             it.close()

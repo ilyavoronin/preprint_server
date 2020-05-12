@@ -15,5 +15,6 @@ fun main() {
 
     dbHandler.use {
         SSDataLoader.loadData(it, false)
+        dbHandler.compactDb()
     }
 }
