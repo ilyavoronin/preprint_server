@@ -8,7 +8,7 @@ import com.preprint.server.validation.ArxivValidator
 import com.preprint.server.validation.CrossRefValidator
 
 fun main() {
-    val downloadOnlyMode = false
+    val downloadOnlyMode = true
     val dbHandler = if (!downloadOnlyMode) DatabaseHandler(
         Config.config["neo4j_url"].toString(),
         Config.config["neo4j_port"].toString(),
@@ -19,6 +19,6 @@ fun main() {
         dbHandler,
         CustomReferenceExtractor,
         listOf(ArxivValidator),
-        1
+        16
     )
 }

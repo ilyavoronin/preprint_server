@@ -24,31 +24,43 @@ object ManifestParser {
             val checksums = mutableListOf<String>()
             var bFilename = false
             var bCheckSum = false
+            val fileLines = mutableListOf<String>()
+            val checksumLines = mutableListOf<String>()
             override fun startElement(uri: String?, localName: String?, qName: String?, attributes: Attributes?) {
                 if (qName.equals("filename")) {
                     bFilename = true
+                    fileLines.clear()
                 }
                 if (qName.equals("md5sum")) {
                     bCheckSum = true
+                    checksumLines.clear()
                 }
             }
 
             override fun endElement(uri: String?, localName: String?, qName: String?) {
                 if (qName.equals("filename")) {
                     bFilename = false
+                    filenames.add(makeOneLineNotText(fileLines))
+                    fileLines.clear()
                 }
                 if (qName.equals("md5sum")) {
                     bCheckSum = false
+                    checksums.add(makeOneLineNotText(checksumLines))
+                    checksumLines.clear()
                 }
             }
 
             override fun characters(ch: CharArray, start: Int, length: Int) {
                 if (bFilename) {
-                    filenames.add(String(ch, start, length).trim())
+                    fileLines.add(String(ch, start, length).trim())
                 }
                 if (bCheckSum) {
-                    checksums.add(String(ch, start, length).trim())
+                    checksumLines.add(String(ch, start, length).trim())
                 }
+            }
+
+            private fun makeOneLineNotText(rawLines: List<String>): String {
+                return rawLines.joinToString(separator = "")
             }
         }
 

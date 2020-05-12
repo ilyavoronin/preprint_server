@@ -15,10 +15,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.logging.log4j.kotlin.logger
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
+import java.io.*
 import java.lang.Exception
 import java.nio.file.Paths
 import java.util.concurrent.Executors
@@ -32,7 +29,7 @@ object ArxivS3Collector {
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
 
-    private const val MAX_PARALLEL_DOWNLOAD = 1
+    private const val MAX_PARALLEL_DOWNLOAD = 30
 
     /**
      * Uses previosly created dbHandler to store the data.
@@ -53,25 +50,20 @@ object ArxivS3Collector {
         }
         File("$path/pdf/").mkdir()
         val manifestPath = "$path/$manifestFileName"
-        if (!File(manifestPath).exists()) {
-            ArxivS3Downloader.downloadManifest(manifestPath)
-        }
-        else {
-            logger.info("manifest is already downloaded")
-        }
+        ArxivS3Downloader.downloadManifest(manifestPath)
 
         //get filenames and md5 hash of each file from manifest
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        val threadPool = Executors.newFixedThreadPool(MAX_PARALLEL_DOWNLOAD).asCoroutineDispatcher()
         fileNames.chunked(MAX_PARALLEL_DOWNLOAD).forEach { fileNamesChunk ->
-            runBlocking(threadPool) {
+            runBlocking(Dispatchers.IO) {
                 fileNamesChunk.forEach { (filename, md5sum) ->
                     val pdfPath = "$path/$filename"
 
                     launch {
                         //download archive only if it wasn't downloaded before
                         if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
-                            ArxivS3Downloader.download(filename, pdfPath)
+                            //ArxivS3Downloader.download(filename, pdfPath)
+                            println(pdfPath)
                         } else {
                             logger.info("$filename is already downloaded")
                         }
@@ -213,7 +205,8 @@ object ArxivS3Collector {
      * compares md5hash of the file with `md5sumToCompare`
      */
     private fun compareMD5(path : String, md5sumToCompare : String) : Boolean {
-        val md = DigestUtils.md5Hex(File(path).readBytes())
+        val md = DigestUtils.md5Hex(BufferedInputStream(FileInputStream(path), 33554432))
+        println("$path $md $md5sumToCompare")
         return md == md5sumToCompare
     }
 }
