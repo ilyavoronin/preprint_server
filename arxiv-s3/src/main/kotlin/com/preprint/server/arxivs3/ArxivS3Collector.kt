@@ -62,8 +62,7 @@ object ArxivS3Collector {
                     launch {
                         //download archive only if it wasn't downloaded before
                         if (!File(pdfPath).exists() || !compareMD5(pdfPath, md5sum)) {
-                            //ArxivS3Downloader.download(filename, pdfPath)
-                            println(pdfPath)
+                            ArxivS3Downloader.download(filename, pdfPath)
                         } else {
                             logger.info("$filename is already downloaded")
                         }

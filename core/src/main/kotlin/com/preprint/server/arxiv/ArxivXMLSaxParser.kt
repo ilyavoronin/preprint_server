@@ -186,7 +186,7 @@ object ArxivXMLSaxParser {
         }
 
         private fun makeOneLineNotText(rawLines: List<String>): String {
-            return rawLines.joinToString()
+            return rawLines.joinToString(separator = "")
         }
     }
 }
