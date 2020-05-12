@@ -79,8 +79,7 @@ class DatabaseHandler(
                     """
                     UNWIND ${"$"}publications as pubData
                     MERGE (pub:${DBLabels.PUBLICATION.str} {arxivId : pubData.arxivId}) 
-                    ON CREATE SET pub += pubData, pub:${DBLabels.ARXIV_LBL.str}
-                    ON MATCH SET pub:${DBLabels.ARXIV_LBL.str}
+                    SET pub += pubData, pub:${DBLabels.ARXIV_LBL.str}
                     RETURN id(pub)
                 """.trimIndent(), publications
                 ).list().map { it.get("id(pub)").asLong() }
@@ -418,10 +417,10 @@ class DatabaseHandler(
         if (!record.lastUpdateDate.isNullOrBlank()) {
             res += "lastUpdateDate" to LocalDate.parse(record.lastUpdateDate!!)
         }
-        if (!record.pdfUrl.isBlank()) {
+        if (record.pdfUrl.isNotBlank()) {
             res += "pdfUrl" to record.pdfUrl
         }
-        if (record.abstract.isBlank()) {
+        if (record.abstract.isNotBlank()) {
             res += "abstract" to record.abstract
         }
         return res
