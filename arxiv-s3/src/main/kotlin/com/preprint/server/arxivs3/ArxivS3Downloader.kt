@@ -52,11 +52,7 @@ object ArxivS3Downloader {
         val request = GetObjectRequest(bucketName, manifestKey, true)
         val transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build()
         val p = transferManager.download(request, File(path))
-        while (!p.isDone) {
-            println(p.progress.bytesTransferred / p.progress.totalBytesToTransfer)
-            sleep(1000)
-        }
-
+        p.waitForCompletion()
         logger.info("Download finished")
     }
 

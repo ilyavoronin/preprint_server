@@ -205,7 +205,6 @@ object ArxivS3Collector {
      */
     private fun compareMD5(path : String, md5sumToCompare : String) : Boolean {
         val md = DigestUtils.md5Hex(BufferedInputStream(FileInputStream(path), 33554432))
-        println("$path $md $md5sumToCompare")
         return md == md5sumToCompare
     }
 }
