@@ -27,3 +27,5 @@ alg-geom
 dg-ga
 solv-int
 cmp-lg
+math
+cs

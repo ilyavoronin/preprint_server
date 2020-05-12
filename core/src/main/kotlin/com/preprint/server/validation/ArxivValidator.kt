@@ -5,8 +5,9 @@ import com.preprint.server.data.Reference
 object ArxivValidator : Validator {
     val ids = this.javaClass.getResource("/ids.txt").readText().lines()
     override fun validate(ref: Reference) {
+        ref.arxivId = ""
         val beg = ref.rawReference.lastIndexOf("arxiv:", ignoreCase = true)
-        if (beg != -1) {
+        if (beg != -1 && beg + 6 < ref.rawReference.length && ref.rawReference[beg + 6].isDigit()) {
             val arx = ref.rawReference.substring(beg).substringAfter(":")
             if (arx.length > 8) {
                 var res : String? = null
@@ -45,8 +46,25 @@ object ArxivValidator : Validator {
                         res += ref.rawReference[i]
                         i += 1
                     }
-                    ref.arxivId = res
+                    if (res.isNotBlank()) {
+                        ref.arxivId = res
+                    }
                     return
+                }
+                else {
+                    val beg = """$idPrefix\.\p{Upper}{2}/""".toRegex().find(ref.rawReference)
+                    if (beg != null) {
+                        var i = beg.range.last + 1
+                        var res = idPrefix + "/"
+                        while (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
+                            res += ref.rawReference[i]
+                            i += 1
+                        }
+                        if (res.isNotBlank()) {
+                            ref.arxivId = res
+                        }
+                        return
+                    }
                 }
             }
         }
