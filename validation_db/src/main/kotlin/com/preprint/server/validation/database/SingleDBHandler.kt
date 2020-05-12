@@ -21,24 +21,24 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     private val mainDbPath = File(dbFolderPath, "main")
     private val titleDbPath = File(dbFolderPath, "title")
     private val authVolPageYearDbPath = File(dbFolderPath, "volpy")
-    private val authorVDbPath = File(dbFolderPath, "authorv")
-    private val authorPDbPath = File(dbFolderPath, "authorp")
+    private val authorVYDbPath = File(dbFolderPath, "authorv")
+    private val authorPYDbPath = File(dbFolderPath, "authorp")
     private val authFlVolDbPath = File(dbFolderPath, "flvol")
     private val doiPath = File(dbFolderPath, "doi")
 
     private lateinit var mainDb: RocksDB
     private lateinit var titleDb: RocksDB
     private lateinit var authVolPageYearDb: RocksDB
-    private lateinit var authorVolumeDb: RocksDB
-    private lateinit var authorPageDb: RocksDB
+    private lateinit var authorVolumeYearDb: RocksDB
+    private lateinit var authorPageYearDb: RocksDB
     private lateinit var authFlVolDb: RocksDB
     lateinit var doiDb: RocksDB
 
     private val mainKeys = HashMap<String, ByteArray>()
     private val titleKeys = HashMap<String, MutableList<Long>>()
     private val authVolPageYearKeys = HashMap<String, MutableList<Long>>()
-    private val authorVolumeKeys = HashMap<String, MutableList<Long>>()
-    private val authorPageKeys = HashMap<String, MutableList<Long>>()
+    private val authorVolumeYearKeys = HashMap<String, MutableList<Long>>()
+    private val authorPageYearKeys = HashMap<String, MutableList<Long>>()
     private val authFlVolKeys = HashMap<String, MutableList<Long>>()
     private val doiKeys = HashMap<String, MutableList<Long>>()
 
@@ -89,8 +89,8 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         mainKeys.clear()
         titleKeys.clear()
         authVolPageYearKeys.clear()
-        authorVolumeKeys.clear()
-        authorPageKeys.clear()
+        authorVolumeYearKeys.clear()
+        authorPageYearKeys.clear()
         authFlVolKeys.clear()
         doiKeys.clear()
 
@@ -170,22 +170,22 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     private fun bgetByAuthorVolume(bytes: ByteArray) : MutableSet<Long> {
-        val recordsBytes = authorVolumeDb.get(bytes) ?: return mutableSetOf()
+        val recordsBytes = authorVolumeYearDb.get(bytes) ?: return mutableSetOf()
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthorVolume(authors: String, volume: String) : MutableSet<Long> {
-        val bytes = encode(Pair(authors, volume))
+    fun getByAuthorVolume(authors: String, volume: String, year: Int) : MutableSet<Long> {
+        val bytes = encode(Triple(authors, volume, year))
         return bgetByAuthorVolume(bytes)
     }
 
     private fun bgetByAuthorPage(bytes: ByteArray) : MutableSet<Long> {
-        val recordsBytes = authorPageDb.get(bytes) ?: return mutableSetOf()
+        val recordsBytes = authorPageYearDb.get(bytes) ?: return mutableSetOf()
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthorPage(authors: String, firstPage: Int) : MutableSet<Long> {
-        val bytes = encode(Pair(authors, firstPage))
+    fun getByAuthorPage(authors: String, firstPage: Int, year: Int) : MutableSet<Long> {
+        val bytes = encode(Triple(authors, firstPage, year))
         return bgetByAuthorPage(bytes)
     }
 
@@ -250,18 +250,18 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
             authVolPageYearKeys[str]!!.add(id)
         }
 
-        if (record.authors.size >= 2) {
+        if (record.authors.size >= 2 && record.year != null) {
             val authorString = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
             if (!record.journalVolume.isNullOrBlank()) {
-                val str = sencode(Pair(authorString, record.journalVolume))
-                authorVolumeKeys.getOrPut(str, {mutableListOf()})
-                authorVolumeKeys[str]!!.add(id)
+                val str = sencode(Triple(authorString, record.journalVolume, record.year))
+                authorVolumeYearKeys.getOrPut(str, {mutableListOf()})
+                authorVolumeYearKeys[str]!!.add(id)
             }
 
             if (record.firstPage != null) {
-                val str = sencode(Pair(authorString, record.firstPage))
-                authorPageKeys.getOrPut(str, {mutableListOf()})
-                authorPageKeys[str]!!.add(id)
+                val str = sencode(Triple(authorString, record.firstPage, record.year))
+                authorPageYearKeys.getOrPut(str, {mutableListOf()})
+                authorPageYearKeys[str]!!.add(id)
             }
         }
 
@@ -308,15 +308,15 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
             }
 
             launch {
-                updateLists(authorVolumeDb, authorVolumeKeys)
-                authorVolumeKeys.forEach { (_, list) ->
+                updateLists(authorVolumeYearDb, authorVolumeYearKeys)
+                authorVolumeYearKeys.forEach { (_, list) ->
                     stats.maxAuthorVolumeLength = max(stats.maxAuthorVolumeLength, list.size)
                 }
             }
 
             launch {
-                updateLists(authorPageDb, authorPageKeys)
-                authorPageKeys.forEach { (_, list) ->
+                updateLists(authorPageYearDb, authorPageYearKeys)
+                authorPageYearKeys.forEach { (_, list) ->
                     stats.maxAuthorPageLength = max(stats.maxAuthorPageLength, list.size)
                 }
             }
@@ -354,8 +354,8 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         val sMainKeys = getSortedByteKeys(mainKeys)
         val sTitleKeys = getSortedByteKeys(titleKeys).filter {limitLengthFun(it)}
         val sVolPageYearKeys = getSortedByteKeys(authVolPageYearKeys).filter {limitLengthFun(it)}
-        val sAuthorVolumeKeys = getSortedByteKeys(authorVolumeKeys).filter {limitLengthFun(it)}
-        val sAuthorPageKeys = getSortedByteKeys(authorPageKeys).filter {limitLengthFun(it)}
+        val sAuthorVolumeKeys = getSortedByteKeys(authorVolumeYearKeys).filter {limitLengthFun(it)}
+        val sAuthorPageKeys = getSortedByteKeys(authorPageYearKeys).filter {limitLengthFun(it)}
         val sFlVolKeys = getSortedByteKeys(authFlVolKeys).filter {limitLengthFun(it)}
         val sDoiKeys = getSortedByteKeys(doiKeys).filter(limitLengthFun)
 
@@ -395,10 +395,10 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
                 authVolPageYearDb.write(WriteOptions(), sVolPageYear)
             }
             launch {
-                authorVolumeDb.write(WriteOptions(), sAuthorVolume)
+                authorVolumeYearDb.write(WriteOptions(), sAuthorVolume)
             }
             launch {
-                authorPageDb.write(WriteOptions(), sAuthorPage)
+                authorPageYearDb.write(WriteOptions(), sAuthorPage)
             }
             launch {
                 authFlVolDb.write(WriteOptions(), sFlVol)
@@ -432,8 +432,8 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         mainDb = RocksDB.open(options, mainDbPath.absolutePath)
         titleDb = RocksDB.open(options, titleDbPath.absolutePath)
         authVolPageYearDb = RocksDB.open(options, authVolPageYearDbPath.absolutePath)
-        authorVolumeDb = RocksDB.open(options, authorVDbPath.absolutePath)
-        authorPageDb = RocksDB.open(options, authorPDbPath.absolutePath)
+        authorVolumeYearDb = RocksDB.open(options, authorVYDbPath.absolutePath)
+        authorPageYearDb = RocksDB.open(options, authorPYDbPath.absolutePath)
         authFlVolDb = RocksDB.open(options, authFlVolDbPath.absolutePath)
         doiDb = RocksDB.open(options, doiPath.absolutePath)
     }
@@ -458,10 +458,10 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
                 authVolPageYearDb.compactRange()
             }
             launch {
-                authorVolumeDb.compactRange()
+                authorVolumeYearDb.compactRange()
             }
             launch {
-                authorPageDb.compactRange()
+                authorPageYearDb.compactRange()
             }
             launch {
                 authFlVolDb.compactRange()
@@ -476,8 +476,8 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         mainDb.closeE()
         titleDb.closeE()
         authVolPageYearDb.closeE()
-        authorVolumeDb.closeE()
-        authorPageDb.closeE()
+        authorVolumeYearDb.closeE()
+        authorPageYearDb.closeE()
         authFlVolDb.closeE()
         doiDb.closeE()
     }

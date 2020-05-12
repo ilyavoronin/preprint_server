@@ -30,15 +30,15 @@ object LocalValidator : Validator, AutoCloseable {
         }
 
 
-        if (ref.authors.size >= 2) {
+        if (ref.authors.size >= 2 && ref.year != null) {
             val authString = DBHandler.getFirstAuthorLetters(ref.authors.map {it.name})
 
             if (!ref.volume.isNullOrBlank()) {
-                records.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!))
+                records.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!, ref.year!!))
             }
 
             if (ref.firstPage != null) {
-                records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))
+                records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!, ref.year!!))
             }
         }
 

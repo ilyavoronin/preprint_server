@@ -56,17 +56,17 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
                 )
             }.filterNotNull()
 
-    fun getByAuthorVolume(authors: String, volume: String): List<UniversalData> =
+    fun getByAuthorVolume(authors: String, volume: String, year: Int): List<UniversalData> =
             databases.flatMap {
                 it.mgetById(
-                        it.getByAuthorVolume(authors, volume).toList()
+                        it.getByAuthorVolume(authors, volume, year).toList()
                 )
             }.filterNotNull()
 
-    fun getByAuthorPage(authors: String, firstPage: Int): List<UniversalData> =
+    fun getByAuthorPage(authors: String, firstPage: Int, year: Int): List<UniversalData> =
             databases.flatMap {
                 it.mgetById(
-                        it.getByAuthorPage(authors, firstPage).toList()
+                        it.getByAuthorPage(authors, firstPage, year).toList()
                 )
             }.filterNotNull()
 
