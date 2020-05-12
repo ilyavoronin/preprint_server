@@ -616,7 +616,7 @@ class DatabaseHandler(
                     ).list().map { it.get("id(cpub)").asLong() }
                     if (idObj.size > 0) {
                         val id = idObj[0]
-                        ref.authors?.let { createAuthorConnections(tr, it, id) }
+                        ref.authors.let { createAuthorConnections(tr, it, id) }
 
                         val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
                                 lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = "")

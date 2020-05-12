@@ -3,9 +3,7 @@ package com.preprint.server.arxiv
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.pdf.PdfHandler
 import com.preprint.server.ref.CustomReferenceExtractor
-import com.preprint.server.validation.ArxivValidator
-import com.preprint.server.validation.CrossRefValidator
-import com.preprint.server.validation.FastValidator
+import com.preprint.server.validation.Validator
 
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
@@ -39,6 +37,7 @@ object ArxivCollector {
     fun collect(
         startDate: String,
         dbHandler: DatabaseHandler,
+        validators: List<Validator>,
         resumptionToken_: String = ""
     ) {
         var recordsProcessed = 0
@@ -67,7 +66,7 @@ object ArxivCollector {
                 newArxivRecords,
                 "files/",
                 CustomReferenceExtractor,
-                listOf(CrossRefValidator, ArxivValidator),
+                validators,
                 false
             )
 

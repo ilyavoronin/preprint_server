@@ -7,31 +7,24 @@ import com.preprint.server.validation.database.Config
 import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.UniversalData
 
-object FastValidator : Validator, AutoCloseable {
+object LocalValidator : Validator, AutoCloseable {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())
 
     override fun validate(ref: Reference) {
-        /*
         val records = mutableSetOf<UniversalData>()
         if (!ref.title.isNullOrBlank()) {
-            records.addAll(dbHandler.getByTitle(ref.title!!.toLowerCase()))
+            records.addAll(dbHandler.getByTitle(ref.title!!))
         }
-        /*
-        if (!ref.journal.isNullOrBlank() && ref.firstPage != null) {
-            records.addAll(dbHandler.getByJNamePage(ref.journal!!, ref.firstPage!!))
-        }
-         */
 
-        /*
-        if (!ref.volume.isNullOrBlank() && ref.firstPage != null) {
+        if (!ref.volume.isNullOrBlank() && ref.firstPage != null && ref.authors.isNotEmpty()) {
+            val auth = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
             if (ref.year != null) {
-                records.addAll(dbHandler.getByVolPageYear(ref.volume!!, ref.firstPage!!, ref.year!!))
+                records.addAll(dbHandler.getByAuthVolPageYear(auth, ref.volume!!, ref.firstPage!!, ref.year!!))
             }
             if (ref.lastPage != null) {
-                records.addAll(dbHandler.getByFirsLastPageVolume(ref.firstPage!!, ref.lastPage!!, ref.volume!!))
+                records.addAll(dbHandler.getByAuthFirsLastPageVolume(auth, ref.firstPage!!, ref.lastPage!!, ref.volume!!))
             }
         }
-         */
 
         if (ref.authors.size >= 2) {
             val authString = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
@@ -39,19 +32,9 @@ object FastValidator : Validator, AutoCloseable {
                 records.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!))
             }
 
-            if (ref.year != null) {
-                records.addAll(dbHandler.getByAuthorYear(authString, ref.year!!))
-            }
-
             if (ref.firstPage != null) {
                 records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))
             }
-
-            /*
-            if (ref.authors.size >= 3) {
-                records.addAll(dbHandler.getByAuthors(authString))
-            }
-             */
         }
 
         println(records.size)
@@ -62,7 +45,6 @@ object FastValidator : Validator, AutoCloseable {
                 return
             }
         }
-         */
     }
 
     private fun check(ref: Reference, record: UniversalData): Boolean {
@@ -132,7 +114,7 @@ object FastValidator : Validator, AutoCloseable {
                 score += 2
             }
         }
-        return score >= 5
+        return score >= 4
     }
 
     private fun accept(ref: Reference, record: UniversalData) {

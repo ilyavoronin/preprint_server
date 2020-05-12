@@ -3,7 +3,6 @@ package example
 import com.preprint.server.validation.database.Config
 import com.preprint.server.validation.database.CrossRefDataLoader
 import com.preprint.server.validation.database.DBHandler
-import com.preprint.server.validation.database.SingleDBHandler
 
 fun main() {
     val dbHandler = DBHandler(Config.config["validation_db_path"].toString())

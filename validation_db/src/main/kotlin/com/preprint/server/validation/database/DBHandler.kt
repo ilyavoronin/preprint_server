@@ -49,10 +49,10 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
     fun getByTitle(title: String) : List<UniversalData> =
             databases.flatMap { it.mgetById(it.getByTitle(title).toList())}.filterNotNull()
 
-    fun getByVolPageYear(auth: String, volume: String, firstPage: Int, year: Int): List<UniversalData> =
+    fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int): List<UniversalData> =
             databases.flatMap {
                 it.mgetById(
-                        it.getByVolPageYear(auth, volume, firstPage, year).toList()
+                        it.getByAuthVolPageYear(auth, volume, firstPage, year).toList()
                 )
             }.filterNotNull()
 

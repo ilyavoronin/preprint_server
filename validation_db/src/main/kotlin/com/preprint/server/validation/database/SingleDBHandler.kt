@@ -164,7 +164,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByVolPageYear(auth: String, volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
+    fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
         val bytes = encode(AuthVolPageYear(auth, volume, firstPage, year))
         return bgetByAuthVolPageYear(bytes)
     }
