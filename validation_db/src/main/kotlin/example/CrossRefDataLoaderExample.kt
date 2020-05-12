@@ -14,6 +14,6 @@ fun main() {
         }
     })
     dbHandler.use {
-        CrossRefDataLoader.loadData(it)
+        CrossRefDataLoader.loadData(it, false,54900000)
     }
 }

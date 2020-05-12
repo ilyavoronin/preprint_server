@@ -23,7 +23,7 @@ object SSDataLoader {
         }
     }
 
-    fun loadData(dbHandler: DBHandler, start: Int? = null) {
+    fun loadData(dbHandler: DBHandler, checkDuplcates: Boolean, start: Int? = null) {
         if (start != null) {
             startFrom = start
         }
@@ -36,7 +36,7 @@ object SSDataLoader {
             val records = processFile(file).filter { validate(it)}
             logger.info("Begin storing ${records.size} records to the database")
             records.forEach { format(it) }
-            dbHandler.storeRecords(records)
+            dbHandler.storeRecords(records, checkDuplcates)
 
             cntPath.writeText((i + 2).toString())
         }

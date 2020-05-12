@@ -16,7 +16,7 @@ object CrossRefDataLoader {
     val textStream = getTextStream(File(filePath))
     val bulkRecodsNumber = 300_000
 
-    fun loadData(dbHandler: DBHandler, startFrom: Long = 0) {
+    fun loadData(dbHandler: DBHandler, checkDuplicates: Boolean, startFrom: Long = 0) {
         var recordProcessed = 0
         for (i in 0 until startFrom) {
             val line = textStream.readLine()
@@ -40,7 +40,7 @@ object CrossRefDataLoader {
             while (true) {
                 tries += 1
                 try {
-                    dbHandler.storeRecords(records)
+                    dbHandler.storeRecords(records, checkDuplicates)
                     break
                 } catch (e: Exception) {
                     e.printStackTrace()

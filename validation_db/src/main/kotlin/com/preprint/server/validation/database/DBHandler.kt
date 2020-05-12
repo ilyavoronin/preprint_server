@@ -23,8 +23,10 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         }
     }
 
-    fun storeRecords(records_: List<UniversalData>) {
-        val records = filterExisting(records_)
+    fun storeRecords(records_: List<UniversalData>, checkDuplicates: Boolean) {
+        val records = if (checkDuplicates) filterExisting(records_)
+                      else records_
+
         if (databases.isEmpty() || recordsCnt.last() + records.size > maxRecordsPerDb) {
             logger.info("Creating new database")
             createNewDb()

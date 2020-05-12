@@ -14,6 +14,6 @@ fun main() {
     })
 
     dbHandler.use {
-        SSDataLoader.loadData(it)
+        SSDataLoader.loadData(it, false)
     }
 }
