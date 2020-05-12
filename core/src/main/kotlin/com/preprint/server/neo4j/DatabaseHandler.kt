@@ -91,7 +91,7 @@ class DatabaseHandler(
         Gets all nodes from the arxivRecords(authors, journals, etc.) and create nodes for them
         This is done in order to use concurrency later for connection creation
          */
-        createAllNodes(arxivRecords)
+        val newPublications = createAllNodes(arxivRecords)
 
         /*
         Create all connections using multiple threads,
@@ -104,7 +104,7 @@ class DatabaseHandler(
                 launch {
                     driver.session().use {
                         try {
-                            it.writeTransaction { tr -> createConnections(tr, id, record)}
+                            it.writeTransaction { tr -> createConnections(tr, id, record, newPublications)}
                         } catch (e : Exception) {
                             logger.error("Connections creation failed for ${record.id}")
                             failedTransactions.add(Pair(id, record))
@@ -119,7 +119,7 @@ class DatabaseHandler(
             failedTransactions.forEach { (id, record) ->
                 try {
                     session.writeTransaction { tr ->
-                        createConnections(tr, id, record)
+                        createConnections(tr, id, record, newPublications)
                     }
                 } catch (e: Exception) {
                     logger.error("Connections creation failed again for ${record.id}")
@@ -201,7 +201,7 @@ class DatabaseHandler(
      * Methods getAll... get all data of the type ...(Author e.g) from given list of records
      * Methods createAll... creates a new nodes in the database for given data of type ...(Author e.g.)
      */
-    private fun createAllNodes(arxivRecords: List<ArxivData>) {
+    private fun createAllNodes(arxivRecords: List<ArxivData>): Set<Reference> {
         val authors = getAllAuthors(arxivRecords)
         val journals = getAllJouranls(arxivRecords)
         val affiliations = getAllAffiliations(arxivRecords)
@@ -216,8 +216,9 @@ class DatabaseHandler(
         logger.info("Affiliation nodes created")
         createAllMissingPublicationsWithTitle(mpubs)
         logger.info("MissingPublication nodes created")
-        createAllPublications(pubs)
+        val newPubliactions = createAllPublications(pubs)
         logger.info("Publication nodes created")
+        return newPubliactions
     }
 
     private fun createAllAuthors(authors: List<Author>) {
@@ -291,7 +292,8 @@ class DatabaseHandler(
         }
     }
 
-    private fun createAllPublications(pubs: List<Reference>) {
+    private fun createAllPublications(pubs: List<Reference>): Set<Reference> {
+        val newPub = mutableSetOf<Reference>()
         driver.session().use {
             it.writeTransaction { tr ->
                 pubs.forEach { ref ->
@@ -308,6 +310,7 @@ class DatabaseHandler(
                         RETURN p
                     """.trimIndent(), params)
                     if (resp.list().isEmpty()) {
+                        newPub.add(ref)
                         val matchString =
                             if (!ref.doi.isNullOrEmpty()) "doi: ${parm("doi")}"
                             else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("arxivId")}"
@@ -319,6 +322,7 @@ class DatabaseHandler(
                 }
             }
         }
+        return newPub
     }
 
     private fun getAllAuthors(records: List<ArxivData>): List<Author> {
@@ -490,11 +494,12 @@ class DatabaseHandler(
     private fun createConnections(
             tr : Transaction,
             id : Long,
-            record: ArxivData
+            record: ArxivData,
+            newPublications: Set<Reference>
     ) {
         createAuthorConnections(tr, record.authors, id)
 
-        createCitationsConnections(tr, record)
+        createCitationsConnections(tr, record, newPublications)
 
         if (record.journal != null) {
             createJournalPublicationConnections(tr, record.journal, id)
@@ -545,9 +550,15 @@ class DatabaseHandler(
      * 1)If finds, then just creates new connection from the node that corresponds `record` to the found node.
      * 2)If doesn't find, but `ref` has a title, than it trying to find a MissingPublication node with this title
      * and creates connection if found, or creates new MissingPublication node
-     * 3)Otherwise just creates MissingPublication node
+     * 3)Otherwise just creates MissingPublication node.
+     *
+     * To optimize queries this search was done before(in createAllNodes)
+     * and all new Publications are stored in `newPublications`
      */
-    private fun createCitationsConnections(tr: Transaction, record: ArxivData) {
+    private fun createCitationsConnections(
+        tr: Transaction,
+        record: ArxivData,
+        newPublications: Set<Reference>) {
         record.refList.forEach {ref ->
             val params = mapOf(
                 "rid" to record.id,
@@ -558,7 +569,9 @@ class DatabaseHandler(
                 "cdata" to refDataToMap(ref),
                 "jdata" to journalDataToMap(ref)
             )
-            val res = tr.run("""
+            if (!newPublications.contains(ref)) {
+                val res = tr.run(
+                    """
                     MATCH (pubFrom:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
                     MATCH (pubTo:${DBLabels.PUBLICATION.str})
                     WHERE pubTo <> pubFrom AND (pubTo.arxivId = ${parm("arxId")} OR
@@ -566,45 +579,50 @@ class DatabaseHandler(
                     SET pubTo += ${parm("cdata")}
                     MERGE (pubFrom)-[c:${DBLabels.CITES.str} {rawRef: ${parm("rRef")}}]->(pubTo)
                     RETURN pubTo
-                """.trimIndent(), params)
+                """.trimIndent(), params
+                )
 
-            if (res.list().isEmpty()) {
-                if (!ref.validated) {
+                if (res.list().isEmpty()) {
                     if (!ref.title.isNullOrEmpty()) {
                         //then the cited publication doesn't exist in database
                         //crete missing publication -> publication connection
                         tr.run(
-                                """
-                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
-                        MATCH (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
-                        MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
-                        SET c.rawRef = ${parm("rRef")}, 
-                            mpub += ${parm("cdata")},
-                            mpub += ${parm("jdata")}
-                    """.trimIndent(), params
+                            """
+                    MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})
+                    MATCH (mpub:${DBLabels.MISSING_PUBLICATION.str} {title: ${parm("rtit")}})
+                    MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)
+                    SET c.rawRef = ${parm("rRef")}, 
+                        mpub += ${parm("cdata")},
+                        mpub += ${parm("jdata")}
+                """.trimIndent(), params
                         )
                     } else {
                         tr.run(
-                                """	
-                        MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})	
-                        CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})	
-                        MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)	
-                        SET c.rawRef = ${parm("rRef")}, 	
-                            mpub += ${parm("cdata")},	
-                            mpub += ${parm("jdata")}	
-                    """.trimIndent(), params
+                            """	
+                    MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("rid")}})	
+                    CREATE (mpub:${DBLabels.MISSING_PUBLICATION.str})	
+                    MERGE (mpub)-[c:${DBLabels.CITED_BY.str}]->(pub)	
+                    SET c.rawRef = ${parm("rRef")}, 	
+                        mpub += ${parm("cdata")},	
+                        mpub += ${parm("jdata")}	
+                """.trimIndent(), params
                         )
                     }
-                } else {
-                    val params = mapOf("cdata" to refDataToMap(ref),
-                            "arxivId" to record.id,
-                            "rawRef" to ref.rawReference)
-                    val matchString =
-                            if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
-                            else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
-                            else "title: ${parm("cdata.title")}"
+                }
+            }
+            else {
+                val params = mapOf(
+                    "cdata" to refDataToMap(ref),
+                    "arxivId" to record.id,
+                    "rawRef" to ref.rawReference
+                )
+                val matchString =
+                    if (!ref.doi.isNullOrEmpty()) "doi: ${parm("cdata.doi")}"
+                    else if (!ref.arxivId.isNullOrEmpty()) "arxivId: ${parm("cdata.arxivId")}"
+                    else "title: ${parm("cdata.title")}"
 
-                    val idObj = tr.run("""
+                val idObj = tr.run(
+                    """
                         MATCH (pub:${DBLabels.PUBLICATION.str} {arxivId: ${parm("arxivId")}})
                         MATCH (cpub:${DBLabels.PUBLICATION.str} {${matchString}})
                         SET cpub += ${parm("cdata")}
@@ -612,19 +630,22 @@ class DatabaseHandler(
                         SET cites.rawRef = ${parm("rawRef")}
                         RETURN id(cpub)
                         """.trimIndent(),
-                            params
-                    ).list().map { it.get("id(cpub)").asLong() }
-                    if (idObj.size > 0) {
-                        val id = idObj[0]
-                        ref.authors.let { createAuthorConnections(tr, it, id) }
+                    params
+                ).list().map { it.get("id(cpub)").asLong() }
+                if (idObj.size > 0) {
+                    val id = idObj[0]
+                    ref.authors.let { createAuthorConnections(tr, it, id) }
 
-                        val journal = JournalRef(rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
-                                lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = "")
-                        createJournalPublicationConnections(tr, journal, id)
-                    } else {
-                        logger.error("Failed to create connection between Publication with arxivId ${record.id} " +
-                                "and publication with $matchString")
-                    }
+                    val journal = JournalRef(
+                        rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
+                        lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = ""
+                    )
+                    createJournalPublicationConnections(tr, journal, id)
+                } else {
+                    logger.error(
+                        "Failed to create connection between Publication with arxivId ${record.id} " +
+                                "and publication with $matchString"
+                    )
                 }
             }
         }

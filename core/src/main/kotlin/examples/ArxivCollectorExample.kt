@@ -4,6 +4,7 @@ import com.preprint.server.Config
 import com.preprint.server.arxiv.ArxivCollector
 import com.preprint.server.neo4j.DatabaseHandler
 import com.preprint.server.validation.ArxivValidator
+import com.preprint.server.validation.CrossRefValidator
 import com.preprint.server.validation.LocalValidator
 
 fun main() {
@@ -14,6 +15,6 @@ fun main() {
         Config.config["neo4j_user"].toString(),
         Config.config["neo4j_password"].toString()
     )
-    ArxivCollector.collect(START_DATE, dataBaseHandler, listOf(LocalValidator, ArxivValidator))
+    ArxivCollector.collect(START_DATE, dataBaseHandler, listOf(CrossRefValidator, ArxivValidator))
     dataBaseHandler.close()
 }
