@@ -6,6 +6,9 @@ object Common {
             return Pair(null, null)
         }
         var i = pages.indexOfFirst { it.isDigit() }
+        if (i == -1) {
+            return Pair(null, null)
+        }
         var firstPageString = ""
         var lastPageString = ""
         while (i < pages.length && pages[i].isDigit()) {

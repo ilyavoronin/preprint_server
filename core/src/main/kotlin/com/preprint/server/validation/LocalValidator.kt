@@ -20,7 +20,7 @@ object LocalValidator : Validator, AutoCloseable {
         }
 
         if (!ref.volume.isNullOrBlank() && ref.firstPage != null && ref.authors.isNotEmpty()) {
-            val auth = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
+            val auth = DBHandler.getFirstAuthorLetters(ref.authors.map {it.name})
             if (ref.year != null) {
                 records.addAll(dbHandler.getByAuthVolPageYear(auth, ref.volume!!, ref.firstPage!!, ref.year!!))
             }
@@ -31,12 +31,11 @@ object LocalValidator : Validator, AutoCloseable {
 
 
         if (ref.authors.size >= 2) {
-            val authString = dbHandler.getFirstAuthorLetters(ref.authors.map {it.name})
-            /*
+            val authString = DBHandler.getFirstAuthorLetters(ref.authors.map {it.name})
+
             if (!ref.volume.isNullOrBlank()) {
                 records.addAll(dbHandler.getByAuthorVolume(authString, ref.volume!!))
             }
-             */
 
             if (ref.firstPage != null) {
                 records.addAll(dbHandler.getByAuthorPage(authString, ref.firstPage!!))

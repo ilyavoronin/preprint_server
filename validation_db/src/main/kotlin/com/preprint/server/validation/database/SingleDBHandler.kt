@@ -109,7 +109,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
                 " ${(currentTime % 60_000) / 1000} seconds")
 
         if (lastTime != null && currentTime > lastTime!! * 1.5
-                || currentTime > 1000 * 60 * 3
+                || currentTime > 1000 * 60 * 1.5
         ) {
             if (currentTime > lastTime!! * 1.5) {
                 compactDb(true)

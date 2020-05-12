@@ -13,7 +13,7 @@ fun main() {
         }
     })
     dbHandler.use {
-        CrossRefDataLoader.loadData(it, false,54900000)
+        CrossRefDataLoader.loadData(it, false)
         dbHandler.compactDb()
     }
 }
