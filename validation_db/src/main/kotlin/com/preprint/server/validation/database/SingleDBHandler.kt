@@ -224,13 +224,6 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         }
     }
 
-    fun getFirstAuthorLetters(authors: List<String>) : String {
-        return authors.joinToString(separator = ",") { name ->
-            val words = name.split("""\s""".toRegex()).filter {!it.isBlank()}.map{it[0]}.sorted()
-            words.joinToString(separator = "") { it.toString() }
-        }
-    }
-
     fun getShortenedTitle(title: String): String {
         val st =  title.toLowerCase().filter { it.isLetter() }
         return if (st.isEmpty()) title
@@ -251,14 +244,14 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.year != null && record.authors.size > 0) {
-            val auth = getFirstAuthorLetters(record.authors.map {it.name})
+            val auth = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
             val str = sencode(AuthVolPageYear(auth, record.journalVolume!!, record.firstPage!!, record.year))
             authVolPageYearKeys.getOrPut(str, {mutableListOf()})
             authVolPageYearKeys[str]!!.add(id)
         }
 
         if (record.authors.size >= 2) {
-            val authorString = getFirstAuthorLetters(record.authors.map {it.name})
+            val authorString = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
             if (!record.journalVolume.isNullOrBlank()) {
                 val str = sencode(Pair(authorString, record.journalVolume))
                 authorVolumeKeys.getOrPut(str, {mutableListOf()})
@@ -274,7 +267,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
         if (!record.journalVolume.isNullOrBlank() &&
                 record.firstPage != null && record.lastPage != null && record.authors.isNotEmpty()) {
-            val auth = getFirstAuthorLetters(record.authors.map {it.name})
+            val auth = DBHandler.getFirstAuthorLetters(record.authors.map {it.name})
             val str = sencode(AuthFLVolume(auth, record.firstPage!!, record.lastPage!!, record.journalVolume!!))
             authFlVolKeys.getOrPut(str, {mutableListOf()})
             authFlVolKeys[str]!!.add(id)

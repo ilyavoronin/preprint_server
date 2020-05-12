@@ -83,12 +83,6 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         recordsCnt.add(0)
     }
 
-    fun getFirstAuthorLetters(authors: List<String>) : String {
-        return authors.joinToString(separator = ",") { name ->
-            val words = name.split("""\s""".toRegex()).filter {!it.isBlank()}.sorted()
-            words.joinToString(separator = "") { it[0].toString() }
-        }
-    }
 
     private fun writeInfo() {
         File(dbFolderFile, "STRUCTURE").writeText(
@@ -109,4 +103,13 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
     }
 
     data class DBInfo(val dbPaths: List<String>, val dbRecordsCnt: List<Long>)
+
+    companion object {
+        fun getFirstAuthorLetters(authors: List<String>): String {
+            return authors.joinToString(separator = ",") { name ->
+                val words = name.split("""(\s|\.)""".toRegex()).filter { !it.isBlank() }.sorted()
+                words.joinToString(separator = "") { it[0].toString() }
+            }
+        }
+    }
 }
