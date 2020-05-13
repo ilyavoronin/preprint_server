@@ -55,21 +55,7 @@ object ArxivValidator : Validator {
                 if (beg != -1) {
                     var res = idPrefix + "/"
                     var i = ref.rawReference.indexOf('/', beg) + 1
-                    while (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
-                        res += ref.rawReference[i]
-                        i += 1
-                    }
-                    if (res.isNotBlank()) {
-                        ref.arxivId = res
-                        resetAllData(ref)
-                    }
-                    return
-                }
-                else {
-                    val beg = """$idPrefix\.\p{Upper}{2}/""".toRegex().find(ref.rawReference)
-                    if (beg != null) {
-                        var i = beg.range.last + 1
-                        var res = idPrefix + "/"
+                    if (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
                         while (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
                             res += ref.rawReference[i]
                             i += 1
@@ -77,6 +63,24 @@ object ArxivValidator : Validator {
                         if (res.isNotBlank()) {
                             ref.arxivId = res
                             resetAllData(ref)
+                        }
+                    }
+                    return
+                }
+                else {
+                    val beg = """$idPrefix\.\p{Upper}{2}/""".toRegex().find(ref.rawReference)
+                    if (beg != null) {
+                        var i = beg.range.last + 1
+                        if (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
+                            var res = idPrefix + "/"
+                            while (i < ref.rawReference.length && ref.rawReference[i].isDigit()) {
+                                res += ref.rawReference[i]
+                                i += 1
+                            }
+                            if (res.isNotBlank()) {
+                                ref.arxivId = res
+                                resetAllData(ref)
+                            }
                         }
                         return
                     }
