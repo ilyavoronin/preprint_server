@@ -26,7 +26,7 @@ object CrossRefValidator : Validator {
                 ref.issn = record.journal?.issn
                 ref.journal = record.journal?.shortTitle ?: record.journal?.fullTitle
                 ref.authors = record.authors
-                ref.urls.add(record.pdfUrl)
+                ref.urls.addAll(record.pdfUrls)
                 break
             }
         }

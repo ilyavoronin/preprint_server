@@ -6,12 +6,12 @@ import com.preprint.server.core.data.PubData
 import com.preprint.server.core.data.Reference
 
 data class CRData(
-    override var id: String = "",
-    override var title: String = "",
-    override var doi: String? = null,
-    override var journal: JournalRef? = null,
-    override var refList: MutableList<Reference> = mutableListOf<Reference>(),
-    override var pdfUrl: String = "",
-    override val authors: MutableList<Author> = mutableListOf<Author>(),
-    override var abstract: String = ""
-) : PubData
+    var id: String = "",
+    var title: String = "",
+    var doi: String? = null,
+    var journal: JournalRef? = null,
+    var refList: MutableList<Reference> = mutableListOf(),
+    var pdfUrls: MutableList<String> = mutableListOf(),
+    val authors: MutableList<Author> = mutableListOf(),
+    var abstract: String = ""
+)

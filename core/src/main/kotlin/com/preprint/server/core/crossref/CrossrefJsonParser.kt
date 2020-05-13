@@ -31,10 +31,12 @@ object CrossrefJsonParser {
                 record.title?.let {crRecord.title = it[0]}
 
                 crRecord.authors.addAll(record.author?.map {auth ->
-                    Author(auth.family + " " + auth.given, firstName = auth.given, secondName = auth.family)
+                    Author(auth.family + " " + auth.given)
                 } ?: listOf())
 
-                record.URL?.let {crRecord.pdfUrl = it}
+                record.link?.let {
+                    crRecord.pdfUrls.addAll(it.map { it.URL }.filterNotNull())
+                }
 
                 //get journal information
                 if (record.container_title != null) {
