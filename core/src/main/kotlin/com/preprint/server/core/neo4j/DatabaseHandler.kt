@@ -636,11 +636,13 @@ class DatabaseHandler(
                     val id = idObj[0]
                     ref.authors.let { createAuthorConnections(tr, it, id) }
 
-                    val journal = JournalRef(
-                        rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
-                        lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = ""
-                    )
-                    createJournalPublicationConnections(tr, journal, id)
+                    if (!ref.journal.isNullOrBlank()) {
+                        val journal = JournalRef(
+                            rawTitle = ref.journal, volume = ref.volume, firstPage = ref.firstPage,
+                            lastPage = ref.lastPage, number = ref.issue, issn = ref.issn, rawRef = ""
+                        )
+                        createJournalPublicationConnections(tr, journal, id)
+                    }
                 } else {
                     logger.error(
                         "Failed to create connection between Publication with arxivId ${record.id} " +
