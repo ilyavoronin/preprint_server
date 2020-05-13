@@ -677,8 +677,8 @@ class DatabaseHandler(
                    WHERE id(pub) = ${parm("pubId")}
                    MATCH (j:${DBLabels.JOURNAL.str} {title: ${parm("rjrl")}})
                    MERGE (pub)-[jref:${DBLabels.PUBLISHED_IN}]->(j)
-                   ON CREATE SET jref.volume = ${parm("vol")}, jref.firstPage = ${parm("firstPage")},
-                       jref.lastPage = ${parm("lastPage")}, jref.number = ${parm("no")},
+                   ON CREATE SET pub.journalVolume = ${parm("vol")}, pub.journalFirstPage = ${parm("firstPage")},
+                       pub.journalLastPage = ${parm("lastPage")}, pub.journalIssue = ${parm("no")},
                        jref.rawRef = ${parm("rr")}
                 """.trimIndent(), params)
         }
