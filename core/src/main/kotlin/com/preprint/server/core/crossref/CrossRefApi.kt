@@ -3,7 +3,7 @@ package com.preprint.server.core.crossref
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import com.preprint.server.core.Config
+import Config
 import com.preprint.server.core.utils.RequestLimiter
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
@@ -14,16 +14,28 @@ import java.net.URLEncoder
  * Used for accessing CrossRef API
  */
 object CrossRefApi {
-    val logger = logger()
+    private val logger = logger()
     const val prefix = "https://api.crossref.org"
+
     val email = Config.config["email"].toString()
 
     //the number of records that each request returns
-    var maxRecordsNumber = 3
+    var maxRecordsNumber = Config.config["crossref_max_records_returned"].toString()
 
-    val reqLimiter = RequestLimiter(49, 2100)
+    private val defaultRequestLimit = Config.config["crossref_request_max"].toString().toInt()
+    private val defaultRequestInterval = Config.config["crossref_request_interval"].toString().toLong()
+    private val reqLimiter = RequestLimiter(
+        defaultRequestLimit,
+        defaultRequestInterval
+    )
 
-    val checkConnectioRequest = "https://api.crossref.org/works?query=renear+ontologies&rows=5"
+    private val timeout = Config.config["crossref_timeout"].toString().toInt()
+
+    private val testTimeout = Config.config["crossref_test_timeout"].toString().toInt()
+
+    private val checkConnectioRequest = Config.config["crossref_test_request"].toString()
+
+    private val sleepTime = Config.config["crossref_sleep_time"].toString().toLong()
 
 
     /**
@@ -37,7 +49,7 @@ object CrossRefApi {
 
         val url = "$prefix/works?query=${URLEncoder.encode(ref, "utf-8")}&rows=$maxRecordsNumber&mailto=$email"
         val (_, response, result) = try {
-            url.httpGet().timeoutRead(30000).responseString()
+            url.httpGet().timeoutRead(timeout).responseString()
         } catch (e : Exception) {
             waitConnection()
             throw ApiRequestFailedException(e.message)
@@ -79,15 +91,15 @@ object CrossRefApi {
     private fun waitConnection() {
         while (true) {
             val (_, _, result) = try {
-                checkConnectioRequest.httpGet().timeoutRead(5000).responseString()
+                checkConnectioRequest.httpGet().timeoutRead(testTimeout).responseString()
             } catch (e: Exception) {
-                sleep(10000)
+                sleep(sleepTime)
                 continue
             }
             if (result is Result.Failure) {
                 logger.error(result.getException())
                 logger.error("Waiting for CrossRef to be available")
-                sleep(10000)
+                sleep(sleepTime)
                 continue
             }
             break

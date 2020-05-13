@@ -2,6 +2,7 @@ package com.preprint.server.core.ref
 
 import com.preprint.server.core.data.Reference
 import com.preprint.server.core.validation.Validator
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep
@@ -22,7 +23,7 @@ interface ReferenceExtractor {
                     stopValidation = false
                     attemptsDone += 1
                     logger().error(e.message)
-                    sleep(2000)
+                    delay(2000)
                     if (attemptsDone >= 3) {
                         stopValidation = true
                     }

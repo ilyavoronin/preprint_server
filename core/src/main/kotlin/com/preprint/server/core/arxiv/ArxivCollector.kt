@@ -13,14 +13,12 @@ import java.lang.Thread.sleep
  * Used to collect data about arxiv publications
  */
 object ArxivCollector {
-    val logger = logger()
+    private val logger = logger()
     var resumptionToken = ""
 
-    //the number of records to get from each request
-    var limit = 10
 
     //the time to sleep when arxiv API request fails
-    var sleepTime: Long = 600000
+    var sleepTime: Long = Config.config["arxiv_api_sleep_time"].toString().toLong()
 
 
     /**
@@ -33,12 +31,16 @@ object ArxivCollector {
      * otherwise make requests with given resumption token to the arxiv api
      * and 'startDate` will be ignored by the ArxivApi object later
      * (read more about working with resumption token in ArxivApi description)
+     *
+     * limit is the number of records to get from each request
+     * (arxiv api response contains 1000 records)
      */
     fun collect(
         startDate: String,
         dbHandler: DatabaseHandler,
         validators: List<Validator>,
-        resumptionToken_: String = ""
+        resumptionToken_: String = "",
+        limit: Int = 1000
     ) {
         var recordsProcessed = 0
         resumptionToken = resumptionToken_

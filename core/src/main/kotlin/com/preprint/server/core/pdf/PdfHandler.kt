@@ -18,7 +18,7 @@ import java.lang.Thread.sleep
  */
 object PdfHandler {
     private val logger = logger()
-    var sleepTime : Long = 0
+    var sleepTime : Long = Config.config["arxiv_pdf_sleep_time"].toString().toLong()
 
     /**
      * Download pdf and extract references
@@ -72,7 +72,7 @@ object PdfHandler {
                     File(outputPath + "failed.txt").appendText("${record.id}\n")
                     continue
                 }
-                ArxivCollector.logger.debug(record.refList
+                logger.debug(record.refList
                         .mapIndexed { i, ref -> "  ${i + 1}) $ref"}.joinToString(prefix = "\n", separator = "\n"))
             }
 

@@ -17,10 +17,10 @@ object ArxivAPI {
     const val requestApiUrlPrefix = "http://export.arxiv.org/api/query"
 
     //a time to sleep when receiving 503 code
-    var sleepTime: Long = 600000
+    var sleepTime: Long = Config.config["arxiv_api_sleep_time"].toString().toLong()
 
     //a time to wait for a response
-    var timeout = 60000
+    var timeout = Config.config["arxiv_api_timeout"].toString().toInt()
 
     /**
      * Makes request to get metadata for all metadata from `startDate`

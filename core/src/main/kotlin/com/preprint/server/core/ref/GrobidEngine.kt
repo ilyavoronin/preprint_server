@@ -1,6 +1,6 @@
 package com.preprint.server.core.ref
 
-import com.preprint.server.core.Config
+import Config
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
@@ -12,7 +12,7 @@ import java.io.File
 import java.util.*
 
 object GrobidEngine {
-    val logger = logger()
+    private val logger = logger()
     var engine : Engine
     init {
         //the path to the grobid home folder
