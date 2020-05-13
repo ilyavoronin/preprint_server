@@ -3,14 +3,10 @@ package com.preprint.server.arxivs3
 import com.amazonaws.AmazonClientException
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.event.ProgressEvent
-import com.amazonaws.event.ProgressListener
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
-import com.amazonaws.services.s3.transfer.PersistableTransfer
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import com.amazonaws.services.s3.transfer.TransferProgress
-import com.amazonaws.services.s3.transfer.internal.S3ProgressListener
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.lang.Thread.sleep

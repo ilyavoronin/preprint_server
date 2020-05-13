@@ -1,6 +1,5 @@
 package com.preprint.server.arxivs3
 
-import com.preprint.server.core.Config
 import com.preprint.server.core.arxiv.ArxivAPI
 import com.preprint.server.core.data.Reference
 import com.preprint.server.core.neo4j.DatabaseHandler
@@ -26,10 +25,10 @@ import java.util.concurrent.Executors
  */
 object ArxivS3Collector {
     private val logger = logger()
-    val path = Config.config["arxiv_pdf_path"].toString()
-    val manifestFileName = "manifest.xml"
+    private val path = ArxivS3Config.config["arxiv_pdf_path"].toString()
+    private val bufferSize = ArxivS3Config.config["buffer_size"].toString().toInt() //33554432
+    private val manifestFileName = "manifest.xml"
 
-    private const val MAX_PARALLEL_DOWNLOAD = 10
 
     /**
      * Uses previosly created dbHandler to store the data.
@@ -38,11 +37,17 @@ object ArxivS3Collector {
      * FixedThreadPool with `maxThreads` will be used during
      * the reference extraction, or `Dispatchers.Default` from coroutines
      * library if `maxThreads` = -1
+     *
+     * `maxParallelDownload` is the number of archives that
+     * will be loaded at the same time
+     *
+     * If dbHandler is null, then this method will only download archives
      */
     fun beginBulkDownload(
         dbHandler: DatabaseHandler?,
         referenceExtractor: ReferenceExtractor?,
         validators: List<Validator>,
+        maxParallelDownload: Int,
         maxThreads: Int = -1
     ) {
         if (dbHandler == null) {
@@ -54,7 +59,7 @@ object ArxivS3Collector {
 
         //get filenames and md5 hash of each file from manifest
         val fileNames = ManifestParser.parseFilenames(manifestPath)
-        fileNames.chunked(MAX_PARALLEL_DOWNLOAD).forEach { fileNamesChunk ->
+        fileNames.chunked(maxParallelDownload).forEach { fileNamesChunk ->
             runBlocking(Dispatchers.IO) {
                 fileNamesChunk.forEach { (filename, md5sum) ->
                     val pdfPath = "$path/$filename"
@@ -96,7 +101,7 @@ object ArxivS3Collector {
 
         try {
             val filenames = unzip(filename, outputDir)
-            val ids = filenames.map {getIdFromFilename(it)}.take(10)
+            val ids = filenames.map {getIdFromFilename(it)}
 
             //get metadata about each extracted pdf
             val records = ArxivAPI.getArxivRecords(ids)
@@ -207,7 +212,7 @@ object ArxivS3Collector {
      * compares md5hash of the file with `md5sumToCompare`
      */
     private fun compareMD5(path : String, md5sumToCompare : String) : Boolean {
-        val md = DigestUtils.md5Hex(BufferedInputStream(FileInputStream(path), 33554432))
+        val md = DigestUtils.md5Hex(BufferedInputStream(FileInputStream(path), bufferSize))
         return md == md5sumToCompare
     }
 }
