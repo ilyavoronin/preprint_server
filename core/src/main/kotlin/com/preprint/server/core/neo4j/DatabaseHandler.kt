@@ -192,6 +192,25 @@ class DatabaseHandler(
                             .trimIndent()
                     )
                 }
+
+                if (!existingIndexes.contains("full_text_search_publication_index")) {
+                    tr.run(
+                        """
+                            CALL db.index.fulltext.createNodeIndex("full_text_search_publication_index",
+                                ["Arxiv"],["title", "arxivId", "doi", "pubYear", "journalVolume",
+                                           "journalFirstPage", "journalLastPage", "journalIssue"])
+                        """.trimIndent()
+                    )
+                }
+
+                if (!existingIndexes.contains("full_text_search_abstract_index")) {
+                    tr.run(
+                        """
+                            CALL db.index.fulltext.createNodeIndex("full_text_search_abstract_index",
+                                ["Arxiv"],["abstract", "title"])
+                        """.trimIndent()
+                    )
+                }
             }
         }
     }
@@ -426,6 +445,9 @@ class DatabaseHandler(
         }
         if (record.abstract.isNotBlank()) {
             res += "abstract" to record.abstract
+        }
+        if (record.journal?.year != null) {
+            res += "pubYear" to record.journal!!.year!!
         }
         return res
     }
