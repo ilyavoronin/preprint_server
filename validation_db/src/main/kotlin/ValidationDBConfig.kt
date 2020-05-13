@@ -5,7 +5,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 
-object ValidationDBConfig {
+internal object ValidationDBConfig {
     // Configure settings folder
     private val settingsRoot: Path = Paths.get(System.getProperty("user.home", ""), ".preprint_server")
 

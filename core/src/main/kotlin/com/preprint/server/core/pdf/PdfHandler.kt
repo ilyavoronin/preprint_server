@@ -5,7 +5,6 @@ import com.preprint.server.core.ref.ReferenceExtractor
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import com.preprint.server.core.arxiv.ArxivCollector
 import com.preprint.server.core.validation.Validator
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File

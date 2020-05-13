@@ -1,6 +1,5 @@
 package examples
 
-import Config
 import com.preprint.server.core.arxiv.ArxivCollector
 import com.preprint.server.core.neo4j.DatabaseHandler
 import com.preprint.server.core.validation.ArxivValidator

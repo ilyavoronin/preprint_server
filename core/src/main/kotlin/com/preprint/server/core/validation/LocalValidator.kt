@@ -1,14 +1,10 @@
 package com.preprint.server.core.validation
 
-import com.preprint.server.core.algo.Algorithms
 import com.preprint.server.core.data.Author
 import com.preprint.server.core.data.Reference
-import com.preprint.server.validation.database.Config
 import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.UniversalData
 import org.apache.logging.log4j.kotlin.logger
-import scala.Enumeration
-import java.lang.Math.abs
 
 object LocalValidator : Validator, AutoCloseable {
     val logger = logger()

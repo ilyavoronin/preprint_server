@@ -3,7 +3,6 @@ package com.preprint.server.core.crossref
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import Config
 import com.preprint.server.core.utils.RequestLimiter
 import org.apache.logging.log4j.kotlin.logger
 import java.lang.Thread.sleep

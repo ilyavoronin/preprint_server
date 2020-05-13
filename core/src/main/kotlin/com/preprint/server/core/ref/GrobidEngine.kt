@@ -1,6 +1,5 @@
 package com.preprint.server.core.ref
 
-import Config
 import org.apache.logging.log4j.kotlin.logger
 import org.grobid.core.data.BibDataSet
 import org.grobid.core.data.BiblioItem
