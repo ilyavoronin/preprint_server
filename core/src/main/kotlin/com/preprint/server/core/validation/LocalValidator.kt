@@ -18,6 +18,12 @@ object LocalValidator : Validator, AutoCloseable {
         val records = mutableSetOf<UniversalData>()
         if (!ref.title.isNullOrBlank()) {
             records.addAll(dbHandler.getByTitle(ref.title!!))
+            if (records.size == 1) {
+                if (ref.title!!.length > 20 && checkByTitle(ref, records.first())) {
+                    accept(ref, records.first())
+                    return
+                }
+            }
         }
 
         if (!ref.volume.isNullOrBlank() && ref.firstPage != null && ref.authors.isNotEmpty()) {
@@ -79,21 +85,13 @@ object LocalValidator : Validator, AutoCloseable {
 
         //checking authors
         if (!record.authors.all {author ->
-                val authorParts = author.name.split("""\s""".toRegex()).filter { it.isNotBlank() }
-                val longestPart = authorParts.maxBy { it.length }
-                if (longestPart != null) {
-                    return@all Algorithms.findLCS(refstr, longestPart).length + 1 >= longestPart.length
-                            || (authorParts.last().all {it.isLetter()} && authorParts.last().length > 1 &&
-                            Algorithms.findLCS(refstr, authorParts.last()).length + 1 >= authorParts.last().length)
-                }
-                else {
-                    return@all false
-                }
+                containsAuthor(author.name, refstr)
             }
         ) {
             score -= 2
         }
 
+        println("score: $score")
 
         if (score < 2) {
             return false
@@ -107,7 +105,9 @@ object LocalValidator : Validator, AutoCloseable {
 
         if (record.journalName != null) {
             val t = Algorithms.findLCS(refstr, record.journalName!!).length
-            if (t.toDouble() / record.journalName!!.length.toDouble() > 0.9) {
+            println(t)
+            println(record.journalName)
+            if (t.toDouble() / record.journalName!!.length.toDouble() > 0.8) {
                 score += 1
             }
         }
@@ -124,7 +124,38 @@ object LocalValidator : Validator, AutoCloseable {
                 score += 2
             }
         }
+        if (refstr.contains(record.firstPage.toString())) {
+            score += 1
+        }
         return score >= 4
+    }
+
+    fun checkByTitle(ref: Reference, record: UniversalData): Boolean {
+        if (
+            record.authors.all { containsAuthor(it.name, ref.rawReference)}
+            && ref.rawReference.contains(record.year.toString())
+        ) {
+            return true
+        }
+
+        if (ref.title?.trim() == record.title?.trim()) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun containsAuthor(author: String, refstr: String): Boolean {
+        val authorParts = author.split("""\s""".toRegex()).filter { it.isNotBlank() }
+        val longestPart = authorParts.maxBy { it.length }
+        if (longestPart != null) {
+            return Algorithms.findLCS(refstr, longestPart).length + 1 >= longestPart.length
+                    || (authorParts.last().all {it.isLetter()} && authorParts.last().length > 1 &&
+                    Algorithms.findLCS(refstr, authorParts.last()).length + 1 >= authorParts.last().length)
+        }
+        else {
+            return false
+        }
     }
 
     private fun accept(ref: Reference, record: UniversalData) {

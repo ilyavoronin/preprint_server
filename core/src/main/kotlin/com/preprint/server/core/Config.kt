@@ -1,4 +1,4 @@
-package com.preprint.server
+package com.preprint.server.core
 
 import java.io.BufferedReader
 import java.io.FileReader
