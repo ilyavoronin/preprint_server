@@ -52,7 +52,9 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
     private var lastReloadTime: Long? = null
 
-    private val maxValueLength = 10
+    private val maxValueLength = ValidationDBConfig.config["max_value_length"].toString().toInt()
+
+    private val timeLimit = ValidationDBConfig.config["time_limit"].toString().toLong()
 
     data class Stats(
             var maxTitleLength: Int = 0,
@@ -109,7 +111,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
                 " ${(currentTime % 60_000) / 1000} seconds")
 
         if (lastTime != null && currentTime > lastTime!! * 1.5
-                || currentTime > 1000 * 60 * 1.5
+                || currentTime > timeLimit
         ) {
             if (currentTime > lastTime!! * 1.5) {
                 compactDb(true)

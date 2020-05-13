@@ -1,5 +1,6 @@
 package com.preprint.server.validation.database
 
+import ValidationDBConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -10,7 +11,7 @@ import java.util.zip.GZIPInputStream
 
 object SSDataLoader {
     private val logger = logger()
-    val path = Config.config["semsch_path_to_files"].toString()
+    val path = ValidationDBConfig.config["semsch_path_to_files"].toString()
     private val cntPath = File(path, "START.txt")
     private var startFrom: Int
 

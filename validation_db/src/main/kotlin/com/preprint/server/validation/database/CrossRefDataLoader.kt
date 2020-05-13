@@ -1,5 +1,6 @@
 package com.preprint.server.validation.database
 
+import ValidationDBConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
@@ -12,11 +13,12 @@ import java.lang.Exception
 
 object CrossRefDataLoader {
     private val logger = logger()
-    val filePath = Config.config["crossref_path_to_file"].toString()
+    val filePath = ValidationDBConfig.config["crossref_path_to_file"].toString()
     val textStream = getTextStream(
         File(filePath)
     )
-    val bulkRecodsNumber = 300_000
+
+    val bulkRecodsNumber = ValidationDBConfig.config["crossref_bulk_records"].toString().toInt()
 
     fun loadData(dbHandler: DBHandler, checkDuplicates: Boolean, startFrom: Long = 0) {
         var recordProcessed = 0

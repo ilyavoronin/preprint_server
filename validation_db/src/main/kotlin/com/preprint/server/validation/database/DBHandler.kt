@@ -1,9 +1,7 @@
 package com.preprint.server.validation.database
 
+import ValidationDBConfig
 import com.beust.klaxon.Klaxon
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 
@@ -11,7 +9,7 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
     private val logger = logger()
     private val databases = mutableListOf<SingleDBHandler>()
     private val recordsCnt = mutableListOf<Long>()
-    val maxRecordsPerDb = Config.config["validation_db_max_records_per_db"].toString().toLong()
+    val maxRecordsPerDb = ValidationDBConfig.config["validation_db_max_records_per_db"].toString().toLong()
 
     val dbFolderFile = File(dbFolderPath)
     init {

@@ -1,5 +1,3 @@
-package com.preprint.server.validation.database
-
 import java.io.BufferedReader
 import java.io.FileReader
 import java.nio.file.Files
@@ -7,7 +5,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 
-object Config {
+object ValidationDBConfig {
     // Configure settings folder
     private val settingsRoot: Path = Paths.get(System.getProperty("user.home", ""), ".preprint_server")
 
@@ -17,7 +15,7 @@ object Config {
         }
     }
 
-    private val configPath: Path = settingsRoot.resolve("config.properties")
+    private val configPath: Path = settingsRoot.resolve("validationDBconfig.properties")
 
     init {
         check(Files.exists(configPath)) {
