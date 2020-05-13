@@ -26,51 +26,35 @@ object CrossRefValidator : Validator {
                 ref.issn = record.journal?.issn
                 ref.journal = record.journal?.shortTitle ?: record.journal?.fullTitle
                 ref.authors = record.authors
+                ref.urls.add(record.pdfUrl)
                 break
             }
         }
     }
 
-    private fun checkSim(ref : Reference, record : CRData) : Boolean {
-        if (ref.title != null && ref.title != "") {
+    private fun checkSim(ref : Reference, crRecord : CRData) : Boolean {
+        val record = crDataToValidationRecord(crRecord)
+        if (ref.title != null && ref.title != "" && !record.title.isNullOrEmpty()) {
             val dist = Algorithms.findLvnstnDist(ref.title!!, record.title)
             val d = dist.toDouble() / ref.title!!.length.toDouble()
-            return d < distThreshold
+            return d < distThreshold && SimilarityChecker.checkByTitle(ref, record)
         }
         else {
-            val lcs = Algorithms.findLCS(ref.rawReference, record.title).length
-            if (lcs.toDouble() / record.title.length > 1 - distThreshold) {
-                return true
-            }
-
-            var score = 0;
-            val j = record.journal ?: return false
-            if (ref.issue != null && j.number != null && ref.issue == j.number) {
-                score += 1
-            }
-            if (ref.firstPage != null && j.firstPage != null && ref.firstPage == ref.lastPage) {
-                if (ref.lastPage != null && j.lastPage != null) {
-                    if (ref.lastPage != j.lastPage) {
-                        score += 1
-                    }
-                }
-                else {
-                    score += 1
-                }
-            }
-            if (ref.volume != null && j.volume != null && ref.volume == j.volume) {
-                score += 1
-            }
-
-            if (!record.authors.isNullOrEmpty() &&
-                    record.authors.all {it.secondName != null && ref.rawReference.contains(it.secondName)}) {
-                score += 1
-            }
-
-            if (j.year != null && ref.year != null && j.year == ref.year) {
-                score += 1
-            }
-            return score >= 2
+            return SimilarityChecker.check(ref, record)
         }
+    }
+
+    private fun crDataToValidationRecord(crRecord: CRData): ValidationRecord {
+        return ValidationRecord(
+            authors = crRecord.authors.map {ValidationRecord.Author(it.name)},
+            journalName = if (crRecord.journal?.fullTitle.isNullOrBlank()) crRecord.journal?.shortTitle
+                            else crRecord.journal?.fullTitle,
+            journalVolume = crRecord.journal?.volume,
+            firstPage = crRecord.journal?.firstPage,
+            lastPage = crRecord.journal?.lastPage,
+            title = crRecord.title,
+            year = crRecord.journal?.year,
+            issue = crRecord.journal?.number
+        )
     }
 }
