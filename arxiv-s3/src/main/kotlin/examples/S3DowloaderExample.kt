@@ -1,6 +1,6 @@
 package examples
 
-import com.preprint.server.Config
+import com.preprint.server.core.Config
 import com.preprint.server.arxivs3.ArxivS3Downloader
 
 fun main() {

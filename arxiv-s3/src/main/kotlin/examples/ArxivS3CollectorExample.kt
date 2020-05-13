@@ -1,6 +1,6 @@
 package examples
 
-import com.preprint.server.Config
+import com.preprint.server.core.Config
 import com.preprint.server.arxivs3.ArxivS3Collector
 import com.preprint.server.core.neo4j.DatabaseHandler
 import com.preprint.server.core.ref.CustomReferenceExtractor

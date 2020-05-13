@@ -1,6 +1,6 @@
 package com.preprint.server.arxivs3
 
-import com.preprint.server.Config
+import com.preprint.server.core.Config
 import com.preprint.server.core.arxiv.ArxivAPI
 import com.preprint.server.core.data.Reference
 import com.preprint.server.core.neo4j.DatabaseHandler
@@ -29,7 +29,7 @@ object ArxivS3Collector {
     val path = Config.config["arxiv_pdf_path"].toString()
     val manifestFileName = "manifest.xml"
 
-    private const val MAX_PARALLEL_DOWNLOAD = 30
+    private const val MAX_PARALLEL_DOWNLOAD = 10
 
     /**
      * Uses previosly created dbHandler to store the data.
