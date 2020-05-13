@@ -1,6 +1,9 @@
 package com.preprint.server.validation.database
 
 import com.beust.klaxon.Klaxon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 
@@ -30,7 +33,9 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
     fun storeRecords(records_: List<UniversalData>, checkDuplicates: Boolean) {
         val records = if (checkDuplicates) filterExisting(records_)
                       else records_
-
+        if (checkDuplicates) {
+            logger.info("Records left after filtering: ${records.size}")
+        }
         if (databases.isEmpty() || recordsCnt.last() + records.size > maxRecordsPerDb) {
             logger.info("Creating new database")
             createNewDb()
@@ -40,12 +45,15 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         databases.last().storeRecords(records)
     }
 
-    private fun filterExisting(records: List<UniversalData>): List<UniversalData> {
-        val exists = BooleanArray(records.size, {false})
+    private fun filterExisting(records_: List<UniversalData>): List<UniversalData> {
+        val exists = BooleanArray(records_.size, {false})
+        val records = records_.sortedBy { it.doi }
         databases.forEach {db ->
-            records.chunked(1000).flatMap {
-                db.doiDb.multiGetAsList(it.map {it.doi?.toByteArray()})
-            }.forEachIndexed {i, ba -> if (ba != null) exists[i] = true}
+                val jobs = records.chunked(20000).map {
+                        db.doiDb.multiGetAsList(it.map { it.doi?.toByteArray() })
+                }
+                val list = jobs.flatMap { it }
+                list.forEachIndexed { i, ba -> if (ba != null) exists[i] = true }
         }
         return records.filterIndexed {i, _ -> !exists[i]}
     }
