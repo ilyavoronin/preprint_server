@@ -126,10 +126,8 @@ object ArxivS3Collector {
                 records.forEach {refs.addAll(it.refList)}
                 logger.info("Begin validation")
 
-                runBlocking {
-                    validators.forEach { validator ->
-                        validator.validate(refs)
-                    }
+                validators.forEach { validator ->
+                    validator.validate(refs)
                 }
 
                 logger.info("Validated ${refs.count { it.validated }} out of ${refs.size}")

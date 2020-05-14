@@ -14,6 +14,6 @@ fun main() {
         Config.config["neo4j_user"].toString(),
         Config.config["neo4j_password"].toString()
     )
-    ArxivCollector.collect(START_DATE, dataBaseHandler, listOf(CrossRefValidator))
+    ArxivCollector.collect(START_DATE, dataBaseHandler, listOf(LocalValidator))
     dataBaseHandler.close()
 }

@@ -1,41 +1,39 @@
 package com.preprint.server.core.validation
 
 import com.preprint.server.core.data.Reference
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.lang.Exception
 import java.lang.Thread.sleep
 
 interface Validator {
-    suspend fun validate(refList : List<Reference>) = withContext(Dispatchers.IO) {
-        val jobs = mutableListOf<Job>()
-        var failedRefs = mutableListOf<Reference>()
-        for (ref in refList) {
-            jobs.add(launch {
-                try {
-                    validate(ref)
-                } catch (e : Exception) {
-                    failedRefs.add(ref)
+    fun validate(refList : List<Reference>) {
+        val failedRefs = mutableListOf<Reference>()
+        runBlocking {
+            for (ref in refList) {
+                launch {
+                    try {
+                        validate(ref)
+                    } catch (e: Exception) {
+                        failedRefs.add(ref)
+                    }
                 }
-            })
+            }
         }
-        jobs.forEach { it.join() }
 
         //try failed requests again
         if (failedRefs.size != 0) {
             sleep(2000)
-            jobs.clear()
             var failed = 0
-            for (ref in failedRefs) {
-                jobs.add(launch {
-                    try {
-                        validate(ref)
-                    } catch (e: Exception) {
-                        failed++
+            runBlocking {
+                for (ref in failedRefs) {
+                    launch {
+                        try {
+                            validate(ref)
+                        } catch (e: Exception) {
+                            failed++
+                        }
                     }
-                })
+                }
             }
             if (failed != 0) {
                 throw ValidatorException("Validation failed twice for some references")

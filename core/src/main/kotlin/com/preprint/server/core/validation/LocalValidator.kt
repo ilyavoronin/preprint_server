@@ -4,15 +4,16 @@ import com.preprint.server.core.data.Author
 import com.preprint.server.core.data.Reference
 import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.UniversalData
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
-import scala.Enumeration
 
 object LocalValidator : Validator, AutoCloseable {
     val logger = logger()
     val dbHandler =
         DBHandler(Config.config["validation_db_path"].toString())
 
-    override suspend fun validate(refList: List<Reference>) {
+    override fun validate(refList: List<Reference>) {
         fun mergeList(
             list1: List<List<UniversalData>>,
             list2: List<List<UniversalData>>
@@ -33,11 +34,33 @@ object LocalValidator : Validator, AutoCloseable {
 
         val urefList = refList.map {toUdata(it)}
 
-        val titleData = dbHandler.mgetByTitle(urefList)
-        val avpyData = dbHandler.mgetByAuthVolPageYear(urefList)
-        val aflvData = dbHandler.mgetByAuthFLPageVolume(urefList)
-        val avyData = dbHandler.mgetByAuthVolumeYear(urefList)
-        val apyData = dbHandler.mgetByAuthPageYear(urefList)
+        var titleData = listOf<List<UniversalData>>()
+        var avpyData = listOf<List<UniversalData>>()
+        var aflvData = listOf<List<UniversalData>>()
+        var avyData = listOf<List<UniversalData>>()
+        var apyData = listOf<List<UniversalData>>()
+
+        runBlocking {
+
+            launch {
+                titleData = dbHandler.mgetByTitle(urefList)
+            }
+            launch {
+                avpyData = dbHandler.mgetByAuthVolPageYear(urefList)
+            }
+
+            launch {
+                aflvData = dbHandler.mgetByAuthFLPageVolume(urefList)
+            }
+
+            launch {
+                avyData = dbHandler.mgetByAuthVolumeYear(urefList)
+            }
+
+            launch {
+                apyData = dbHandler.mgetByAuthPageYear(urefList)
+            }
+        }
 
         val lists = listOf(titleData, avpyData, aflvData, avyData, apyData)
             .fold(List(titleData.size, { emptyList<UniversalData>()})) { acc, list ->

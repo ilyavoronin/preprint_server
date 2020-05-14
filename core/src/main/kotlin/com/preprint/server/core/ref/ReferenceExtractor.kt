@@ -14,19 +14,17 @@ interface ReferenceExtractor {
         var attemptsDone = 0
         while (true) {
             var stopValidation = true
-            runBlocking {
-                try {
-                    validators.forEach { validator ->
-                        validator.validate(refs)
-                    }
-                } catch (e: Validator.ValidatorException) {
-                    stopValidation = false
-                    attemptsDone += 1
-                    logger().error(e.message)
-                    delay(2000)
-                    if (attemptsDone >= 3) {
-                        stopValidation = true
-                    }
+            try {
+                validators.forEach { validator ->
+                    validator.validate(refs)
+                }
+            } catch (e: Validator.ValidatorException) {
+                stopValidation = false
+                attemptsDone += 1
+                logger().error(e.message)
+                sleep(2000)
+                if (attemptsDone >= 3) {
+                    stopValidation = true
                 }
             }
             if (stopValidation) {
