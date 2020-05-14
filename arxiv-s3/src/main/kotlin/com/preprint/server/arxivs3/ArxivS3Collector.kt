@@ -73,7 +73,9 @@ object ArxivS3Collector {
                         }
 
                         if (dbHandler != null) {
-                            processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                            synchronized(dbHandler) {
+                                processFile(pdfPath, dbHandler, referenceExtractor, validators, maxThreads)
+                            }
                         }
                     }
                 }
@@ -119,6 +121,18 @@ object ArxivS3Collector {
                         }
                     }
                 }
+
+                val refs = mutableListOf<Reference>()
+                records.forEach {refs.addAll(it.refList)}
+                logger.info("Begin validation")
+
+                runBlocking {
+                    validators.forEach { validator ->
+                        validator.validate(refs)
+                    }
+                }
+
+                logger.info("Validated ${refs.count { it.validated }} out of ${refs.size}")
             }
             dbHandler.storeArxivData(records)
         }
@@ -193,15 +207,6 @@ object ArxivS3Collector {
                 File(filepath).readBytes()
             ).toMutableList()
 
-            logger.info("Begin validation")
-
-            runBlocking {
-                validators.forEach { validator ->
-                    validator.validate(refs)
-                }
-            }
-
-            logger.info("Validated ${refs.count { it.validated }} out of ${refs.size}")
             return refs
         } catch (e : Exception) {
             return mutableListOf()

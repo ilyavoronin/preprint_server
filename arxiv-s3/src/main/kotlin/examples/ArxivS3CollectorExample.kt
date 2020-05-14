@@ -4,9 +4,10 @@ import com.preprint.server.arxivs3.ArxivS3Collector
 import com.preprint.server.core.neo4j.DatabaseHandler
 import com.preprint.server.core.ref.CustomReferenceExtractor
 import com.preprint.server.core.validation.ArxivValidator
+import com.preprint.server.core.validation.LocalValidator
 
 fun main() {
-    val downloadOnlyMode = true
+    val downloadOnlyMode = false
     val dbHandler = if (!downloadOnlyMode) DatabaseHandler(
         ArxivS3Config.config["neo4j_url"].toString(),
         ArxivS3Config.config["neo4j_port"].toString(),
@@ -16,7 +17,7 @@ fun main() {
     ArxivS3Collector.beginBulkDownload(
         dbHandler,
         CustomReferenceExtractor,
-        listOf(ArxivValidator),
-        16
+        listOf(LocalValidator, ArxivValidator),
+        1
     )
 }
