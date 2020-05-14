@@ -99,15 +99,20 @@ class DatabaseHandler(
         we will store them in `failedTransactions` and retry them later sequentially
          */
         val failedTransactions = mutableListOf<Pair<Long, ArxivData>>()
-        runBlocking(Dispatchers.IO) {
+        runBlocking(Dispatchers.Default) {
             pubIds.zip(arxivRecords).forEach { (id, record) ->
                 launch {
                     driver.session().use {
                         try {
-                            it.writeTransaction { tr -> createConnections(tr, id, record, newPublications)}
+                            it.writeTransaction { tr ->
+                                try {
+                                    createConnections(tr, id, record, newPublications)
+                                } catch (e: Exception) {
+                                    failedTransactions.add(Pair(id, record))
+                                }
+                            }
                         } catch (e : Exception) {
                             logger.error("Connections creation failed for ${record.id}")
-                            failedTransactions.add(Pair(id, record))
                         }
                     }
                 }
@@ -123,6 +128,7 @@ class DatabaseHandler(
                     }
                 } catch (e: Exception) {
                     logger.error("Connections creation failed again for ${record.id}")
+                    logger.error(e.message.toString())
                 }
             }
         }
@@ -668,7 +674,7 @@ class DatabaseHandler(
                 } else {
                     logger.error(
                         "Failed to create connection between Publication with arxivId ${record.id} " +
-                                "and publication with $matchString"
+                                "and publication with match string $matchString and doi ${ref.doi}"
                     )
                 }
             }
