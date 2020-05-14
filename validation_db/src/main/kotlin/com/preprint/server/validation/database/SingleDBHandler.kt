@@ -1,6 +1,7 @@
 package com.preprint.server.validation.database
 
 import com.beust.klaxon.Klaxon
+import com.jsoniter.JsonIterator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -79,6 +80,7 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
 
         val bopt = BlockBasedTableConfig()
                 .setCacheIndexAndFilterBlocks(true).setBlockSize(64000)
+                .setFilterPolicy(BloomFilter(10.0, false))
         options = Options().setCreateIfMissing(true)
                 .setMaxSuccessiveMerges(1000)
                 .setOptimizeFiltersForHits(true)
@@ -137,11 +139,23 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     fun mgetById(ids: List<Long>): List<UniversalData?> {
         return mainDb.multiGetAsList(ids.map {encode(it)}).map {bytes ->
                     if (bytes != null) {
-                        Klaxon().parse<UniversalData>(String(bytes))
+                        JsonIterator.deserialize(String(bytes), UniversalData::class.java)
                     } else {
                         null
                     }
                 }
+    }
+
+    fun mget(db: RocksDB, list: List<String?>): List<List<Long>> {
+        val slist = list.mapIndexed {i, v -> Pair(v, i)}.sortedBy { it.first }.filter {!it.first.isNullOrBlank()}
+        val resp = db.multiGetAsList(slist.map {it.first!!.toByteArray()})
+        val res = MutableList<List<Long>>(list.size, {listOf()})
+        resp.zip(slist).forEach {ba -> res[ba.second.second] = ba.first?.let {decodeIds(it)?.toList()} ?: listOf()}
+        return res
+    }
+
+    fun getUdata(ids: List<List<Long>>): List<List<UniversalData>> {
+        return ids.map {mgetById(it).filterNotNull()}
     }
 
     private fun bgetByTitle(bytes: ByteArray) : MutableSet<Long> {
@@ -149,9 +163,17 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         return decodeIds(recordsBytes) ?: return mutableSetOf()
     }
 
+    fun sencodeTitle(title: String): String {
+        return getShortenedTitle(title)
+    }
+
     fun getByTitle(title: String) : MutableSet<Long> {
-        val bytes = getShortenedTitle(title).toByteArray()
+        val bytes = sencodeTitle(title).toByteArray()
         return bgetByTitle(bytes)
+    }
+
+    fun mgetByTitle(titleList: List<UniversalData>): List<List<UniversalData>> {
+        return getUdata(mget(titleDb, titleList.map {sencodeTitle(it.title ?: return@map null)}))
     }
 
     data class AuthVolPageYear(
@@ -166,16 +188,42 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
         return decodeIds(recordsBytes) ?: mutableSetOf()
     }
 
-    fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
-        val bytes = encode(
+    fun sencodeAuthVolPageYear(auth: String, vol: String, firstPage: Int, year: Int): String {
+        return sencode(
             AuthVolPageYear(
                 auth,
-                volume,
+                vol,
                 firstPage,
                 year
             )
         )
+    }
+
+    fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int) : MutableSet<Long> {
+        val bytes = sencodeAuthVolPageYear(auth, volume, firstPage, year).toByteArray()
         return bgetByAuthVolPageYear(bytes)
+    }
+
+    fun mgetByAuthVolPageYear(list: List<UniversalData>): List<List<UniversalData>> {
+        return getUdata(
+            mget(authVolPageYearDb,
+                list.map {
+                    val auth = DBHandler.getFirstAuthorLetters(it.authors.map {it.name})
+                    if (it.authors.isNotEmpty() && !it.journalVolume.isNullOrBlank()
+                        && it.firstPage != null && it.year != null
+                    ) {
+                        sencodeAuthVolPageYear(auth, it.journalVolume!!, it.firstPage!!, it.year)
+                    }
+                    else {
+                        null
+                    }
+                }
+            )
+        )
+    }
+
+    fun sencodeAuthorVolume(auth: String, vol: String, year: Int): String {
+        return sencode(Triple(auth, vol, year))
     }
 
     private fun bgetByAuthorVolume(bytes: ByteArray) : MutableSet<Long> {
@@ -184,8 +232,28 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     fun getByAuthorVolume(authors: String, volume: String, year: Int) : MutableSet<Long> {
-        val bytes = encode(Triple(authors, volume, year))
+        val bytes = sencodeAuthorVolume(authors, volume, year).toByteArray()
         return bgetByAuthorVolume(bytes)
+    }
+
+    fun mgetByAuthVolume(list: List<UniversalData>): List<List<UniversalData>> {
+        return getUdata(
+            mget(authorVolumeYearDb,
+                list.map {
+                    val auth = DBHandler.getFirstAuthorLetters(it.authors.map {it.name})
+                    if (it.authors.size >= 2 && !it.journalVolume.isNullOrBlank() && it.year != null) {
+                        sencodeAuthorVolume(auth, it.journalVolume!!, it.year)
+                    }
+                    else {
+                        null
+                    }
+                }
+            )
+        )
+    }
+
+    fun sencodeAuthorPage(authors: String, firstPage: Int, year: Int): String {
+        return sencode(Triple(authors, firstPage, year))
     }
 
     private fun bgetByAuthorPage(bytes: ByteArray) : MutableSet<Long> {
@@ -194,8 +262,24 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
     }
 
     fun getByAuthorPage(authors: String, firstPage: Int, year: Int) : MutableSet<Long> {
-        val bytes = encode(Triple(authors, firstPage, year))
+        val bytes = sencodeAuthorPage(authors, firstPage, year).toByteArray()
         return bgetByAuthorPage(bytes)
+    }
+
+    fun mgetByAuthPage(list: List<UniversalData>): List<List<UniversalData>> {
+        return getUdata(
+            mget(authorPageYearDb,
+                list.map {
+                    val auth = DBHandler.getFirstAuthorLetters(it.authors.map {it.name})
+                    if (it.authors.size >= 2 && it.firstPage != null && it.year != null) {
+                        sencodeAuthorPage(auth, it.firstPage!!, it.year)
+                    }
+                    else {
+                        null
+                    }
+                }
+            )
+        )
     }
 
     private fun bgetByFirsLastPageVolume(bytes: ByteArray): MutableSet<Long> {
@@ -210,8 +294,8 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
             val vol: String
     )
 
-    fun getByFirsLastPageVolume(auth: String, fpage: Int, lpage: Int, vol: String): MutableSet<Long> {
-        val bytes = encode(
+    fun sencodeAuthFLVol(auth: String, fpage: Int, lpage: Int, vol: String): String {
+        return sencode(
             AuthFLVolume(
                 auth,
                 fpage,
@@ -219,7 +303,29 @@ internal class SingleDBHandler(val dbFolderPath: File) : AutoCloseable {
                 vol
             )
         )
+    }
+
+    fun getByFirsLastPageVolume(auth: String, fpage: Int, lpage: Int, vol: String): MutableSet<Long> {
+        val bytes = sencodeAuthFLVol(auth, fpage, lpage, vol).toByteArray()
         return bgetByFirsLastPageVolume(bytes)
+    }
+
+    fun mgetByAuthFLVolume(list: List<UniversalData>): List<List<UniversalData>> {
+        return getUdata(
+            mget(authFlVolDb,
+                list.map {
+                    val auth = DBHandler.getFirstAuthorLetters(it.authors.map {it.name})
+                    if (it.authors.size >= 2 && it.firstPage != null
+                        && it.lastPage != null && !it.journalVolume.isNullOrBlank()
+                    ) {
+                        sencodeAuthFLVol(auth, it.firstPage!!, it.lastPage!!, it.journalVolume!!)
+                    }
+                    else {
+                        null
+                    }
+                }
+            )
+        )
     }
 
     private fun encode(a: Any): ByteArray {

@@ -5,11 +5,56 @@ import com.preprint.server.core.data.Reference
 import com.preprint.server.validation.database.DBHandler
 import com.preprint.server.validation.database.UniversalData
 import org.apache.logging.log4j.kotlin.logger
+import scala.Enumeration
 
 object LocalValidator : Validator, AutoCloseable {
     val logger = logger()
     val dbHandler =
         DBHandler(Config.config["validation_db_path"].toString())
+
+    override suspend fun validate(refList: List<Reference>) {
+        fun mergeList(
+            list1: List<List<UniversalData>>,
+            list2: List<List<UniversalData>>
+        ): List<List<UniversalData>> {
+            return list1.zip(list2).map {(l1, l2) -> l1.union(l2).toList()}
+        }
+
+        fun toUdata(ref: Reference): UniversalData {
+            return UniversalData(
+                authors = ref.authors.map {UniversalData.Author(it.name)},
+                title = ref.title,
+                journalVolume = ref.volume,
+                firstPage = ref.firstPage,
+                lastPage = ref.lastPage,
+                year = ref.year
+            )
+        }
+
+        val urefList = refList.map {toUdata(it)}
+
+        val titleData = dbHandler.mgetByTitle(urefList)
+        val avpyData = dbHandler.mgetByAuthVolPageYear(urefList)
+        val aflvData = dbHandler.mgetByAuthFLPageVolume(urefList)
+        val avyData = dbHandler.mgetByAuthVolumeYear(urefList)
+        val apyData = dbHandler.mgetByAuthPageYear(urefList)
+
+        val lists = listOf(titleData, avpyData, aflvData, avyData, apyData)
+            .fold(List(titleData.size, { emptyList<UniversalData>()})) { acc, list ->
+                mergeList(acc, list)
+        }
+
+        refList.zip(lists).forEach { (ref, list) -> bulkValidate(ref, list) }
+    }
+
+    fun bulkValidate(ref: Reference, list: List<UniversalData>) {
+        list.forEach { undata ->
+            if (check(ref, undata)) {
+                accept(ref, undata)
+                return
+            }
+        }
+    }
 
     override fun validate(ref: Reference) {
         val records = mutableSetOf<UniversalData>()

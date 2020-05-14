@@ -8,9 +8,9 @@ fun main() {
         DBHandler(ValidationDBConfig.config["validation_db_path"].toString())
 
 
-    val list2 = dbHandler.getByTitle("Prospects for new physics observations in diffractive processes at the LHC and Tevatron")
+    val list2 = dbHandler.getByTitle("Few-nucleon forces and systems in chiral effective field theory")
     println(list2)
-    val list3 = dbHandler.getByAuthorVolume("AKV,ADM,GMR","23", 2002)
+    val list3 = dbHandler.getByAuthVolPageYear("EE","43", 57, 2008)
     println(list3)
     dbHandler.close()
 }

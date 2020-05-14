@@ -2,6 +2,9 @@ package com.preprint.server.validation.database
 
 import ValidationDBConfig
 import com.beust.klaxon.Klaxon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 
@@ -56,8 +59,26 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
         return records.filterIndexed {i, _ -> !exists[i]}
     }
 
-    fun getByTitle(title: String) : List<UniversalData> =
-            databases.flatMap { it.mgetById(it.getByTitle(title).toList())}.filterNotNull()
+    private fun <T> mergeLists(list1: List< List< List <T>>>): List<List<T>> {
+        return list1.fold(List(list1[0].size, { listOf<T>()})) {acc, list ->
+            acc.zip(list).map {(l1, l2) -> l1 + l2}
+        }
+    }
+
+    fun getByTitle(title: String) : List<UniversalData> {
+        return databases.flatMap { it.mgetById(it.getByTitle(title).toList()) }.filterNotNull()
+    }
+
+    fun mgetByTitle(
+        titleList: List<UniversalData>
+    ): List<List<UniversalData>> = runBlocking(Dispatchers.IO) {
+            val jobs = databases.map { db ->
+                async {
+                    db.mgetByTitle(titleList)
+                }
+            }
+            mergeLists(jobs.map {it.await()})
+    }
 
     fun getByAuthVolPageYear(auth: String, volume: String, firstPage: Int, year: Int): List<UniversalData> =
             databases.flatMap {
@@ -65,6 +86,42 @@ class DBHandler(dbFolderPath: String): AutoCloseable {
                         it.getByAuthVolPageYear(auth, volume, firstPage, year).toList()
                 )
             }.filterNotNull()
+
+    fun mgetByAuthVolPageYear(list: List<UniversalData>) = runBlocking(Dispatchers.IO) {
+        val jobs = databases.map { db ->
+            async {
+                db.mgetByAuthVolPageYear(list)
+            }
+        }
+        mergeLists(jobs.map {it.await()})
+    }
+
+    fun mgetByAuthPageYear(list: List<UniversalData>) = runBlocking(Dispatchers.IO) {
+        val jobs = databases.map { db ->
+            async {
+                db.mgetByAuthPage(list)
+            }
+        }
+        mergeLists(jobs.map {it.await()})
+    }
+
+    fun mgetByAuthVolumeYear(list: List<UniversalData>) = runBlocking(Dispatchers.IO) {
+        val jobs = databases.map { db ->
+            async {
+                db.mgetByAuthVolume(list)
+            }
+        }
+        mergeLists(jobs.map {it.await()})
+    }
+
+    fun mgetByAuthFLPageVolume(list: List<UniversalData>) = runBlocking(Dispatchers.IO) {
+        val jobs = databases.map { db ->
+            async {
+                db.mgetByAuthFLVolume(list)
+            }
+        }
+        mergeLists(jobs.map {it.await()})
+    }
 
     fun getByAuthorVolume(authors: String, volume: String, year: Int): List<UniversalData> =
             databases.flatMap {
