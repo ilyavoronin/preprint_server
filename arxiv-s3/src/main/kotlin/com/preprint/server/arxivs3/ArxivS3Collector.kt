@@ -1,10 +1,12 @@
 package com.preprint.server.arxivs3
 
 import com.preprint.server.core.arxiv.ArxivAPI
+import com.preprint.server.core.arxiv.ArxivData
 import com.preprint.server.core.data.Reference
 import com.preprint.server.core.neo4j.DatabaseHandler
 import com.preprint.server.core.ref.ReferenceExtractor
 import com.preprint.server.core.validation.Validator
+import com.preprint.server.validation.database.UniversalData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.logging.log4j.kotlin.logger
 import java.io.*
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.nio.file.Paths
 import java.util.concurrent.Executors
 
@@ -28,7 +31,6 @@ object ArxivS3Collector {
     private val path = ArxivS3Config.config["arxiv_pdf_path"].toString()
     private val bufferSize = ArxivS3Config.config["buffer_size"].toString().toInt() //33554432
     private val manifestFileName = "manifest.xml"
-
 
     /**
      * Uses previosly created dbHandler to store the data.
@@ -106,7 +108,17 @@ object ArxivS3Collector {
             val ids = filenames.map {getIdFromFilename(it)}
 
             //get metadata about each extracted pdf
-            val records = ArxivAPI.getArxivRecords(ids)
+            var records: List<ArxivData>
+            while (true) {
+                try {
+                    records = ArxivAPI.getArxivRecords(ids)
+                    break
+                } catch (e: Exception) {
+                    logger.error(e.message ?: "Unknown exception")
+                    logger.info("Retrying in 600 seconds")
+                    sleep(600_000)
+                }
+            }
 
             if (referenceExtractor != null) {
                 val dispatcher =

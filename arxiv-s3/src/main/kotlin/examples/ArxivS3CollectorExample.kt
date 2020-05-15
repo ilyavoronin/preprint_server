@@ -18,6 +18,6 @@ fun main() {
         dbHandler,
         CustomReferenceExtractor,
         listOf(LocalValidator, ArxivValidator),
-        1
+        30
     )
 }
