@@ -7,6 +7,7 @@ import com.preprint.server.core.data.Author
 import com.preprint.server.core.data.JournalRef
 import com.preprint.server.core.data.Reference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
@@ -14,6 +15,7 @@ import org.neo4j.driver.Transaction
 import java.io.Closeable
 import java.lang.Exception
 import java.time.LocalDate
+import java.util.concurrent.Executors
 
 
 /**
@@ -28,6 +30,7 @@ class DatabaseHandler(
 
     private val driver = GraphDatabase.driver("bolt://$url:$port", AuthTokens.basic(user, password))
     private val logger = logger()
+    private val maxThreads = Config.config["neo4j_max_threads"].toString().toInt()
 
     /**
      * Create initial setup(create indexes, declares some node's properties unique),
@@ -99,7 +102,9 @@ class DatabaseHandler(
         we will store them in `failedTransactions` and retry them later sequentially
          */
         val failedTransactions = mutableListOf<Pair<Long, ArxivData>>()
-        runBlocking(Dispatchers.Default) {
+        val dispatcher = if (maxThreads > 0) Executors.newFixedThreadPool(maxThreads).asCoroutineDispatcher()
+                         else Dispatchers.Default
+        runBlocking(dispatcher) {
             pubIds.zip(arxivRecords).forEach { (id, record) ->
                 launch {
                     driver.session().use {
