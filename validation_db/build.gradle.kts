@@ -1,6 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     java
     kotlin("jvm")
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = "com.preprint.server"
@@ -25,6 +28,7 @@ dependencies {
     compile("org.apache.commons:commons-lang3:3.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
     implementation("org.rocksdb:rocksdbjni:6.8.1")
+    implementation("net.sf.jopt-simple:jopt-simple:6.0-alpha-3")
     testCompile("junit", "junit", "4.12")
 }
 
@@ -37,5 +41,19 @@ tasks {
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
+    }
+    named<ShadowJar>("shadowJar") {
+        archiveBaseName.set("validation")
+        mergeServiceFiles()
+        manifest {
+            attributes(mapOf("Main-Class" to "ValidationMainKt"))
+        }
+        isZip64 = true
+    }
+}
+
+tasks {
+    build {
+        dependsOn("shadowJar")
     }
 }

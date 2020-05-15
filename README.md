@@ -1,21 +1,66 @@
-Downloading and processing old arxiv publications
--------------------------------------------------
+Building validation database
+----------------------------
 
-## Downloading data to index
+# Downloading data to index
 1. Download latest crossref metadata dump from archive.org. The latest for now is available [here](https://archive.org/download/crossref_doi_dump_201909) (~45GB)
 2. Download latest data from Semantic Scholar. Follow instructions from [here](http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/download) (~115GB)
 
-## Bulid data collector
+
+# Build
+```sh
+./gradlew -p validation_db build
+```
+
+# Run data indexing
+Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint_server/`. Specify the following parameters:
+* validation_db_path -- path where to store database
+* crossref_path_to_file -- path to the file with CrossRef data
+* semsch_path_to_files -- path to the folder with Semantic Scholar data  
+
+
+1. Indexing CrossRef data
+Run from the project folder:
+```sh
+java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref
+```
+The following options is available:
+* filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: false)
+* start-from -- the number of first record to store(used for resuming)
+
+For example:
+```sh
+java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref --filter-duplicates=false --start-from=0
+```
+
+2. Indexing Semantic Scholar data
+Run from the project folder:
+```sh
+java -jar arxiv-s3/build/libs/validation-1.0-all.jar semsch
+```
+The following options is available:
+* filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: true)
+* with-doi -- store only records that have doi
+
+For example:
+```sh
+java -jar arxiv-s3/build/libs/validation-1.0-all.jar semsch --filter-duplicates=true --with-doi=true
+```
+
+Downloading and processing old arxiv publications
+-------------------------------------------------
+
+# Bulid
 ```sh
 ./gradlew -p arxiv-s3 build
 ```
 
-## Run data collector
-Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint_server/`. Specify the following parameters:
-* validation_db_path -- path where to store database
-* crossref_path_to_file -- path to the file with CrossRef data
-* semsch_path_to_files -- path to the folder with Semantic Scholar data
+# Run data collector
+Copy `ArxivS3config.properties` from `arxiv-s3` folder to `~/.preprint_server/`. Specify the following parameters:
+* arxiv_pdf_path -- path where to store downloaded archives
+* neo4j_url, neo4j_port, neo4j_user, neo4j_password
 
+
+Run from the project folder:
 ```sh
 java -jar arxiv-s3/build/libs/arxiv-s3-1.0-all.jar
 ```
