@@ -1,23 +1,35 @@
-Arxiv data class description
---------------------------
-* **identifier**(required) -- the unique identifier of an item in a repository
-* **datestamp**(required) -- the date of creation, modification or deletion of the record for the purpose of selective harvesting.
-* **specs**(optional) -- a list of [setSpec](http://www.openarchives.org/OAI/openarchivesprotocol.htm#Set) elements, which indicates the set membership of the item for the purpose of selective harvesting
-* **creationDate**(requred) -- creation date
-* **lastUpdateDate**(optional) -- the date when the record was last updated
-* **title**(required) -- the title of the preprint
-* **authors**(required) -- list of authors, where each author presented by Author data class. Author consists of two fields: **name**(required) and **affiliation**(optional) 
-* **categories** -- the list of categories of the preprint. See the possible categories [here](https://arxiv.org/help/prep#subj)
-* **comments**(optional) -- see the comments format [here](https://arxiv.org/help/prep#comments)
-* **reportNo**(required only when supplied by author's institution) -- institution's locally assigned publication number
-* **journalRef**(optional) --   full bibliographic reference if the article has already appeared in a journal or a proceedings
-* **mscClass**(requred for math archives only) -- this field is used to indicate the mathematical classification code according to the [Mathematics Subject Classification](http://www.ams.org/msc/)
-* **acmClass**(required for cs archives only) -- this field is used to indicate the classification code according to the [ACM Computing Classification System](https://www.acm.org/publications/computing-classification-system/1998)
-* **doi**(optional) -- This field is only for a DOI ([Digital Object Identifier](http://doi.org/)) that resolves (links) to another version of the article, in a journal for example 
-* **abstract**(requred)
-* **license**(?)
-* **pdf** -- link to the pdf with preprint
-* **refList** -- list of references
+Downloading and processing old arxiv publications
+-------------------------------------------------
+
+## Downloading data to index
+1. Download latest crossref metadata dump from archive.org. The latest for now is available [here](https://archive.org/download/crossref_doi_dump_201909) (~45GB)
+2. Download latest data from Semantic Scholar. Follow instructions from [here](http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/download) (~115GB)
+
+## Bulid data collector
+```sh
+./gradlew -p arxiv-s3 build
+```
+
+## Run data collector
+Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint_server/`. Specify the following parameters:
+* validation_db_path -- path where to store database
+* crossref_path_to_file -- path to the file with CrossRef data
+* semsch_path_to_files -- path to the folder with Semantic Scholar data
+
+```sh
+java -jar arxiv-s3/build/libs/arxiv-s3-1.0-all.jar
+```
+The following options is available:
+* download-only -- only downoload arcives without processing
+* ref-extractor -- reference extractor to use. Valid arguments 'c' for CustomReferenceExtractor, 'g' for GrobidReferenceExtractor (default argument: 'c')
+* validators -- list of validators to use. Valid arguments 'l' for LocalValidator, 'c' for CrossRefValidator, 'a' for ArxivValidator (defalut argument: 'la')
+* mpd -- maximum parallel downloads(default argument: '10')
+* threads -- maximum number of threads to use when extracting references(default argument: '-1', number of threads equal to the number of CPU cores will be used)
+
+For example:
+```sh
+java -jar arxiv-s3/build/libs/arxiv-s3-1.0-all.jar --download-only --ref-extractor=c --validators=la --mpd=16 --threads=8
+```
 
 Benchmarking Extractors
 --------------------------
