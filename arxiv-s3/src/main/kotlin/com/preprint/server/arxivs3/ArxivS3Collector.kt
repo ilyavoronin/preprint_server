@@ -31,6 +31,14 @@ object ArxivS3Collector {
     private val path = ArxivS3Config.config["arxiv_pdf_path"].toString()
     private val bufferSize = ArxivS3Config.config["buffer_size"].toString().toInt() //33554432
     private val manifestFileName = "manifest.xml"
+    private val processedPath = File(path, "processed.txt")
+    private val processedFiles = mutableSetOf<String>()
+
+    init {
+        if (processedPath.exists()) {
+            processedFiles.addAll(processedPath.readLines().filter { it.isNotBlank() })
+        }
+    }
 
     /**
      * Uses previosly created dbHandler to store the data.
@@ -60,7 +68,7 @@ object ArxivS3Collector {
         ArxivS3Downloader.downloadManifest(manifestPath)
 
         //get filenames and md5 hash of each file from manifest
-        val fileNames = ManifestParser.parseFilenames(manifestPath)
+        val fileNames = ManifestParser.parseFilenames(manifestPath).filter { !processedFiles.contains(it.first)}
         fileNames.chunked(maxParallelDownload).forEach { fileNamesChunk ->
             runBlocking(Dispatchers.IO) {
                 fileNamesChunk.forEach { (filename, md5sum) ->
@@ -148,6 +156,7 @@ object ArxivS3Collector {
         }
         finally {
             deleteDir(outputDir)
+            processedPath.appendText(filename + "\n")
         }
     }
 
