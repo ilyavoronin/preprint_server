@@ -18,7 +18,7 @@ Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint
 * semsch_path_to_files -- path to the folder with Semantic Scholar data  
 
 
-#####1. Indexing CrossRef data
+##### 1. Indexing CrossRef data
 Run from the project folder:
 ```sh
 java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref
@@ -32,7 +32,7 @@ For example:
 java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref --filter-duplicates=false --start-from=0
 ```
 
-#####2. Indexing Semantic Scholar data
+##### 2. Indexing Semantic Scholar data
 Run from the project folder:
 ```sh
 java -jar arxiv-s3/build/libs/validation-1.0-all.jar semsch
