@@ -343,7 +343,7 @@ object ReferenceParser {
             containsArxivId = true
         }
         return !(containsJournal ||
-                containsAuthors && containsYear ||
+                containsYear ||
                 containsArxivId && containsAuthors)
     }
 }
