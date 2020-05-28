@@ -3,6 +3,7 @@ package examples
 import com.preprint.server.arxivs3.ArxivS3Collector
 import com.preprint.server.core.neo4j.DatabaseHandler
 import com.preprint.server.core.ref.CustomReferenceExtractor
+import com.preprint.server.core.ref.GrobidReferenceExtractor
 import com.preprint.server.core.validation.ArxivValidator
 import com.preprint.server.core.validation.LocalValidator
 
@@ -16,8 +17,9 @@ fun main() {
     ) else null
     ArxivS3Collector.beginBulkDownload(
         dbHandler,
-        CustomReferenceExtractor,
-        listOf(LocalValidator, ArxivValidator),
-        30
+        GrobidReferenceExtractor,
+        listOf(LocalValidator),
+        1,
+        1
     )
 }

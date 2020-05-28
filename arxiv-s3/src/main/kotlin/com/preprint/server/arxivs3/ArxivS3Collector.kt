@@ -119,6 +119,7 @@ object ArxivS3Collector {
             var records: List<ArxivData>
             while (true) {
                 try {
+                    logger.info("Begin api request to get metadata about ${ids.size} records")
                     records = ArxivAPI.getArxivRecords(ids)
                     break
                 } catch (e: Exception) {
@@ -136,7 +137,7 @@ object ArxivS3Collector {
                 runBlocking(dispatcher) {
                     records.zip(filenames).forEach { (record, filepath) ->
                         launch {
-                            println(record.pdfUrl)
+                            logger.info("Pdf url: ${record.pdfUrl})")
                             record.refList = getRefList(filepath, referenceExtractor, validators)
                         }
                     }
@@ -221,6 +222,7 @@ object ArxivS3Collector {
         referenceExtractor: ReferenceExtractor,
         validators: List<Validator>
     ) : MutableList<Reference>{
+        logger.info("Begin reference extraction from $filepath")
         try {
             val refs = referenceExtractor.extractUnverifiedReferences(
                 File(filepath).readBytes()
