@@ -22,7 +22,7 @@
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="logFile"/>
         </Root>
-        <Logger name="com.preprint.server" level="debug" additivity="false">
+        <Logger name="com.preprint.server.arxivs3" level="debug" additivity="false">
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="logFile"/>
             <AppenderRef ref="debugFile"/>
