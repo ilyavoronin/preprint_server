@@ -21,7 +21,7 @@ Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint
 ##### 1. Indexing CrossRef data
 Run from the project folder:
 ```sh
-java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref
+java -jar validation_db/build/libs/validation-1.0-all.jar crossref
 ```
 The following options are available:
 * filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: false)
@@ -29,13 +29,13 @@ The following options are available:
 
 For example:
 ```sh
-java -jar arxiv-s3/build/libs/validation-1.0-all.jar crossref --filter-duplicates=false --start-from=0
+java -jar validation_db/build/libs/validation-1.0-all.jar crossref --filter-duplicates=false --start-from=0
 ```
 
 ##### 2. Indexing Semantic Scholar data
 Run from the project folder:
 ```sh
-java -jar arxiv-s3/build/libs/validation-1.0-all.jar semsch
+java -jar validation_db/build/libs/validation-1.0-all.jar semsch
 ```
 The following options are available:
 * filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: true)
@@ -43,7 +43,7 @@ The following options are available:
 
 For example:
 ```sh
-java -jar arxiv-s3/build/libs/validation-1.0-all.jar semsch --filter-duplicates=true --with-doi=true
+java -jar validation_db/build/libs/validation-1.0-all.jar semsch --filter-duplicates=true --with-doi=true
 ```
 
 Downloading and processing old arxiv publications
