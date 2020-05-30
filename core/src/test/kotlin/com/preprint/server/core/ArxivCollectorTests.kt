@@ -19,7 +19,7 @@ class ArxivCollectorTests {
         mockkConstructor(KotlinLogger::class)
         every {anyConstructed<KotlinLogger>().info(any<String>())} just Runs
         mockkObject(PdfHandler)
-        every { PdfHandler.getFullInfo(any(), any(), any(), any(), any()) } just Runs
+        every { PdfHandler.getFullInfo(any(), any(), any(), any(), any(), any()) } just Runs
         mockkObject(GrobidEngine)
         mockkObject(ArxivAPI)
     }

@@ -23,7 +23,7 @@ object GrobidEngine {
     }
 
     fun processReferences(pdfFile : File, consolidate : Int) : List<BibDataSet> {
-        logger.info("Begin process references")
+        logger.debug("Begin process references")
         return engine.processReferences(pdfFile, consolidate)
     }
 
@@ -32,7 +32,7 @@ object GrobidEngine {
     }
 
     fun processRawReferences(refList : List<String>, consolidate: Int) : List<BiblioItem> {
-        logger.info("Begin process raw references")
+        logger.debug("Begin process raw references")
         if (consolidate == 1) {
             return engine.processRawReferences(refList, consolidate)
         }

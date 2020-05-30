@@ -13,7 +13,7 @@ object ReferenceParser {
         isTwoColumns: Boolean,
         pageWidth: Int
     ): List<String> {
-        logger.info("Begin reference parsing")
+        logger.debug("Begin reference parsing")
         val refList = mutableListOf<String>()
         val refRegex = refType.regex
         if (!isTwoColumns) {
@@ -79,7 +79,7 @@ object ReferenceParser {
                 return listOf()
             }
 
-            logger.info("Found $curRefNum references")
+            logger.debug("Found $curRefNum references")
 
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {
@@ -226,7 +226,7 @@ object ReferenceParser {
                 return listOf()
             }
 
-            logger.info("Found $curRefNum reference lines")
+            logger.debug("Found $curRefNum reference lines")
 
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {

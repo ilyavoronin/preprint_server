@@ -69,7 +69,8 @@ object ArxivCollector {
                 "files/",
                 CustomReferenceExtractor,
                 validators,
-                false
+                false,
+                recordsTotal
             )
 
             dbHandler.storeArxivData(newArxivRecords)
