@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
         10
     }
 
-    val maxThreads = if (options.has("thread")) {
+    val maxThreads = if (options.has("threads")) {
         options.valueOf("threads").toString().toInt()
     } else {
         -1
@@ -70,6 +70,13 @@ fun main(args: Array<String>) {
             LocalValidator.close()
         }
     })
+
+    println("ArxivS3Collector will be launched with the following parametrs:")
+    println("download only mode: $downloadOnlyMode")
+    println("reference extractor: ${refExtractor.javaClass.name}")
+    println("validators: ${validators.joinToString(separator = ", ") { it.javaClass.name }}")
+    println("max parallel downloads: $maxParallelDownload")
+    println("max threads: $maxThreads")
 
     ArxivS3Collector.beginBulkDownload(
         dbHandler,
