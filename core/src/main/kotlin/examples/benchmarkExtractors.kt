@@ -10,7 +10,7 @@ import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
 const val FILES_FOLDER = "./files/test/"
-const val BENCHMARKS_FOLDER = "./benchmarks"
+const val BENCHMARKS_FOLDER = "./benchmarks/data"
 
 /**
  * Compare implemented reference extractors on a set of files from FILES_FOLDER.
@@ -79,7 +79,7 @@ fun main() {
             }
             val m1 = references[extractor1]!!.groupBy({it.first}, {it.second})
             val m2 = references[extractor2]!!.groupBy({it.first}, {it.second})
-            val outputFile = File("${name1}Without${name2}")
+            val outputFile = File(BENCHMARKS_FOLDER, "${name1}Without${name2}")
             var diffCnt = 0
             outputFile.writeText("")
             for ((filename, refs) in m1) {
