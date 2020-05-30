@@ -1,3 +1,7 @@
+Configure dependencies that require manual installation
+------------------------------
+Follow [this](https://grobid.readthedocs.io/en/latest/Install-Grobid/#build-grobid-with-gradle) instructions to download and install Grobid. Grobid is used to process PDF files. Skip this step if you only want to build validation database.
+
 Building validation database
 ----------------------------
 
@@ -18,8 +22,8 @@ Copy `validationDBconfig.properties` from `validation_db` folder to `~/.preprint
 * semsch_path_to_files -- path to the folder with Semantic Scholar data  
 
 
-##### 1. Indexing CrossRef data
-Run from the project folder:
+#### 1. Indexing CrossRef data
+##### Run from the project folder:
 ```sh
 java -jar validation_db/build/libs/validation-1.0-all.jar crossref
 ```
@@ -27,13 +31,13 @@ The following options are available:
 * filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: false)
 * start-from -- the number of first record to store(used for resuming)
 
-For example:
+##### For example:
 ```sh
 java -jar validation_db/build/libs/validation-1.0-all.jar crossref --filter-duplicates=false --start-from=0
 ```
 
-##### 2. Indexing Semantic Scholar data
-Run from the project folder:
+#### 2. Indexing Semantic Scholar data
+##### Run from the project folder:
 ```sh
 java -jar validation_db/build/libs/validation-1.0-all.jar semsch
 ```
@@ -43,7 +47,7 @@ The following options are available:
 
 The number of the last processed archive with SemanticScholar data is saved in file `START.txt` and on the next launch processing will start from the archive number specified in this file
 
-For example:
+##### For example:
 ```sh
 java -jar validation_db/build/libs/validation-1.0-all.jar semsch --filter-duplicates=true --with-doi=true
 ```
@@ -62,7 +66,7 @@ Copy `ArxivS3config.properties` from `arxiv-s3` folder to `~/.preprint_server/`.
 * neo4j_url, neo4j_port, neo4j_user, neo4j_password
 
 
-Run from the project folder:
+##### Run from the project folder:
 ```sh
 java -jar arxiv-s3/build/libs/arxiv-s3-1.0-all.jar
 ```
@@ -73,9 +77,37 @@ The following options are available:
 * mpd -- maximum parallel downloads(default argument: '10')
 * threads -- maximum number of threads to use when extracting references(default argument: '-1', number of threads equal to the number of CPU cores will be used)
 
-For example:
+##### For example:
 ```sh
 java -jar arxiv-s3/build/libs/arxiv-s3-1.0-all.jar --download-only --ref-extractor=c --validators=la --mpd=16 --threads=8
+```
+
+Download and process new arxiv publications
+-------------------------------------------
+
+### Build
+```sh
+./gradlew -p core build
+```
+
+### Run data collector
+Copy `config.properties` from `core` folder to `~/.preprint_server/`. Specify the following parameters:
+* grobid_home -- path to Grobid home folder
+* neo4j_url, neo4j_port, neo4j_user, neo4j_password
+* email -- specify email if you want to use CrossRefValidator. This email will only be used in requests to CrossRef api(in `mailto` parameter of the request)
+
+
+##### Run from the project folder:
+```sh
+java -jar core/build/libs/collector-1.0-all.jar
+```
+The following options are available:
+* from -- the date to begin from in format `YYYY-MM-DD`(required)
+* validators -- list of validators to use. Valid arguments 'l' for LocalValidator, 'c' for CrossRefValidator, 'a' for ArxivValidator (defalut argument: 'la')
+
+##### For example:
+```sh
+java -jar core/build/libs/collector-1.0-all.jar --from=2020-05-30 --validators=la
 ```
 
 Benchmarking Extractors
