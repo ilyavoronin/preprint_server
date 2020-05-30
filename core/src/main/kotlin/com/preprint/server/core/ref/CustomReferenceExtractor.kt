@@ -33,9 +33,10 @@ object CustomReferenceExtractor : ReferenceExtractor {
         }
         val ind = findRefBegin(lines)
         if (ind == -1) {
-            return listOf()
+            lines = emptyList()
+        } else {
+            lines = lines.drop(ind)
         }
-        lines = lines.drop(ind)
         //remove pageStart and page end marks
         lines = lines.filter {line -> line.indent >= 0}
         var refList = Reference.toReferences(
@@ -176,6 +177,9 @@ object CustomReferenceExtractor : ReferenceExtractor {
 
     private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean, pageWidth : Int) : List<String> {
         //find type of references
+        if (lines.isEmpty()) {
+            return emptyList()
+        }
         var type : ReferenceType? = null
         for (refType in ReferenceType.values()) {
             if (refType.firstRegex.containsMatchIn(lines[0].str)) {
