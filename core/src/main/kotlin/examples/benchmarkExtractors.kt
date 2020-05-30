@@ -46,20 +46,25 @@ fun main() {
             files.forEachIndexed { i, file ->
                 extractors.keys.forEach { extractor ->
                     var referencesNumber = 0
+                    var validatedNumber = 0
                     val progressPrefix = "(${i + 1} / ${files.size})"
                     val timeMillis = measureTimeMillis {
                         try {
                             val newRefs = extractor.getReferences(file.readBytes(), validators)
+                            validatedNumber = newRefs.count { it.validated }
                             references[extractor]!!.addAll(newRefs.map {Pair(file.nameWithoutExtension, it)})
                             referencesNumber = newRefs.size
                         } catch (e: Exception) {
                             println("$progressPrefix ${file.nameWithoutExtension},${extractors[extractor]} - e.message")
                         }
                     }
-                    val validatedCnt = references[extractor]!!.count { it.second.validated }
-                    val data = "${file.nameWithoutExtension},${extractors[extractor]},${referencesNumber},${validatedCnt},${timeMillis}"
-                    csvWriter.write("$data\n")
-                    println("$progressPrefix $data")
+                    if (i > 0) {
+                        val data =
+                            "${file.nameWithoutExtension},${extractors[extractor]}," +
+                                    "${referencesNumber},${validatedNumber},${timeMillis}"
+                        csvWriter.write("$data\n")
+                        println("$progressPrefix $data")
+                    }
                 }
             }
         }
