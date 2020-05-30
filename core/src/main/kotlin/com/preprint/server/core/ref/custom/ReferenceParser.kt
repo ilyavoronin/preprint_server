@@ -304,7 +304,9 @@ object ReferenceParser {
 
     private fun addLineToReference(ref: String, line: String): String {
         return if (ref.length > 2 && ref.last() == '-') {
-            if (ref[ref.lastIndex - 1].isLowerCase() && line.first().isLowerCase()) {
+            val wordPart1 = ref.takeLastWhile { !it.isWhitespace() }.drop(1).all {it.isLowerCase()}
+            val wordPart2 = line.takeWhile { !it.isWhitespace() }.all{it.isLowerCase()}
+            if (wordPart1 && wordPart2) {
                 ref.dropLast(1) + line
             } else {
                 ref + line

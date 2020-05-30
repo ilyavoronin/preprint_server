@@ -37,9 +37,9 @@ fun main() {
     )
 
     val pdfPath = Paths.get(FILES_FOLDER)
-    val benchmarksPath = Paths.get(BENCHMARKS_FOLDER)
-    val csvStats = benchmarksPath.resolve("benchmark.csv")
-    csvStats.toFile().outputStream().bufferedWriter().use { csvWriter ->
+    File(BENCHMARKS_FOLDER).mkdir()
+    val csvStatsFile = File(BENCHMARKS_FOLDER, "benchmark.csv")
+    csvStatsFile.outputStream().bufferedWriter().use { csvWriter ->
         pdfPath.toAbsolutePath().normalize().toFile().listFiles { file ->
             file.name.endsWith(".pdf")
         }?.let { files ->

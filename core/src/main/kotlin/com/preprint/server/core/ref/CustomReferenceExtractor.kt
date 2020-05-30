@@ -187,7 +187,6 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 break
             }
         }
-        val refList = mutableListOf<String>()
 
         //futher if we return empty list
         // means that we want grobid to parse this document later
