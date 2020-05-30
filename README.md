@@ -39,7 +39,9 @@ java -jar validation_db/build/libs/validation-1.0-all.jar semsch
 ```
 The following options are available:
 * filter-duplicates -- publication with doi, that already exists in the database, won't be stored (defautlt: true)
-* with-doi -- store only records that have doi
+* with-doi -- store only records that have doi  
+
+The number of the last processed archive with SemanticScholar data is saved in file `START.txt` and on the next launch processing will start from the archive number specified in this file
 
 For example:
 ```sh

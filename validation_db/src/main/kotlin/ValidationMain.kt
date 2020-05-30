@@ -6,9 +6,9 @@ import java.io.IOException
 
 fun main(args: Array<String>) {
     val optionParser = OptionParser()
-    optionParser.accepts("with-doi")
-    optionParser.accepts("filter-duplicates")
-    optionParser.accepts("start-from")
+    optionParser.accepts("with-doi").withRequiredArg()
+    optionParser.accepts("filter-duplicates").withRequiredArg()
+    optionParser.accepts("start-from").withRequiredArg()
     val options = optionParser.parse(*args)
 
     val dbHandler =
@@ -34,6 +34,10 @@ fun main(args: Array<String>) {
                 } else {
                     0
                 }
+
+                println("CrossRefDataLoader will be launched with the following parametrs:")
+                println("don't add duplicates: $checkDuplicates")
+                println("number of record to start: $startFrom")
                 CrossRefDataLoader.loadData(it, checkDuplicates, startFrom)
             }
 
@@ -49,6 +53,10 @@ fun main(args: Array<String>) {
                 } else {
                     true
                 }
+
+                println("SSRefDataLoader will be launched with the following parametrs:")
+                println("don't add duplicates: $checkDuplicates")
+                println("add records only with doi: $onlyWithDoi")
                 SSDataLoader.loadData(it, checkDuplicates, onlyWithDoi)
             }
             else -> throw IOException("Illegal argument ${args[0]}")
