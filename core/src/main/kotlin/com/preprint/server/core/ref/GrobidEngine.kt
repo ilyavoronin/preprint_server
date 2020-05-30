@@ -24,20 +24,59 @@ object GrobidEngine {
 
     fun processReferences(pdfFile : File, consolidate : Int) : List<BibDataSet> {
         logger.debug("Begin process references")
-        return engine.processReferences(pdfFile, consolidate)
+        var tries = 0
+        while (true) {
+            try {
+                return engine.processReferences(pdfFile, consolidate)
+            } catch (e: Exception) {
+                tries += 1
+                if (tries == 3) {
+                    throw e
+                }
+            }
+        }
     }
 
     fun processRawReference(ref : String, consolidate: Int) : BiblioItem {
-        return engine.processRawReference(ref, consolidate) ?: BiblioItem()
+        var tries = 0
+        while (true) {
+            try {
+                while (true) {
+                    val bibRef = engine.processRawReference(ref, consolidate)
+                    if (bibRef != null) {
+                        return bibRef
+                    }
+                    tries += 1
+                    if (tries == 4) {
+                        break
+                    }
+                }
+                return BiblioItem()
+            } catch (e: Exception) {
+                tries += 1
+                if (tries == 4) {
+                    throw e
+                }
+            }
+        }
     }
 
     fun processRawReferences(refList : List<String>, consolidate: Int) : List<BiblioItem> {
         logger.debug("Begin process raw references")
-        if (consolidate == 1) {
-            return engine.processRawReferences(refList, consolidate)
-        }
-        else {
-            return refList.map { processRawReference(it, 0)}
+        var tries = 0
+        while (true) {
+            try {
+                if (consolidate == 1) {
+                    return engine.processRawReferences(refList, consolidate)
+                } else {
+                    return refList.map { processRawReference(it, 0) }
+                }
+            } catch (e: Exception) {
+                tries += 1
+                if (tries == 3) {
+                    throw e
+                }
+            }
         }
     }
 }
