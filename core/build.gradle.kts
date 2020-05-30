@@ -1,6 +1,7 @@
 plugins {
     java
     kotlin("jvm")
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 repositories {
@@ -25,6 +26,8 @@ dependencies {
     implementation("org.neo4j.driver:neo4j-java-driver:4.0.0")
     implementation("com.beust:klaxon:5.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5")
+    implementation("net.sf.jopt-simple:jopt-simple:6.0-alpha-3")
+
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("io.mockk:mockk:1.9.3")
@@ -54,5 +57,20 @@ tasks {
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
+    }
+
+    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+        archiveBaseName.set("collector")
+        mergeServiceFiles()
+        manifest {
+            attributes(mapOf("Main-Class" to "ArxivCollectorMainKt"))
+        }
+        isZip64 = true
+    }
+}
+
+tasks {
+    build {
+        dependsOn("shadowJar")
     }
 }
