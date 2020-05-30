@@ -99,7 +99,7 @@ Copy `config.properties` from `core` folder to `~/.preprint_server/`. Specify th
 
 ##### Run from the project folder:
 ```sh
-java -jar core/build/libs/collector-1.0-all.jar
+java -jar core/build/libs/collector-1.0-all.jar --from=YYYY-MM-DD
 ```
 The following options are available:
 * from -- the date to begin from in format `YYYY-MM-DD`(required)
