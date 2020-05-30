@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
         throw IllegalArgumentException("You should specify `from` option`")
     }
 
-    var validators = mutableListOf(LocalValidator, ArxivValidator)
+    var validators = mutableListOf(CrossRefValidator, ArxivValidator)
     if (options.has("validators")) {
         validators = mutableListOf()
         options.valueOf("validators").toString().forEach { c ->

@@ -103,7 +103,7 @@ java -jar core/build/libs/collector-1.0-all.jar --from=YYYY-MM-DD
 ```
 The following options are available:
 * from -- the date to begin from in format `YYYY-MM-DD`(required)
-* validators -- list of validators to use. Valid arguments 'l' for LocalValidator, 'c' for CrossRefValidator, 'a' for ArxivValidator (defalut argument: 'la')
+* validators -- list of validators to use. Valid arguments 'l' for LocalValidator, 'c' for CrossRefValidator, 'a' for ArxivValidator (defalut argument: 'ca')
 
 ##### For example:
 ```sh
