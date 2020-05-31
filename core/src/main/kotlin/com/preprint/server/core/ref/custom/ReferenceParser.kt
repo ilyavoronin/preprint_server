@@ -94,7 +94,7 @@ object ReferenceParser {
                         }
                         curRef = addLineToReference(curRef, newLine)
 
-                        if ((curRef.last() != ';')
+                        if (curRef.isNotBlank() && curRef.last() != ';'
                             && (curRef.last() == '.' || nextLineInd - lineInd > 5 || containMultipleReferences)
                             && ((k != lineInd && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || k == lineInd && (lines[k].lastPos - lines[k].indent) < maxWidth * 0.9)
@@ -252,7 +252,7 @@ object ReferenceParser {
                         }
                         curRef = addLineToReference(curRef, newLine)
                         val curSide = getSide(lines[k])
-                        if (curRef.last() != ';'
+                        if (curRef.isNotBlank() && curRef.last() != ';'
                             && (curRef.last() == '.' || nextLineInd - lineInd > 10 || containsMultipleReferences)
                             && ((k != lineInd && curSide == prevSide && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || (lines[k].lastPos - lines[k].indent) < maxWidth * 0.8)
