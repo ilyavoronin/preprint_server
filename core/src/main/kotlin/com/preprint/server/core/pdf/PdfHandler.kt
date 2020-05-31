@@ -28,11 +28,12 @@ object PdfHandler {
         refExtractor: ReferenceExtractor?,
         validators: List<Validator>,
         savePdf: Boolean,
-        totalRecordsToDownload: Int
+        totalRecordsToDownload: Int,
+        beginRecordNumber: Int = 0
     ) {
         logger.info("Begin download of ${recordList.size} pdf")
         for ((i, record) in recordList.withIndex()) {
-            logger.info("downloading $i out of ${totalRecordsToDownload}: ${record.id}")
+            logger.info("downloading ${beginRecordNumber + i + 1} out of ${totalRecordsToDownload}: ${record.id}")
             logger.info("pdf url: ${record.pdfUrl}")
 
             if (record.pdfUrl == "") {

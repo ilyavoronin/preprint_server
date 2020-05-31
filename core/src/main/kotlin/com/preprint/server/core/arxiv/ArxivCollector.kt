@@ -70,7 +70,8 @@ object ArxivCollector {
                 CustomReferenceExtractor,
                 validators,
                 false,
-                recordsTotal
+                recordsTotal,
+                recordsProcessed
             )
 
             dbHandler.storeArxivData(newArxivRecords)
