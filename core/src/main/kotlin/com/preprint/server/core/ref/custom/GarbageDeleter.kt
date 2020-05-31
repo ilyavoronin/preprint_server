@@ -125,7 +125,7 @@ object GarbageDeleter {
 
         return when {
             isDigits(firstLineIndices) -> lines.filterIndexed {i, line ->
-                !(i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num)
+                !(i - 1 >= 0 && lines[i - 1].indent == PdfMarks.PageStart.num)
             }
             isDigits(lastLineIndices) -> lines.filterIndexed {i, line ->
                 !(i + 1 <= lines.lastIndex && lines[i + 1].indent == PdfMarks.PageEnd.num)
