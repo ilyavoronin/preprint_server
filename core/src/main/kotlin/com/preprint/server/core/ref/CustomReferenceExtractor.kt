@@ -4,6 +4,8 @@ import com.preprint.server.core.data.Reference
 import com.preprint.server.core.ref.custom.*
 import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
+import java.io.ByteArrayOutputStream
 import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
@@ -19,6 +21,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         }
         val pageWidth = doc.pages[0].mediaBox.width.toDouble()
         val isTwoColumns = PDFRefTextStripper.isTwoColumns
+        var canDropPages = true
 
         var lines = getLines(textWithMarks)
         lines = removeEmptyLines(lines)
@@ -34,6 +37,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         val ind = findRefBegin(lines)
         if (ind == -1) {
             lines = emptyList()
+            canDropPages = false
         } else {
             lines = lines.drop(ind)
         }
@@ -51,6 +55,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         if (pagesTotal > 40 && refList.size.toDouble() / pagesTotal < 0.7) {
             logger.debug("Drop because too little references was parsed")
             refList = emptyList()
+            canDropPages = false
         }
 
         val isReferences = refList.all {it.isReference}
@@ -59,7 +64,22 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 logger.debug("Drop because grobid can't identify parsed string as reference")
             }
             logger.debug("done by GROBID")
-            refList = GrobidReferenceExtractor.getReferences(pdf)
+            refList = if (canDropPages && lines.isNotEmpty()) {
+                val ndoc = PDDocument()
+                for (i in 0 until 2) {
+                    ndoc.addPage(doc.getPage(i))
+                }
+                for (i in lines[0].pn - 1 until doc.numberOfPages) {
+                    ndoc.addPage(doc.getPage(i))
+                }
+                val ba = ByteArrayOutputStream()
+                ndoc.save(ba)
+                ndoc.close()
+                GrobidReferenceExtractor.getReferences(ba.toByteArray())
+            }
+            else {
+                GrobidReferenceExtractor.getReferences(pdf)
+            }
         }
         else {
             logger.debug("done by CUSTOM")
