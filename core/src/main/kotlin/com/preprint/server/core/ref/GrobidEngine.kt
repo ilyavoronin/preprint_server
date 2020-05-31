@@ -55,7 +55,7 @@ object GrobidEngine {
             } catch (e: Exception) {
                 tries += 1
                 if (tries == 4) {
-                    throw e
+                    return BiblioItem()
                 }
             }
         }
