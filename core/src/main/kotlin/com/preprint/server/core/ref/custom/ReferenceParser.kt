@@ -146,10 +146,14 @@ object ReferenceParser {
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1) {
-                    if (refs.any { rejectAsReference(it)}) {
+                    if (refs.any { rejectAsReferenceStrong(it)}) {
                         logger.debug("Drop because can't parse reference with semicolon")
                         return listOf()
                     }
+                }
+                if (refs.any { rejectAsReferenceWeak(it) }) {
+                    logger.debug("Drop because multiple references was parsed as one")
+                    return listOf()
                 }
                 refList.addAll(refs)
             }
@@ -310,10 +314,14 @@ object ReferenceParser {
                 }
                 val refs = curRef.split(";").map{it.trim()}.filter { it.isNotEmpty() }
                 if (refs.size > 1) {
-                    if (refs.any { rejectAsReference(it)}) {
+                    if (refs.any { rejectAsReferenceStrong(it)}) {
                         logger.debug("Drop because can't parse reference with semicolon")
                         return listOf()
                     }
+                }
+                if (refs.any { rejectAsReferenceWeak(it) }) {
+                    logger.debug("Drop because multiple references was parsed as one")
+                    return listOf()
                 }
                 refList.addAll(refs)
             }
@@ -344,7 +352,7 @@ object ReferenceParser {
         return ref.drop(match.range.last + 1).trimIndent()
     }
 
-    private fun rejectAsReference(ref : String) : Boolean {
+    private fun rejectAsReferenceStrong(ref : String) : Boolean {
         val reference =
             Reference(ref, GrobidEngine.processRawReference(ref, 0))
         var containsAuthors = false
@@ -366,5 +374,10 @@ object ReferenceParser {
         return !(containsJournal ||
                 containsYear ||
                 containsArxivId && containsAuthors)
+    }
+
+    private fun rejectAsReferenceWeak(ref: String): Boolean {
+        return ArxivValidator.containsMultipleIds(ref)
+                || """\((19|20)\d\d\)""".toRegex().findAll(ref).toList().size > 1
     }
 }

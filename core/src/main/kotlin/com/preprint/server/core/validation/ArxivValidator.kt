@@ -105,6 +105,13 @@ object ArxivValidator : Validator {
     }
 
     fun containsId(ref : String) : Boolean {
-        return ids.any {ref.contains(it)}
+        val lref = ref.toLowerCase()
+        return ids.any {lref.contains("""$it(\.\p{Upper}{2})?/\d\d\d""".toRegex()) || lref.contains("arxiv:")}
+    }
+
+    fun containsMultipleIds(ref: String): Boolean {
+        val lref = ref.toLowerCase()
+        return ids.sumBy { """$it(\.\p{Upper}{2})?/\d\d\d""".toRegex().findAll(lref).toList().size } > 1 ||
+                "arxiv:".toRegex().findAll(lref).toList().size > 1
     }
 }
