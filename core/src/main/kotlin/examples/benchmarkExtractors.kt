@@ -116,7 +116,7 @@ fun main() {
                     }
                 }
             }
-            pairwiseBenchmark.writeText("$name1,$name2,$diffCnt")
+            pairwiseBenchmark.appendText("$name1,$name2,$diffCnt")
             println("$name1 extractor extracted $diffCnt references more than $name2")
         }
     }
