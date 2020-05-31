@@ -9,7 +9,7 @@ import java.lang.Exception
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
-const val FILES_FOLDER = "./files/test/"
+const val FILES_FOLDER = "./files/test1/"
 const val BENCHMARKS_FOLDER = "./benchmarks/data"
 
 /**

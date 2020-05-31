@@ -46,6 +46,13 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 pageWidth.roundToInt()
             ).map {it.trimIndent()}.filter { it.isNotEmpty() }
         )
+
+        val pagesTotal = PDFRefTextStripper.lastPageNo
+        if (pagesTotal > 40 && refList.size.toDouble() / pagesTotal < 0.7) {
+            logger.debug("Drop because too little references was parsed")
+            refList = emptyList()
+        }
+
         val isReferences = refList.all {it.isReference}
         if (refList.isEmpty() || !isReferences) {
             if (!isReferences) {

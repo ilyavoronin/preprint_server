@@ -17,7 +17,7 @@ enum class ReferenceType(val regex : Regex,
     C("""^\d{1,4}""".toRegex(),
         """1 """.toRegex(),
         2, 0, 0, true, true),
-    D("""^\[.*]""".toRegex(),
-        """^\[.*]""".toRegex(),
+    D("""^\[.*?]""".toRegex(),
+        """^\[.*?]""".toRegex(),
         3, 1, 1, false, true)
 }

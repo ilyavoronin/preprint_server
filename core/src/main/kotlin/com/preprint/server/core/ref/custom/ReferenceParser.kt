@@ -43,7 +43,8 @@ object ReferenceParser {
                                     break
                                 }
                             }
-                            else if (value == curRefNum) {
+                            else if (value == curRefNum || lines[j].indent != secondLineIndent && !refType.strict) {
+                                logger.debug("Drop because of error in reference numeration")
                                 return listOf()
                             }
                         }
@@ -74,6 +75,10 @@ object ReferenceParser {
                 i = j
             }
 
+            if (secondLineIndent == -1) {
+                canUseSecondIndentPattern = false
+            }
+
             if (refType.strict && !canUseSecondIndentPattern) {
                 logger.debug("Drop because can't use indent pattern")
                 return listOf()
@@ -96,6 +101,7 @@ object ReferenceParser {
 
                         if (curRef.isNotBlank() && curRef.last() != ';'
                             && (curRef.last() == '.' || nextLineInd - lineInd > 5 || containMultipleReferences)
+                            && (curRef.last() != ',' && !ArxivValidator.containsId(newLine))
                             && ((k != lineInd && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || k == lineInd && (lines[k].lastPos - lines[k].indent) < maxWidth * 0.9)
                         ) {
@@ -137,7 +143,9 @@ object ReferenceParser {
                                 break
                             }
                         } else {
-                            if (lines[k].lastPos - lines[k].indent < 0.9 * maxWidth) {
+                            if (lines[k].lastPos - lines[k].indent < 0.9 * maxWidth
+                                && (k + 1 >= lines.size || !ArxivValidator.containsId(lines[k + 1].str))
+                                && curRef.last() != ',') {
                                 //we find the end of reference
                                 break
                             }
@@ -195,7 +203,8 @@ object ReferenceParser {
                                     return listOf()
                                 }
                             }
-                            else if (value == curRefNum) {
+                            else if (value == curRefNum || lines[j].indent != secondLineIndent && !refType.strict) {
+                                logger.debug("Drop because of error in reference numeration")
                                 return listOf()
                             }
                         }
@@ -233,6 +242,10 @@ object ReferenceParser {
                 }
                 curRefNum += 1
                 i = j
+            }
+
+            if (secondLineIndentLeft == -1 && secondLineIndentRight == -1) {
+                canUseSecondIndentPattern = false
             }
 
             if (refType.strict && !canUseSecondIndentPattern) {
@@ -290,8 +303,8 @@ object ReferenceParser {
                         curRef = addLineToReference(curRef, newLine)
                         val curSide = getSide(lines[k])
                         if (canUseSecondIndentPattern && k < lines.lastIndex) {
-                            if (curSide == 0 && lines[k + 1].indent != secondLineIndentLeft
-                                || curSide == 1 && lines[k + 1].indent != secondLineIndentRight
+                            if (lines[k + 1].indent != secondLineIndentLeft
+                                && lines[k + 1].indent != secondLineIndentRight
                             ) {
 
                                 //we find the end of reference
@@ -304,7 +317,10 @@ object ReferenceParser {
                                 break
                             }
                         } else {
-                            if (lines[k].lastPos - lines[k].indent < 0.8 * maxWidth) {
+                            if (lines[k].lastPos - lines[k].indent < 0.8 * maxWidth
+                                && (k + 1 >= lines.size || !ArxivValidator.containsId(lines[k + 1].str))
+                                && curRef.last() != ','
+                            ) {
                                 //we find the end of reference
                                 break
                             }
