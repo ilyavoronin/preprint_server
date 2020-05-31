@@ -152,7 +152,7 @@ object GarbageDeleter {
                 if (state == 0) {
                     curMaxString = Algorithms.findLCS(lines[prev].str, lines[cur].str)
                     if (curMaxString.length > lines[cur].str.length * 0.75 &&
-                        curMaxString.length > lines[prev].str.length * 0.75
+                        curMaxString.length > lines[prev].str.length * 0.75 && curMaxString.length > 1
                     ) {
                         //then we assume that this strings contain header
                         state = 1
@@ -164,7 +164,7 @@ object GarbageDeleter {
                 }
                 if (state == 1) {
                     val newString = Algorithms.findLCS(curMaxString, lines[cur].str)
-                    if (newString.length == curMaxString.length
+                    if (newString.length == curMaxString.length && newString.length > lines[cur].str.length * 0.75
                         || curMaxString.length > 15 && curMaxString.length - newString.length < 4) {
                         runLength += 1
                         if (i == listIndices.lastIndex) {

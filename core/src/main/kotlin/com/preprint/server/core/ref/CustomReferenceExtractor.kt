@@ -171,8 +171,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
             }
         }
 
-        val i6 = lines.indexOfLast { line -> line.str.contains("references", ignoreCase = true) }
-        return i6 + 1
+        return -1
     }
 
     private fun parseReferences(lines : List<Line>, isTwoColumn : Boolean, pageWidth : Int) : List<String> {
