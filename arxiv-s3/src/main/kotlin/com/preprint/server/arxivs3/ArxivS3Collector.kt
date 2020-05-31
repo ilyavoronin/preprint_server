@@ -68,7 +68,9 @@ object ArxivS3Collector {
         ArxivS3Downloader.downloadManifest(manifestPath)
 
         //get filenames and md5 hash of each file from manifest
-        val fileNames = ManifestParser.parseFilenames(manifestPath).filter { !processedFiles.contains(it.first)}
+        val fileNames = ManifestParser.parseFilenames(manifestPath).filter {
+                (filename, _) -> processedFiles.count { it.endsWith(filename)} == 0
+        }
         fileNames.chunked(maxParallelDownload).forEach { fileNamesChunk ->
             runBlocking(Dispatchers.IO) {
                 fileNamesChunk.forEach { (filename, md5sum) ->
