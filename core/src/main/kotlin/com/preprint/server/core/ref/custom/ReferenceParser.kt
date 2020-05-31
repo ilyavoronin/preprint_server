@@ -84,6 +84,7 @@ object ReferenceParser {
             //parse references
             for ((j, lineInd) in firstLineIndices.withIndex()) {
                 var curRef = ""
+                var containMultipleReferences = false
                 if (j != firstLineIndices.lastIndex) {
                     val nextLineInd = firstLineIndices[j + 1]
                     for (k in lineInd until nextLineInd) {
@@ -94,19 +95,21 @@ object ReferenceParser {
                         curRef = addLineToReference(curRef, newLine)
 
                         if ((curRef.last() != ';')
-                            && (curRef.last() == '.' || nextLineInd - lineInd > 5)
+                            && (curRef.last() == '.' || nextLineInd - lineInd > 5 || containMultipleReferences)
                             && ((k != lineInd && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || k == lineInd && (lines[k].lastPos - lines[k].indent) < maxWidth * 0.9)
                         ) {
                             //small checking if some of the lines we want to throw away contains arxivId or year
-                            //and then we are doing something wrong
+                            //and then add semicolon to identify them as separate references later
                             if (lines.subList(lineInd + 1, nextLineInd).any {
                                     ArxivValidator.containsId(it.str) || it.str.contains("""(19|20)\d\d""".toRegex())
                                 }) {
-                                return emptyList()
+                                curRef += ';'
+                                containMultipleReferences = true
+                            } else {
+                                //then this is the end of reference
+                                break
                             }
-                            //then this is the end of reference
-                            break
                         }
                     }
                 } else {
@@ -241,6 +244,7 @@ object ReferenceParser {
                 if (j != firstLineIndices.lastIndex) {
                     val nextLineInd = firstLineIndices[j + 1]
                     var prevSide = 0
+                    var containsMultipleReferences = false
                     for (k in lineInd until nextLineInd) {
                         val newLine = if (k == lineInd) removeRefPattern(lines[k].str, refRegex) else lines[k].str
                         if (newLine == null) {
@@ -249,7 +253,7 @@ object ReferenceParser {
                         curRef = addLineToReference(curRef, newLine)
                         val curSide = getSide(lines[k])
                         if (curRef.last() != ';'
-                            && (curRef.last() == '.' || nextLineInd - lineInd > 10)
+                            && (curRef.last() == '.' || nextLineInd - lineInd > 10 || containsMultipleReferences)
                             && ((k != lineInd && curSide == prevSide && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || (lines[k].lastPos - lines[k].indent) < maxWidth * 0.8)
                         ) {
@@ -257,10 +261,12 @@ object ReferenceParser {
                             if (lines.subList(lineInd + 1, nextLineInd).any {
                                     ArxivValidator.containsId(it.str) || it.str.contains("""(19|20)\d\d""".toRegex())
                                 }) {
-                                return emptyList()
+                                curRef += ';'
+                                containsMultipleReferences = true
+                            } else {
+                                //then this is the end of reference
+                                break
                             }
-                            //then this is the end of reference
-                            break
                         }
                         prevSide = curSide
                     }
