@@ -110,15 +110,17 @@ object GarbageDeleter {
     }
 
     fun removePageNumbersSimple(lines : List<Line>) : List<Line> {
-        val firstLineIndices = getFirstLineIndices(lines)
-        val lastLineIndices = getLastLineIndices(lines)
+        val firstLineIndices = getFirstLineIndices(lines).drop(1)
+        val lastLineIndices = getLastLineIndices(lines).drop(1)
 
         //drop first page
         firstLineIndices.drop(1)
         lastLineIndices.drop(1)
 
         fun isDigits(indices : List<Int>) : Boolean {
-            return indices.all{ind -> lines[ind].str.all {it.isDigit()}}
+            return indices.all{ind ->
+                    lines[ind].str.all {it.isDigit()}
+            }
         }
 
         return when {
