@@ -93,11 +93,18 @@ object ReferenceParser {
                         }
                         curRef = addLineToReference(curRef, newLine)
 
-                        if ((curRef.last() == '.' || nextLineInd - lineInd > 5)
+                        if ((curRef.last() != ';')
+                            && (curRef.last() == '.' || nextLineInd - lineInd > 5)
                             && ((k != lineInd && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || k == lineInd && (lines[k].lastPos - lines[k].indent) < maxWidth * 0.9)
                         ) {
-
+                            //small checking if some of the lines we want to throw away contains arxivId or year
+                            //and then we are doing something wrong
+                            if (lines.subList(lineInd + 1, nextLineInd).any {
+                                    ArxivValidator.containsId(it.str) || it.str.contains("""(19|20)\d\d""".toRegex())
+                                }) {
+                                return emptyList()
+                            }
                             //then this is the end of reference
                             break
                         }
@@ -241,11 +248,17 @@ object ReferenceParser {
                         }
                         curRef = addLineToReference(curRef, newLine)
                         val curSide = getSide(lines[k])
-                        if ((curRef.last() == '.' || nextLineInd - lineInd > 10)
+                        if (curRef.last() != ';'
+                            && (curRef.last() == '.' || nextLineInd - lineInd > 10)
                             && ((k != lineInd && curSide == prevSide && lines[k].lastPos < lines[k - 1].lastPos * 0.9)
                                     || (lines[k].lastPos - lines[k].indent) < maxWidth * 0.8)
                         ) {
 
+                            if (lines.subList(lineInd + 1, nextLineInd).any {
+                                    ArxivValidator.containsId(it.str) || it.str.contains("""(19|20)\d\d""".toRegex())
+                                }) {
+                                return emptyList()
+                            }
                             //then this is the end of reference
                             break
                         }
