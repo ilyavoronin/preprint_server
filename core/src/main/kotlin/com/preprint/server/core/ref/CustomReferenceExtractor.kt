@@ -6,6 +6,8 @@ import org.apache.logging.log4j.kotlin.logger
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import java.io.ByteArrayOutputStream
+import java.lang.Integer.max
+import java.lang.Integer.min
 import kotlin.math.roundToInt
 
 object CustomReferenceExtractor : ReferenceExtractor {
@@ -66,7 +68,8 @@ object CustomReferenceExtractor : ReferenceExtractor {
             logger.debug("done by GROBID")
             refList = if (canDropPages && lines.isNotEmpty()) {
                 val ndoc = PDDocument()
-                for (i in 0 until 2) {
+                val unt = min(lines[0].pn - 1, max(3, doc.numberOfPages - lines[0].pn + 1))
+                for (i in 0 until unt) {
                     ndoc.addPage(doc.getPage(i))
                 }
                 for (i in lines[0].pn - 1 until doc.numberOfPages) {
@@ -75,7 +78,13 @@ object CustomReferenceExtractor : ReferenceExtractor {
                 val ba = ByteArrayOutputStream()
                 ndoc.save(ba)
                 ndoc.close()
-                GrobidReferenceExtractor.getReferences(ba.toByteArray())
+                val nrefs = GrobidReferenceExtractor.getReferences(ba.toByteArray())
+                if (nrefs.size.toDouble() / pagesTotal < 0.5) {
+                    logger.debug("Too little references was extracted with Grobid. Trying one more time")
+                    GrobidReferenceExtractor.getReferences(pdf)
+                } else {
+                    nrefs
+                }
             }
             else {
                 GrobidReferenceExtractor.getReferences(pdf)
@@ -144,7 +153,7 @@ object CustomReferenceExtractor : ReferenceExtractor {
         }
 
         val i2 = lines.indexOfLast { line ->
-            line.str.contains("References") || line.str.contains("REFERENCES")
+            (line.str.contains("References") || line.str.contains("REFERENCES")) && !line.str.first().isLowerCase()
         }
         if (i2 != -1) {
             return i2 + 1

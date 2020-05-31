@@ -1,6 +1,7 @@
 package com.preprint.server.core.ref
 
 import com.preprint.server.core.data.Reference
+import java.io.File
 
 
 object GrobidReferenceExtractor : ReferenceExtractor {
