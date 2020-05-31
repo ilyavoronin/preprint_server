@@ -1,11 +1,17 @@
 package preprint.server.examples
 
 import com.preprint.server.core.data.Reference
-import com.preprint.server.core.ref.*
+import com.preprint.server.core.ref.CustomReferenceExtractor
+import com.preprint.server.core.ref.GrobidReferenceExtractor
 import com.preprint.server.core.validation.ArxivValidator
 import com.preprint.server.core.validation.LocalValidator
+import org.apache.log4j.Level
+import org.apache.log4j.LogManager
+import org.apache.log4j.Logger
+import org.apache.log4j.varia.NullAppender
+import org.apache.logging.log4j.kotlin.KotlinLogger
+import org.apache.logging.log4j.kotlin.logger
 import java.io.File
-import java.lang.Exception
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
@@ -44,14 +50,13 @@ fun main() {
             file.name.endsWith(".pdf")
         }?.let { files ->
             files.forEachIndexed { i, file ->
-                extractors.keys.forEach { extractor ->
+                extractors.forEach { extractor, extName ->
                     var referencesNumber = 0
-                    var validatedNumber = 0
                     val progressPrefix = "(${i + 1} / ${files.size})"
+                    var newRefs = listOf<Reference>()
                     val timeMillis = measureTimeMillis {
                         try {
-                            val newRefs = extractor.getReferences(file.readBytes(), validators)
-                            validatedNumber = newRefs.count { it.validated }
+                            newRefs = extractor.getReferences(file.readBytes())
                             references[extractor]!!.addAll(newRefs.map {Pair(file.nameWithoutExtension, it)})
                             referencesNumber = newRefs.size
                         } catch (e: Exception) {
@@ -59,6 +64,9 @@ fun main() {
                         }
                     }
                     if (i > 0) {
+                        validators.forEach { it.validate(newRefs) }
+                        val validatedNumber = newRefs.count { it.validated }
+                        println("Validated $validatedNumber out of ${newRefs.size} ($extName)")
                         val data =
                             "${file.nameWithoutExtension},${extractors[extractor]}," +
                                     "${referencesNumber},${validatedNumber},${timeMillis}"
@@ -77,6 +85,8 @@ fun main() {
      * This will be done for each file separately and references will be compared by doi or arxivId
      */
 
+    val pairwiseBenchmark = File(BENCHMARKS_FOLDER, "pairwise.csv")
+    pairwiseBenchmark.writeText(extractors.values.joinToString(separator = ","))
     for ((extractor1, name1) in extractors) {
         for ((extractor2, name2) in extractors) {
             if (extractor1 == extractor2) {
@@ -106,6 +116,7 @@ fun main() {
                     }
                 }
             }
+            pairwiseBenchmark.writeText("$name1,$name2,$diffCnt")
             println("$name1 extractor extracted $diffCnt references more than $name2")
         }
     }
